@@ -523,6 +523,22 @@ class ApiService {
       method: 'DELETE'
     }, token);
   }
+
+  // Weather
+  async getWeatherForHike(hikeId, token) {
+    const response = await fetch(`${this.baseURL}/api/weather/hike/${hikeId}`, {
+      headers: this.getAuthHeaders(token)
+    });
+    return response.json();
+  }
+
+  async getWeatherForecast(location, date, token) {
+    const queryString = new URLSearchParams({ location, date }).toString();
+    const response = await fetch(`${this.baseURL}/api/weather/forecast?${queryString}`, {
+      headers: this.getAuthHeaders(token)
+    });
+    return response.json();
+  }
 }
 
 export const api = new ApiService();

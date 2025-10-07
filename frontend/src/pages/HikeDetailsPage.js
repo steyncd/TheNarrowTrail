@@ -6,6 +6,7 @@ import { useAuth } from '../contexts/AuthContext';
 import { useTheme } from '../contexts/ThemeContext';
 import api from '../services/api';
 import LoadingSpinner from '../components/common/LoadingSpinner';
+import WeatherWidget from '../components/weather/WeatherWidget';
 
 const HikeDetailsPage = () => {
   const { hikeId } = useParams();
@@ -315,6 +316,13 @@ const HikeDetailsPage = () => {
                   </small>
                 )}
               </div>
+            </div>
+          )}
+
+          {/* Weather Forecast */}
+          {token && hike && hike.date && hike.location && (
+            <div className="mb-4">
+              <WeatherWidget hikeId={hikeId} location={hike.location} date={hike.date} />
             </div>
           )}
 
