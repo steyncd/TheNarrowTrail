@@ -26,8 +26,8 @@ exports.getHikeById = async (req, res) => {
     const { id } = req.params;
     const result = await pool.query(
       `SELECT h.*,
-       COUNT(DISTINCT CASE WHEN hi.attendance_status = 'interested' THEN hi.user_id END) as interested_count,
-       COUNT(DISTINCT CASE WHEN hi.attendance_status = 'confirmed' THEN hi.user_id END) as confirmed_count
+       COUNT(DISTINCT CASE WHEN hi.attendance_status IN ('interested', 'confirmed') THEN hi.user_id END) as interested_count,
+       COUNT(DISTINCT CASE WHEN hi.attendance_status IN ('interested', 'confirmed') THEN hi.user_id END) as confirmed_count
        FROM hikes h
        LEFT JOIN hike_interest hi ON h.id = hi.hike_id
        WHERE h.id = $1
