@@ -354,10 +354,10 @@ const HikeDetailsPage = () => {
                 </div>
               )}
 
-              {/* Interested Users List */}
+              {/* Confirmed Users List */}
               {interestedUsers.length > 0 && (
                 <div className="mt-3 pt-3 border-top">
-                  <h6 className="mb-2">Interested Hikers:</h6>
+                  <h6 className="mb-2">Confirmed Hikers:</h6>
                   <div className="d-flex flex-column gap-2">
                     {interestedUsers.map(user => (
                       <Link

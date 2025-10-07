@@ -182,10 +182,10 @@ exports.getInterestedUsers = async (req, res) => {
   try {
     const { id } = req.params;
     const result = await pool.query(
-      `SELECT u.id, u.name, u.email, u.phone, hi.created_at as interested_at
+      `SELECT u.id, u.name, u.email, u.phone, hi.created_at as interested_at, hi.attendance_status
        FROM hike_interest hi
        JOIN users u ON hi.user_id = u.id
-       WHERE hi.hike_id = $1
+       WHERE hi.hike_id = $1 AND hi.attendance_status = 'confirmed'
        ORDER BY hi.created_at ASC`,
       [id]
     );
