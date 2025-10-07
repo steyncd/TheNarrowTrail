@@ -71,6 +71,30 @@ class HikingPortalSensor(CoordinatorEntity, SensorEntity):
         elif self._sensor_type == "total_hikes":
             return len(self.coordinator.data.get("hikes", []))
 
+        elif self._sensor_type == "days_until_next_hike":
+            next_hike = self.coordinator.data.get("next_hike")
+            if not next_hike or not next_hike.get("date"):
+                return None
+
+            try:
+                from datetime import datetime, timezone
+                hike_date = datetime.fromisoformat(
+                    next_hike["date"].replace("Z", "+00:00")
+                ).replace(tzinfo=timezone.utc)
+                now = datetime.now(timezone.utc)
+                days_until = (hike_date - now).days
+                return max(0, days_until)
+            except (ValueError, KeyError):
+                return None
+
+        elif self._sensor_type == "next_hike_weather":
+            # Placeholder - would integrate with weather service
+            return "Unknown"
+
+        elif self._sensor_type == "unread_notifications":
+            # This would need to be fetched from API
+            return self.coordinator.data.get("unread_notifications", 0)
+
         return None
 
     @property

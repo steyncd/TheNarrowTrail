@@ -89,3 +89,49 @@ class HikingPortalDataUpdateCoordinator(DataUpdateCoordinator):
         except aiohttp.ClientError as err:
             _LOGGER.error("Error fetching data from %s: %s", url, err)
             raise UpdateFailed(f"Error fetching data from {endpoint}") from err
+
+    async def express_interest(self, hike_id: int) -> None:
+        """Express interest in a hike."""
+        url = f"{self.api_url}/api/interest/{hike_id}"
+        try:
+            async with self.session.post(url, headers=self._headers, timeout=10) as response:
+                response.raise_for_status()
+                _LOGGER.info("Successfully expressed interest in hike %s", hike_id)
+        except aiohttp.ClientError as err:
+            _LOGGER.error("Error expressing interest in hike %s: %s", hike_id, err)
+            raise
+
+    async def remove_interest(self, hike_id: int) -> None:
+        """Remove interest from a hike."""
+        url = f"{self.api_url}/api/interest/{hike_id}"
+        try:
+            async with self.session.delete(url, headers=self._headers, timeout=10) as response:
+                response.raise_for_status()
+                _LOGGER.info("Successfully removed interest from hike %s", hike_id)
+        except aiohttp.ClientError as err:
+            _LOGGER.error("Error removing interest from hike %s: %s", hike_id, err)
+            raise
+
+    async def mark_attendance(self, hike_id: int, status: str) -> None:
+        """Mark attendance for a hike."""
+        url = f"{self.api_url}/api/hikes/{hike_id}/attendance"
+        data = {"status": status}
+        try:
+            async with self.session.post(url, headers=self._headers, json=data, timeout=10) as response:
+                response.raise_for_status()
+                _LOGGER.info("Successfully marked attendance for hike %s as %s", hike_id, status)
+        except aiohttp.ClientError as err:
+            _LOGGER.error("Error marking attendance for hike %s: %s", hike_id, err)
+            raise
+
+    async def send_notification(self, hike_id: int, message: str) -> None:
+        """Send notification to hike participants."""
+        url = f"{self.api_url}/api/hikes/{hike_id}/notify"
+        data = {"message": message}
+        try:
+            async with self.session.post(url, headers=self._headers, json=data, timeout=10) as response:
+                response.raise_for_status()
+                _LOGGER.info("Successfully sent notification for hike %s", hike_id)
+        except aiohttp.ClientError as err:
+            _LOGGER.error("Error sending notification for hike %s: %s", hike_id, err)
+            raise

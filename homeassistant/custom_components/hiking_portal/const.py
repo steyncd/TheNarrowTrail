@@ -14,6 +14,9 @@ SENSOR_UPCOMING_HIKES = "upcoming_hikes"
 SENSOR_MY_HIKES = "my_hikes"
 SENSOR_PENDING_USERS = "pending_users"
 SENSOR_TOTAL_HIKES = "total_hikes"
+SENSOR_DAYS_UNTIL_NEXT = "days_until_next_hike"
+SENSOR_NEXT_HIKE_WEATHER = "next_hike_weather"
+SENSOR_UNREAD_NOTIFICATIONS = "unread_notifications"
 
 SENSOR_TYPES = {
     SENSOR_NEXT_HIKE: {
@@ -41,7 +44,22 @@ SENSOR_TYPES = {
         "icon": "mdi:format-list-numbered",
         "unit": "hikes",
     },
+    SENSOR_DAYS_UNTIL_NEXT: {
+        "name": "Days Until Next Hike",
+        "icon": "mdi:calendar-clock",
+        "unit": "days",
+    },
+    SENSOR_NEXT_HIKE_WEATHER: {
+        "name": "Next Hike Weather Status",
+        "icon": "mdi:weather-partly-cloudy",
+        "unit": None,
+    },
+    SENSOR_UNREAD_NOTIFICATIONS: {
+        "name": "Unread Notifications",
+        "icon": "mdi:bell",
+        "unit": "notifications",
+    },
 }
 
 # Platforms
-PLATFORMS = ["sensor", "calendar"]
+PLATFORMS = ["sensor", "calendar", "binary_sensor"]
