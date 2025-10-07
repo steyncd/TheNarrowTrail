@@ -70,13 +70,13 @@ exports.getHikes = async (req, res) => {
 // Create hike (Admin only)
 exports.createHike = async (req, res) => {
   try {
-    const { name, date, difficulty, distance, description, type, cost, group, status, image_url, destination_url, daily_distances, overnight_facilities, price_is_estimate, date_is_estimate, location_link, destination_website } = req.body;
+    const { name, date, difficulty, distance, location, description, type, cost, group, status, image_url, destination_url, daily_distances, overnight_facilities, price_is_estimate, date_is_estimate, location_link, destination_website } = req.body;
 
     const result = await pool.query(
-      `INSERT INTO hikes (name, date, difficulty, distance, description, type, cost, group_type, status, image_url, destination_url, daily_distances, overnight_facilities, price_is_estimate, date_is_estimate, location_link, destination_website, created_at)
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, NOW())
+      `INSERT INTO hikes (name, date, difficulty, distance, location, description, type, cost, group_type, status, image_url, destination_url, daily_distances, overnight_facilities, price_is_estimate, date_is_estimate, location_link, destination_website, created_at)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, NOW())
        RETURNING *`,
-      [name, date, difficulty, distance, description, type, cost, group, status || 'gathering_interest', image_url, destination_url, daily_distances ? JSON.stringify(daily_distances) : null, overnight_facilities, price_is_estimate || false, date_is_estimate || false, location_link, destination_website]
+      [name, date, difficulty, distance, location, description, type, cost, group, status || 'gathering_interest', image_url, destination_url, daily_distances ? JSON.stringify(daily_distances) : null, overnight_facilities, price_is_estimate || false, date_is_estimate || false, location_link, destination_website]
     );
 
     const hike = result.rows[0];
@@ -127,17 +127,17 @@ exports.createHike = async (req, res) => {
 exports.updateHike = async (req, res) => {
   try {
     const { id } = req.params;
-    const { name, date, difficulty, distance, description, type, cost, group, status, image_url, destination_url, daily_distances, overnight_facilities, price_is_estimate, date_is_estimate, location_link, destination_website } = req.body;
+    const { name, date, difficulty, distance, location, description, type, cost, group, status, image_url, destination_url, daily_distances, overnight_facilities, price_is_estimate, date_is_estimate, location_link, destination_website } = req.body;
 
     const result = await pool.query(
       `UPDATE hikes
-       SET name = $1, date = $2, difficulty = $3, distance = $4,
-           description = $5, type = $6, cost = $7, group_type = $8, status = $9,
-           image_url = $10, destination_url = $11, daily_distances = $12, overnight_facilities = $13,
-           price_is_estimate = $14, date_is_estimate = $15, location_link = $16, destination_website = $17
-       WHERE id = $18
+       SET name = $1, date = $2, difficulty = $3, distance = $4, location = $5,
+           description = $6, type = $7, cost = $8, group_type = $9, status = $10,
+           image_url = $11, destination_url = $12, daily_distances = $13, overnight_facilities = $14,
+           price_is_estimate = $15, date_is_estimate = $16, location_link = $17, destination_website = $18
+       WHERE id = $19
        RETURNING *`,
-      [name, date, difficulty, distance, description, type, cost, group, status || 'gathering_interest', image_url, destination_url, daily_distances ? JSON.stringify(daily_distances) : null, overnight_facilities, price_is_estimate || false, date_is_estimate || false, location_link, destination_website, id]
+      [name, date, difficulty, distance, location, description, type, cost, group, status || 'gathering_interest', image_url, destination_url, daily_distances ? JSON.stringify(daily_distances) : null, overnight_facilities, price_is_estimate || false, date_is_estimate || false, location_link, destination_website, id]
     );
 
     if (result.rows.length === 0) {
