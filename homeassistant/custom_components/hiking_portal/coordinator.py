@@ -56,18 +56,18 @@ class HikingPortalDataUpdateCoordinator(DataUpdateCoordinator):
                 data["pending_users"] = []
 
             # Calculate upcoming hikes (future hikes only)
-            from datetime import datetime
-            now = datetime.now()
+            from datetime import datetime, timezone
+            now = datetime.now(timezone.utc)
             data["upcoming_hikes"] = [
                 h for h in data["hikes"]
-                if h.get("date") and datetime.fromisoformat(h["date"].replace("Z", "+00:00")) > now
+                if h.get("date") and datetime.fromisoformat(h["date"].replace("Z", "+00:00")).replace(tzinfo=timezone.utc) > now
             ]
 
             # Find next hike
             if data["upcoming_hikes"]:
                 sorted_hikes = sorted(
                     data["upcoming_hikes"],
-                    key=lambda x: datetime.fromisoformat(x["date"].replace("Z", "+00:00"))
+                    key=lambda x: datetime.fromisoformat(x["date"].replace("Z", "+00:00")).replace(tzinfo=timezone.utc)
                 )
                 data["next_hike"] = sorted_hikes[0]
             else:

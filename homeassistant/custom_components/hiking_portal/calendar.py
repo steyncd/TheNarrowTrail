@@ -59,9 +59,17 @@ class HikingPortalCalendar(CoordinatorEntity, CalendarEntity):
 
         for hike in hikes:
             try:
+                hike_date_str = hike.get("date")
+                if not hike_date_str:
+                    continue
+
                 hike_date = datetime.fromisoformat(
-                    hike["date"].replace("Z", "+00:00")
-                ).replace(tzinfo=None)
+                    hike_date_str.replace("Z", "+00:00")
+                )
+
+                # Ensure both dates are timezone-aware for comparison
+                if start_date.tzinfo is None:
+                    hike_date = hike_date.replace(tzinfo=None)
 
                 # Only include hikes within the requested date range
                 if start_date <= hike_date <= end_date:
