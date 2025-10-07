@@ -11,6 +11,7 @@ function AddHikeForm({ show, onClose, hikeToEdit, onSuccess }) {
     date: '',
     difficulty: 'Easy',
     distance: '',
+    location: '',
     description: '',
     type: 'day',
     group: 'family',
@@ -33,6 +34,7 @@ function AddHikeForm({ show, onClose, hikeToEdit, onSuccess }) {
         date: hikeToEdit.date ? hikeToEdit.date.split('T')[0] : '',
         difficulty: hikeToEdit.difficulty || 'Easy',
         distance: hikeToEdit.distance || '',
+        location: hikeToEdit.location || '',
         description: hikeToEdit.description || '',
         type: hikeToEdit.type || 'day',
         group: hikeToEdit.group_type || 'family',
@@ -53,6 +55,7 @@ function AddHikeForm({ show, onClose, hikeToEdit, onSuccess }) {
         date: '',
         difficulty: 'Easy',
         distance: '',
+        location: '',
         description: '',
         type: 'day',
         group: 'family',
@@ -155,6 +158,17 @@ function AddHikeForm({ show, onClose, hikeToEdit, onSuccess }) {
                     <small>Date is estimate</small>
                   </label>
                 </div>
+              </div>
+              <div className="col-md-6">
+                <label className="form-label">Location</label>
+                <input
+                  type="text"
+                  className="form-control"
+                  placeholder="e.g., Table Mountain, Cape Town"
+                  value={hikeData.location}
+                  onChange={(e) => setHikeData({...hikeData, location: e.target.value})}
+                />
+                <small className="text-muted">City or landmark for weather forecast</small>
               </div>
               <div className="col-md-3">
                 <label className="form-label">Difficulty</label>
