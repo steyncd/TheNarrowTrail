@@ -1,0 +1,271 @@
+{
+  "info": {
+    "name": "Hiking Portal API",
+    "description": "Postman collection for Hiking Portal API endpoints.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "Health Check",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{base_url}}/health",
+          "host": ["{{base_url}}"],
+          "path": ["health"]
+        }
+      }
+    },
+    {
+      "name": "Root",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{base_url}}/",
+          "host": ["{{base_url}}"],
+          "path": [""]
+        }
+      }
+    },
+    {
+      "name": "Register User",
+      "request": {
+        "method": "POST",
+        "header": [
+          {"key": "Content-Type", "value": "application/json"}
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"name\": \"John Doe\",\n  \"email\": \"john@example.com\",\n  \"password\": \"password123\",\n  \"phone\": \"1234567890\"\n}"
+        },
+        "url": {
+          "raw": "{{base_url}}/api/auth/register",
+          "host": ["{{base_url}}"],
+          "path": ["api", "auth", "register"]
+        }
+      }
+    },
+    {
+      "name": "Login",
+      "request": {
+        "method": "POST",
+        "header": [
+          {"key": "Content-Type", "value": "application/json"}
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"email\": \"john@example.com\",\n  \"password\": \"password123\"\n}"
+        },
+        "url": {
+          "raw": "{{base_url}}/api/auth/login",
+          "host": ["{{base_url}}"],
+          "path": ["api", "auth", "login"]
+        }
+      }
+    },
+    {
+      "name": "Get Pending Users (Admin)",
+      "request": {
+        "method": "GET",
+        "header": [
+          {"key": "Authorization", "value": "Bearer {{jwt_token}}"}
+        ],
+        "url": {
+          "raw": "{{base_url}}/api/admin/pending-users",
+          "host": ["{{base_url}}"],
+          "path": ["api", "admin", "pending-users"]
+        }
+      }
+    },
+    {
+      "name": "Get Approved Users (Admin)",
+      "request": {
+        "method": "GET",
+        "header": [
+          {"key": "Authorization", "value": "Bearer {{jwt_token}}"}
+        ],
+        "url": {
+          "raw": "{{base_url}}/api/admin/users",
+          "host": ["{{base_url}}"],
+          "path": ["api", "admin", "users"]
+        }
+      }
+    },
+    {
+      "name": "Approve User (Admin)",
+      "request": {
+        "method": "POST",
+        "header": [
+          {"key": "Authorization", "value": "Bearer {{jwt_token}}"}
+        ],
+        "url": {
+          "raw": "{{base_url}}/api/admin/approve-user/:id",
+          "host": ["{{base_url}}"],
+          "path": ["api", "admin", "approve-user", ":id"]
+        }
+      }
+    },
+    {
+      "name": "Reject User (Admin)",
+      "request": {
+        "method": "DELETE",
+        "header": [
+          {"key": "Authorization", "value": "Bearer {{jwt_token}}"}
+        ],
+        "url": {
+          "raw": "{{base_url}}/api/admin/reject-user/:id",
+          "host": ["{{base_url}}"],
+          "path": ["api", "admin", "reject-user", ":id"]
+        }
+      }
+    },
+    {
+      "name": "Delete User (Admin)",
+      "request": {
+        "method": "DELETE",
+        "header": [
+          {"key": "Authorization", "value": "Bearer {{jwt_token}}"}
+        ],
+        "url": {
+          "raw": "{{base_url}}/api/admin/users/:id",
+          "host": ["{{base_url}}"],
+          "path": ["api", "admin", "users", ":id"]
+        }
+      }
+    },
+    {
+      "name": "Get All Hikes",
+      "request": {
+        "method": "GET",
+        "header": [
+          {"key": "Authorization", "value": "Bearer {{jwt_token}}"}
+        ],
+        "url": {
+          "raw": "{{base_url}}/api/hikes",
+          "host": ["{{base_url}}"],
+          "path": ["api", "hikes"]
+        }
+      }
+    },
+    {
+      "name": "Create Hike (Admin)",
+      "request": {
+        "method": "POST",
+        "header": [
+          {"key": "Authorization", "value": "Bearer {{jwt_token}}"},
+          {"key": "Content-Type", "value": "application/json"}
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"name\": \"Mountain Trail\",\n  \"date\": \"2025-10-10\",\n  \"difficulty\": \"moderate\",\n  \"distance\": \"10km\",\n  \"description\": \"Scenic mountain hike\",\n  \"type\": \"day\",\n  \"cost\": 0,\n  \"group\": \"family\"\n}"
+        },
+        "url": {
+          "raw": "{{base_url}}/api/hikes",
+          "host": ["{{base_url}}"],
+          "path": ["api", "hikes"]
+        }
+      }
+    },
+    {
+      "name": "Update Hike (Admin)",
+      "request": {
+        "method": "PUT",
+        "header": [
+          {"key": "Authorization", "value": "Bearer {{jwt_token}}"},
+          {"key": "Content-Type", "value": "application/json"}
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"name\": \"Updated Trail\",\n  \"date\": \"2025-10-15\",\n  \"difficulty\": \"easy\",\n  \"distance\": \"5km\",\n  \"description\": \"Easy walk\",\n  \"type\": \"day\",\n  \"cost\": 0,\n  \"group\": \"family\"\n}"
+        },
+        "url": {
+          "raw": "{{base_url}}/api/hikes/:id",
+          "host": ["{{base_url}}"],
+          "path": ["api", "hikes", ":id"]
+        }
+      }
+    },
+    {
+      "name": "Delete Hike (Admin)",
+      "request": {
+        "method": "DELETE",
+        "header": [
+          {"key": "Authorization", "value": "Bearer {{jwt_token}}"}
+        ],
+        "url": {
+          "raw": "{{base_url}}/api/hikes/:id",
+          "host": ["{{base_url}}"],
+          "path": ["api", "hikes", ":id"]
+        }
+      }
+    },
+    {
+      "name": "Toggle Interest in Hike",
+      "request": {
+        "method": "POST",
+        "header": [
+          {"key": "Authorization", "value": "Bearer {{jwt_token}}"}
+        ],
+        "url": {
+          "raw": "{{base_url}}/api/hikes/:id/interest",
+          "host": ["{{base_url}}"],
+          "path": ["api", "hikes", ":id", "interest"]
+        }
+      }
+    },
+    {
+      "name": "Get All Photos",
+      "request": {
+        "method": "GET",
+        "header": [
+          {"key": "Authorization", "value": "Bearer {{jwt_token}}"}
+        ],
+        "url": {
+          "raw": "{{base_url}}/api/photos",
+          "host": ["{{base_url}}"],
+          "path": ["api", "photos"]
+        }
+      }
+    },
+    {
+      "name": "Upload Photo",
+      "request": {
+        "method": "POST",
+        "header": [
+          {"key": "Authorization", "value": "Bearer {{jwt_token}}"},
+          {"key": "Content-Type", "value": "application/json"}
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"hike_name\": \"Mountain Trail\",\n  \"date\": \"2025-10-10\",\n  \"url\": \"https://example.com/photo.jpg\"\n}"
+        },
+        "url": {
+          "raw": "{{base_url}}/api/photos",
+          "host": ["{{base_url}}"],
+          "path": ["api", "photos"]
+        }
+      }
+    },
+    {
+      "name": "Delete Photo",
+      "request": {
+        "method": "DELETE",
+        "header": [
+          {"key": "Authorization", "value": "Bearer {{jwt_token}}"}
+        ],
+        "url": {
+          "raw": "{{base_url}}/api/photos/:id",
+          "host": ["{{base_url}}"],
+          "path": ["api", "photos", ":id"]
+        }
+      }
+    }
+  ],
+  "event": [],
+  "variable": [
+    {"key": "base_url", "value": "http://localhost:8080"},
+    {"key": "jwt_token", "value": ""}
+  ]
+}

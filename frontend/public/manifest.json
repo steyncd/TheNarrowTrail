@@ -1,0 +1,30 @@
+{
+  "short_name": "The Narrow Trail",
+  "name": "The Narrow Trail - Hiking Club",
+  "icons": [
+    {
+      "src": "hiker-favicon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml"
+    },
+    {
+      "src": "logo-hiking.svg",
+      "type": "image/svg+xml",
+      "sizes": "any"
+    },
+    {
+      "src": "logo192.png",
+      "type": "image/png",
+      "sizes": "192x192"
+    },
+    {
+      "src": "logo512.png",
+      "type": "image/png",
+      "sizes": "512x512"
+    }
+  ],
+  "start_url": ".",
+  "display": "standalone",
+  "theme_color": "#2d5016",
+  "background_color": "#ffffff"
+}

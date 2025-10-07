@@ -1,0 +1,57 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" width="200" height="200">
+  <!-- Mountain background -->
+  <path d="M0 150 L40 100 L70 120 L100 80 L130 100 L160 70 L200 100 L200 200 L0 200 Z"
+        fill="#2d5016" opacity="0.3"/>
+  <path d="M0 160 L50 120 L80 140 L120 100 L150 120 L180 90 L200 110 L200 200 L0 200 Z"
+        fill="#3d6b2c" opacity="0.4"/>
+  <path d="M0 170 L60 140 L90 155 L140 120 L170 135 L190 110 L200 125 L200 200 L0 200 Z"
+        fill="#4d7c3d"/>
+
+  <!-- Trail/Path -->
+  <path d="M30 200 Q50 170 70 150 T110 120 T150 110"
+        stroke="#8b7355" stroke-width="4" fill="none" stroke-linecap="round"/>
+
+  <!-- Hiker figure -->
+  <g transform="translate(100, 100)">
+    <!-- Backpack -->
+    <path d="M-6 0 L-6 10 L-4 12 L4 12 L6 10 L6 0 Z" fill="#cc4444"/>
+
+    <!-- Body -->
+    <ellipse cx="0" cy="5" rx="5" ry="8" fill="#2c5f2d"/>
+
+    <!-- Head -->
+    <circle cx="0" cy="-5" r="4" fill="#f5d0a9"/>
+
+    <!-- Hat -->
+    <ellipse cx="0" cy="-7" rx="5" ry="2" fill="#8b6f47"/>
+    <rect x="-3" y="-9" width="6" height="2" fill="#8b6f47"/>
+
+    <!-- Hiking stick -->
+    <line x1="8" y1="0" x2="12" y2="15" stroke="#654321" stroke-width="2" stroke-linecap="round"/>
+
+    <!-- Legs -->
+    <line x1="-2" y1="13" x2="-4" y2="22" stroke="#2c5f2d" stroke-width="2.5" stroke-linecap="round"/>
+    <line x1="2" y1="13" x2="4" y2="22" stroke="#2c5f2d" stroke-width="2.5" stroke-linecap="round"/>
+
+    <!-- Arms -->
+    <line x1="-5" y1="3" x2="-8" y2="10" stroke="#2c5f2d" stroke-width="2" stroke-linecap="round"/>
+    <line x1="5" y1="3" x2="8" y2="5" stroke="#2c5f2d" stroke-width="2" stroke-linecap="round"/>
+  </g>
+
+  <!-- Pine trees -->
+  <g transform="translate(40, 140)">
+    <path d="M0 0 L-5 10 L5 10 Z" fill="#2d5016"/>
+    <path d="M0 6 L-6 18 L6 18 Z" fill="#2d5016"/>
+    <rect x="-1" y="18" width="2" height="5" fill="#654321"/>
+  </g>
+
+  <g transform="translate(160, 110)">
+    <path d="M0 0 L-6 12 L6 12 Z" fill="#2d5016"/>
+    <path d="M0 7 L-7 21 L7 21 Z" fill="#2d5016"/>
+    <rect x="-1.5" y="21" width="3" height="6" fill="#654321"/>
+  </g>
+
+  <!-- Sun -->
+  <circle cx="180" cy="30" r="15" fill="#ffd700" opacity="0.8"/>
+  <circle cx="180" cy="30" r="12" fill="#ffed4e"/>
+</svg>
