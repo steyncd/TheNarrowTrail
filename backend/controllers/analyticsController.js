@@ -33,7 +33,7 @@ exports.getOverview = async (req, res) => {
         (SELECT COUNT(*) FROM hikes WHERE status = 'cancelled') as cancelled_hikes,
         (SELECT COUNT(DISTINCT user_id) FROM hike_interest
          WHERE created_at > NOW() - INTERVAL '30 days') as active_users_30d,
-        (SELECT SUM(cost) FROM hikes WHERE status = 'trip_booked' AND date < CURRENT_DATE) as total_revenue,
+        0 as total_revenue,
         (SELECT COUNT(*) FROM hike_comments) as total_comments,
         0 as total_photos
     `;

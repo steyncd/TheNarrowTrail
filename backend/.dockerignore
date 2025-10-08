@@ -7,3 +7,9 @@ README.md
 .vscode
 .DS_Store
 *.log
+.gcloudignore
+cloudbuild.yaml
+Dockerfile
+.dockerignore
+*.md
+docs/

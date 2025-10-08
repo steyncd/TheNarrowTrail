@@ -8,6 +8,7 @@ import api from '../services/api';
 import LoadingSpinner from '../components/common/LoadingSpinner';
 import WeatherWidget from '../components/weather/WeatherWidget';
 import Map from '../components/common/Map';
+import PaymentsSection from '../components/payments/PaymentsSection';
 
 const HikeDetailsPage = () => {
   const { hikeId } = useParams();
@@ -124,6 +125,36 @@ const HikeDetailsPage = () => {
       await fetchHikeDetails();
     } catch (err) {
       console.error('Error toggling interest:', err);
+      alert(err.response?.data?.error || 'Failed to toggle interest');
+    }
+  };
+
+  const handleConfirmAttendance = async () => {
+    if (!token) {
+      navigate('/login');
+      return;
+    }
+
+    try {
+      await api.confirmAttendance(hike.id, token);
+      await fetchHikeDetails();
+    } catch (err) {
+      console.error('Error confirming attendance:', err);
+      alert(err.response?.data?.error || 'Failed to confirm attendance');
+    }
+  };
+
+  const handleCancelAttendance = async () => {
+    if (!token || !window.confirm('Are you sure you want to cancel your attendance?')) {
+      return;
+    }
+
+    try {
+      await api.cancelAttendance(hike.id, token);
+      await fetchHikeDetails();
+    } catch (err) {
+      console.error('Error cancelling attendance:', err);
+      alert(err.response?.data?.error || 'Failed to cancel attendance');
     }
   };
 
@@ -388,14 +419,18 @@ const HikeDetailsPage = () => {
           )}
 
           {/* Map Section */}
-          {hike.location_link && (
+          {(hike.gps_coordinates || hike.location_link) && (
             <div className="card mb-4" style={{ background: isDark ? 'var(--card-bg)' : 'white' }}>
               <div className="card-body">
                 <h5 className="mb-3">
                   <MapPin size={20} className="me-2" />
                   Location
                 </h5>
-                <Map locationLink={hike.location_link} height="350px" />
+                <Map
+                  gpsCoordinates={hike.gps_coordinates}
+                  locationLink={hike.location_link}
+                  height="350px"
+                />
               </div>
             </div>
           )}
@@ -508,6 +543,17 @@ const HikeDetailsPage = () => {
                   ))}
                 </div>
               </div>
+            </div>
+          )}
+
+          {/* Payment Tracking Section */}
+          {token && (
+            <div className="mb-4">
+              <PaymentsSection
+                hikeId={hikeId}
+                hikeCost={hike.cost}
+                isAdmin={currentUser?.role === 'admin'}
+              />
             </div>
           )}
 
@@ -677,21 +723,82 @@ const HikeDetailsPage = () => {
             </div>
           )}
 
-          {/* Interest Button for Logged-in Users */}
+          {/* Interest and Attendance for Logged-in Users */}
           {token && currentUser && (
             <div className="card mb-4" style={{ background: isDark ? 'var(--card-bg)' : 'white' }}>
               <div className="card-body">
                 <h5 className="mb-3">Your Status</h5>
-                <button
-                  className={`btn w-100 ${userStatus?.isInterested ? 'btn-success' : 'btn-outline-success'}`}
-                  onClick={handleInterestToggle}
-                >
-                  {userStatus?.isInterested ? 'Interested ✓' : 'Express Interest'}
-                </button>
-                {userStatus?.isInterested && (
-                  <small className="text-muted d-block mt-2 text-center">
-                    You've expressed interest in this hike
-                  </small>
+
+                {/* Show based on attendance_status */}
+                {!userStatus?.attendance_status && (
+                  <>
+                    <button
+                      className="btn btn-outline-success w-100"
+                      onClick={handleInterestToggle}
+                    >
+                      Express Interest
+                    </button>
+                  </>
+                )}
+
+                {userStatus?.attendance_status === 'interested' && (
+                  <>
+                    <button
+                      className="btn btn-success w-100 mb-2"
+                      onClick={handleInterestToggle}
+                    >
+                      Interested ✓
+                    </button>
+                    <button
+                      className="btn btn-primary w-100"
+                      onClick={handleConfirmAttendance}
+                    >
+                      Confirm Attendance
+                    </button>
+                    <small className="text-muted d-block mt-2 text-center">
+                      You've expressed interest. Confirm to secure your spot!
+                    </small>
+                  </>
+                )}
+
+                {userStatus?.attendance_status === 'confirmed' && (
+                  <>
+                    <button
+                      className="btn btn-success w-100 mb-2"
+                      onClick={handleConfirmAttendance}
+                    >
+                      Attendance Confirmed ✓
+                    </button>
+                    <button
+                      className="btn btn-outline-danger w-100"
+                      onClick={handleCancelAttendance}
+                    >
+                      Cancel Attendance
+                    </button>
+                    <small className="text-success d-block mt-2 text-center fw-bold">
+                      You're confirmed for this hike!
+                    </small>
+                  </>
+                )}
+
+                {userStatus?.attendance_status === 'cancelled' && (
+                  <>
+                    <div className="alert alert-warning mb-2">
+                      You cancelled your attendance
+                    </div>
+                    <button
+                      className="btn btn-outline-success w-100"
+                      onClick={handleInterestToggle}
+                    >
+                      Express Interest Again
+                    </button>
+                  </>
+                )}
+
+                {userStatus?.attendance_status === 'attended' && (
+                  <div className="alert alert-success mb-0">
+                    You attended this hike ✓
+                  </div>
                 )}
               </div>
             </div>

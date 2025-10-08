@@ -15,8 +15,7 @@ router.get('/', authenticateToken, hikeController.getHikes);
 // GET /api/hikes/:id/my-status - Get hike status for current user
 router.get('/:id/my-status', authenticateToken, hikeController.getMyHikeStatus);
 
-// POST /api/hikes/:id/confirm-attendance - Confirm/unconfirm attendance
-router.post('/:id/confirm-attendance', authenticateToken, hikeController.confirmAttendance);
+// Note: Confirm/cancel attendance routes moved to routes/interest.js
 
 // GET /api/hikes/:id/comments - Get comments for a hike
 router.get('/:id/comments', authenticateToken, hikeController.getComments);

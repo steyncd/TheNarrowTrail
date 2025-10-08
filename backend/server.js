@@ -20,6 +20,7 @@ const homeassistantRoutes = require('./routes/homeassistant');
 const calendarRoutes = require('./routes/calendar');
 const tokenRoutes = require('./routes/tokens');
 const weatherRoutes = require('./routes/weather');
+const paymentRoutes = require('./routes/payments');
 
 // Import controllers for special routes
 const hikeController = require('./controllers/hikeController');
@@ -74,9 +75,8 @@ app.use('/api/homeassistant', homeassistantRoutes);
 app.use('/api/calendar', calendarRoutes);
 app.use('/api/tokens', tokenRoutes);
 app.use('/api/weather', weatherRoutes);
-
-// Interest route - mounted separately because it follows the hikes pattern
-app.post('/api/hikes/:id/interest', authenticateToken, require('./controllers/interestController').toggleInterest);
+app.use('/api', paymentRoutes);
+app.use('/api/hikes', interestRoutes);
 
 // My Hikes Dashboard route
 app.get('/api/my-hikes', authenticateToken, hikeController.getMyHikes);

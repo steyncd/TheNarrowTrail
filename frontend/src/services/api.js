@@ -79,6 +79,7 @@ class ApiService {
     return response.json();
   }
 
+  // Interest and Attendance Management (using single table with attendance_status)
   async toggleInterest(hikeId, token) {
     return this.request(`/api/hikes/${hikeId}/interest`, {
       method: 'POST'
@@ -86,7 +87,13 @@ class ApiService {
   }
 
   async confirmAttendance(hikeId, token) {
-    return this.request(`/api/hikes/${hikeId}/confirm-attendance`, {
+    return this.request(`/api/hikes/${hikeId}/confirm`, {
+      method: 'POST'
+    }, token);
+  }
+
+  async cancelAttendance(hikeId, token) {
+    return this.request(`/api/hikes/${hikeId}/cancel`, {
       method: 'POST'
     }, token);
   }
@@ -98,6 +105,7 @@ class ApiService {
     return response.json();
   }
 
+  // Get users by attendance status
   async getInterestedUsers(hikeId, token) {
     const response = await fetch(`${this.baseURL}/api/hikes/${hikeId}/interested`, {
       headers: this.getAuthHeaders(token)
@@ -547,6 +555,80 @@ class ApiService {
       headers: this.getAuthHeaders(token)
     });
     return response.json();
+  }
+
+  // Payments
+  async getHikePayments(hikeId, token) {
+    const response = await fetch(`${this.baseURL}/api/hikes/${hikeId}/payments`, {
+      headers: this.getAuthHeaders(token)
+    });
+    if (response.ok) {
+      return response.json();
+    }
+    console.error('Get hike payments error:', response.status, response.statusText);
+    return [];
+  }
+
+  async getHikePaymentStats(hikeId, token) {
+    const response = await fetch(`${this.baseURL}/api/hikes/${hikeId}/payments/stats`, {
+      headers: this.getAuthHeaders(token)
+    });
+    if (response.ok) {
+      return response.json();
+    }
+    console.error('Get payment stats error:', response.status, response.statusText);
+    return null;
+  }
+
+  async getAllPayments(filters, token) {
+    const queryString = new URLSearchParams(filters || {}).toString();
+    const url = `${this.baseURL}/api/payments${queryString ? '?' + queryString : ''}`;
+    const response = await fetch(url, {
+      headers: this.getAuthHeaders(token)
+    });
+    if (response.ok) {
+      return response.json();
+    }
+    console.error('Get all payments error:', response.status, response.statusText);
+    return [];
+  }
+
+  async recordPayment(paymentData, token) {
+    const response = await fetch(`${this.baseURL}/api/payments`, {
+      method: 'POST',
+      headers: this.getAuthHeaders(token),
+      body: JSON.stringify(paymentData)
+    });
+    if (response.ok) {
+      return { success: true, data: await response.json() };
+    }
+    const errorData = await response.json().catch(() => ({}));
+    return { success: false, error: errorData.error || 'Failed to record payment' };
+  }
+
+  async deletePayment(paymentId, token) {
+    const response = await fetch(`${this.baseURL}/api/payments/${paymentId}`, {
+      method: 'DELETE',
+      headers: this.getAuthHeaders(token)
+    });
+    if (response.ok) {
+      return { success: true };
+    }
+    const errorData = await response.json().catch(() => ({}));
+    return { success: false, error: errorData.error || 'Failed to delete payment' };
+  }
+
+  async bulkCreatePayments(hikeId, amount, status, token) {
+    const response = await fetch(`${this.baseURL}/api/hikes/${hikeId}/payments/bulk`, {
+      method: 'POST',
+      headers: this.getAuthHeaders(token),
+      body: JSON.stringify({ amount, paymentStatus: status })
+    });
+    if (response.ok) {
+      return { success: true, data: await response.json() };
+    }
+    const errorData = await response.json().catch(() => ({}));
+    return { success: false, error: errorData.error || 'Failed to create payments' };
   }
 }
 

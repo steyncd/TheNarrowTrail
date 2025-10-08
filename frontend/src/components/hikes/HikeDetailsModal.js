@@ -59,6 +59,23 @@ const HikeDetailsModal = ({ hike, onClose }) => {
       await fetchHikeStatus();
     } catch (err) {
       console.error('Confirm attendance error:', err);
+      alert(err.response?.data?.error || 'Failed to confirm attendance');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleCancelAttendance = async () => {
+    if (!window.confirm('Are you sure you want to cancel your attendance?')) {
+      return;
+    }
+    setLoading(true);
+    try {
+      await api.cancelAttendance(hike.id, token);
+      await fetchHikeStatus();
+    } catch (err) {
+      console.error('Cancel attendance error:', err);
+      alert(err.response?.data?.error || 'Failed to cancel attendance');
     } finally {
       setLoading(false);
     }
@@ -133,7 +150,7 @@ const HikeDetailsModal = ({ hike, onClose }) => {
                       Carpool
                     </button>
                   </li>
-                  {hikeStatus?.is_confirmed && (
+                  {hikeStatus?.attendance_status === 'confirmed' && (
                     <li className="nav-item">
                       <button
                         className={`nav-link ${activeTab === 'packing' ? 'active' : ''}`}
@@ -166,28 +183,46 @@ const HikeDetailsModal = ({ hike, onClose }) => {
                       </div>
                     )}
 
-                    {hikeStatus && (
+                    {hikeStatus && hikeStatus.attendance_status && (
                       <div className="mb-4">
-                        {hikeStatus.is_confirmed ? (
+                        {hikeStatus.attendance_status === 'confirmed' && (
                           <div className="alert alert-success">
-                            <strong>You're confirmed for this hike!</strong>
+                            <div className="d-flex justify-content-between align-items-center">
+                              <strong>You're confirmed for this hike!</strong>
+                              <button
+                                className="btn btn-sm btn-outline-danger"
+                                onClick={handleCancelAttendance}
+                                disabled={loading}
+                              >
+                                {loading ? 'Cancelling...' : 'Cancel Attendance'}
+                              </button>
+                            </div>
                           </div>
-                        ) : hikeStatus.is_interested ? (
+                        )}
+                        {hikeStatus.attendance_status === 'interested' && (
                           <div className="alert alert-info">
-                            <strong>You've expressed interest in this hike.</strong>
-                            {hikeStatus.can_confirm && (
-                              <div className="mt-2">
-                                <button
-                                  className="btn btn-success"
-                                  onClick={handleConfirmAttendance}
-                                  disabled={loading}
-                                >
-                                  {loading ? 'Confirming...' : 'Confirm Attendance'}
-                                </button>
-                              </div>
-                            )}
+                            <div className="d-flex justify-content-between align-items-center">
+                              <strong>You've expressed interest in this hike.</strong>
+                              <button
+                                className="btn btn-sm btn-success"
+                                onClick={handleConfirmAttendance}
+                                disabled={loading}
+                              >
+                                {loading ? 'Confirming...' : 'Confirm Attendance'}
+                              </button>
+                            </div>
                           </div>
-                        ) : null}
+                        )}
+                        {hikeStatus.attendance_status === 'cancelled' && (
+                          <div className="alert alert-warning">
+                            <strong>You cancelled your attendance for this hike.</strong>
+                          </div>
+                        )}
+                        {hikeStatus.attendance_status === 'attended' && (
+                          <div className="alert alert-success">
+                            <strong>You attended this hike ✓</strong>
+                          </div>
+                        )}
                       </div>
                     )}
 

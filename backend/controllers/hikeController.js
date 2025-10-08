@@ -7,7 +7,7 @@ const { logActivity } = require('../utils/activityLogger');
 exports.getPublicHikes = async (req, res) => {
   try {
     const result = await pool.query(
-      `SELECT id, name, date, difficulty, distance, description, type, cost, group_type, status, image_url, destination_url
+      `SELECT id, name, date, difficulty, distance, description, type, cost, group_type, status, image_url, gps_coordinates
        FROM hikes
        WHERE date >= CURRENT_DATE
        ORDER BY date ASC
@@ -48,15 +48,15 @@ exports.getHikeById = async (req, res) => {
 };
 
 // Get all hikes (authenticated)
+// Updated to use attendance_status from hike_interest table
 exports.getHikes = async (req, res) => {
   try {
     const result = await pool.query(
       `SELECT h.*,
-       COALESCE(json_agg(DISTINCT hi.user_id) FILTER (WHERE hi.user_id IS NOT NULL), '[]') as interested_users,
-       COALESCE(json_agg(DISTINCT ha.user_id) FILTER (WHERE ha.user_id IS NOT NULL), '[]') as confirmed_users
+       COALESCE(json_agg(DISTINCT hi.user_id) FILTER (WHERE hi.attendance_status IN ('interested', 'confirmed')), '[]') as interested_users,
+       COALESCE(json_agg(DISTINCT hi.user_id) FILTER (WHERE hi.attendance_status = 'confirmed'), '[]') as confirmed_users
        FROM hikes h
        LEFT JOIN hike_interest hi ON h.id = hi.hike_id
-       LEFT JOIN hike_attendance ha ON h.id = ha.hike_id
        GROUP BY h.id
        ORDER BY h.date ASC`
     );
@@ -70,13 +70,13 @@ exports.getHikes = async (req, res) => {
 // Create hike (Admin only)
 exports.createHike = async (req, res) => {
   try {
-    const { name, date, difficulty, distance, location, description, type, cost, group, status, image_url, destination_url, daily_distances, overnight_facilities, price_is_estimate, date_is_estimate, location_link, destination_website } = req.body;
+    const { name, date, difficulty, distance, location, description, type, cost, group, status, image_url, daily_distances, overnight_facilities, price_is_estimate, date_is_estimate, location_link, destination_website, gps_coordinates } = req.body;
 
     const result = await pool.query(
-      `INSERT INTO hikes (name, date, difficulty, distance, location, description, type, cost, group_type, status, image_url, destination_url, daily_distances, overnight_facilities, price_is_estimate, date_is_estimate, location_link, destination_website, created_at)
+      `INSERT INTO hikes (name, date, difficulty, distance, location, description, type, cost, group_type, status, image_url, daily_distances, overnight_facilities, price_is_estimate, date_is_estimate, location_link, destination_website, gps_coordinates, created_at)
        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, NOW())
        RETURNING *`,
-      [name, date, difficulty, distance, location, description, type, cost, group, status || 'gathering_interest', image_url, destination_url, daily_distances ? JSON.stringify(daily_distances) : null, overnight_facilities, price_is_estimate || false, date_is_estimate || false, location_link, destination_website]
+      [name, date, difficulty, distance, location, description, type, cost, group, status || 'gathering_interest', image_url, daily_distances ? JSON.stringify(daily_distances) : null, overnight_facilities, price_is_estimate || false, date_is_estimate || false, location_link, destination_website, gps_coordinates]
     );
 
     const hike = result.rows[0];
@@ -127,17 +127,17 @@ exports.createHike = async (req, res) => {
 exports.updateHike = async (req, res) => {
   try {
     const { id } = req.params;
-    const { name, date, difficulty, distance, location, description, type, cost, group, status, image_url, destination_url, daily_distances, overnight_facilities, price_is_estimate, date_is_estimate, location_link, destination_website } = req.body;
+    const { name, date, difficulty, distance, location, description, type, cost, group, status, image_url, daily_distances, overnight_facilities, price_is_estimate, date_is_estimate, location_link, destination_website, gps_coordinates } = req.body;
 
     const result = await pool.query(
       `UPDATE hikes
        SET name = $1, date = $2, difficulty = $3, distance = $4, location = $5,
            description = $6, type = $7, cost = $8, group_type = $9, status = $10,
-           image_url = $11, destination_url = $12, daily_distances = $13, overnight_facilities = $14,
-           price_is_estimate = $15, date_is_estimate = $16, location_link = $17, destination_website = $18
+           image_url = $11, daily_distances = $12, overnight_facilities = $13,
+           price_is_estimate = $14, date_is_estimate = $15, location_link = $16, destination_website = $17, gps_coordinates = $18
        WHERE id = $19
        RETURNING *`,
-      [name, date, difficulty, distance, location, description, type, cost, group, status || 'gathering_interest', image_url, destination_url, daily_distances ? JSON.stringify(daily_distances) : null, overnight_facilities, price_is_estimate || false, date_is_estimate || false, location_link, destination_website, id]
+      [name, date, difficulty, distance, location, description, type, cost, group, status || 'gathering_interest', image_url, daily_distances ? JSON.stringify(daily_distances) : null, overnight_facilities, price_is_estimate || false, date_is_estimate || false, location_link, destination_website, gps_coordinates, id]
     );
 
     if (result.rows.length === 0) {
@@ -197,15 +197,17 @@ exports.getInterestedUsers = async (req, res) => {
 };
 
 // Get attendees for a hike (Admin only)
+// Updated to use hike_interest with attendance_status='confirmed'
 exports.getAttendees = async (req, res) => {
   try {
     const { id } = req.params;
     const result = await pool.query(
-      `SELECT ha.*, u.name, u.email, u.phone
-       FROM hike_attendees ha
-       JOIN users u ON ha.user_id = u.id
-       WHERE ha.hike_id = $1
-       ORDER BY ha.added_at ASC`,
+      `SELECT hi.hike_id, hi.user_id, hi.payment_status, hi.amount_paid,
+              hi.created_at, hi.updated_at, u.name, u.email, u.phone
+       FROM hike_interest hi
+       JOIN users u ON hi.user_id = u.id
+       WHERE hi.hike_id = $1 AND hi.attendance_status = 'confirmed'
+       ORDER BY hi.created_at ASC`,
       [id]
     );
     res.json(result.rows);
@@ -216,18 +218,19 @@ exports.getAttendees = async (req, res) => {
 };
 
 // Add attendee to hike (Admin only)
+// Updated to use hike_interest with attendance_status='confirmed'
 exports.addAttendee = async (req, res) => {
   try {
     const { id } = req.params;
     const { user_id, payment_status, amount_paid, notes } = req.body;
 
     const result = await pool.query(
-      `INSERT INTO hike_attendees (hike_id, user_id, payment_status, amount_paid, notes, added_at)
-       VALUES ($1, $2, $3, $4, $5, NOW())
+      `INSERT INTO hike_interest (hike_id, user_id, attendance_status, payment_status, amount_paid, created_at, updated_at)
+       VALUES ($1, $2, 'confirmed', $3, $4, NOW(), NOW())
        ON CONFLICT (hike_id, user_id) DO UPDATE
-       SET payment_status = $3, amount_paid = $4, notes = $5
+       SET attendance_status = 'confirmed', payment_status = $3, amount_paid = $4, updated_at = NOW()
        RETURNING *`,
-      [id, user_id, payment_status || 'unpaid', amount_paid || 0, notes || '']
+      [id, user_id, payment_status || 'pending', amount_paid || 0]
     );
 
     res.json(result.rows[0]);
@@ -238,21 +241,22 @@ exports.addAttendee = async (req, res) => {
 };
 
 // Update attendee (Admin only)
+// Updated to use hike_interest table
 exports.updateAttendee = async (req, res) => {
   try {
     const { hikeId, userId } = req.params;
-    const { payment_status, amount_paid, notes } = req.body;
+    const { payment_status, amount_paid } = req.body;
 
     const result = await pool.query(
-      `UPDATE hike_attendees
-       SET payment_status = $1, amount_paid = $2, notes = $3
-       WHERE hike_id = $4 AND user_id = $5
+      `UPDATE hike_interest
+       SET payment_status = $1, amount_paid = $2, updated_at = NOW()
+       WHERE hike_id = $3 AND user_id = $4 AND attendance_status = 'confirmed'
        RETURNING *`,
-      [payment_status, amount_paid, notes, hikeId, userId]
+      [payment_status, amount_paid, hikeId, userId]
     );
 
     if (result.rows.length === 0) {
-      return res.status(404).json({ error: 'Attendee not found' });
+      return res.status(404).json({ error: 'Confirmed attendee not found' });
     }
 
     res.json(result.rows[0]);
@@ -263,13 +267,22 @@ exports.updateAttendee = async (req, res) => {
 };
 
 // Remove attendee (Admin only)
+// Updated to use hike_interest - changes status to 'cancelled' instead of deleting
 exports.removeAttendee = async (req, res) => {
   try {
     const { hikeId, userId } = req.params;
-    await pool.query(
-      'DELETE FROM hike_attendees WHERE hike_id = $1 AND user_id = $2',
+    const result = await pool.query(
+      `UPDATE hike_interest
+       SET attendance_status = 'cancelled', updated_at = NOW()
+       WHERE hike_id = $1 AND user_id = $2 AND attendance_status = 'confirmed'
+       RETURNING *`,
       [hikeId, userId]
     );
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: 'Confirmed attendee not found' });
+    }
+
     res.json({ message: 'Attendee removed' });
   } catch (error) {
     console.error('Remove attendee error:', error);
@@ -277,97 +290,35 @@ exports.removeAttendee = async (req, res) => {
   }
 };
 
-// Confirm/unconfirm attendance (Hiker self-service)
-exports.confirmAttendance = async (req, res) => {
-  try {
-    const { id } = req.params;
-    const userId = req.user.id;
-
-    // Check if already confirmed
-    const existing = await pool.query(
-      'SELECT * FROM hike_attendees WHERE hike_id = $1 AND user_id = $2',
-      [id, userId]
-    );
-
-    if (existing.rows.length > 0) {
-      // Remove attendance confirmation
-      await pool.query(
-        'DELETE FROM hike_attendees WHERE hike_id = $1 AND user_id = $2',
-        [id, userId]
-      );
-      res.json({ confirmed: false });
-    } else {
-      // Add attendance confirmation
-      const result = await pool.query(
-        `INSERT INTO hike_attendees (hike_id, user_id, payment_status, amount_paid, notes, added_at)
-         VALUES ($1, $2, 'unpaid', 0, 'Self-confirmed', NOW())
-         RETURNING *`,
-        [id, userId]
-      );
-
-      // Get hike and user info
-      const hikeResult = await pool.query('SELECT * FROM hikes WHERE id = $1', [id]);
-      const userResult = await pool.query('SELECT name FROM users WHERE id = $1', [userId]);
-      const hike = hikeResult.rows[0];
-      const user = userResult.rows[0];
-
-      // Notify admins
-      const admins = await pool.query(
-        'SELECT email, phone, notifications_email, notifications_whatsapp FROM users WHERE role = $1 AND status = $2',
-        ['admin', 'approved']
-      );
-
-      const hikeDate = new Date(hike.date).toLocaleDateString();
-
-      for (const admin of admins.rows) {
-        if (admin.notifications_email) {
-          await sendEmail(
-            admin.email,
-            'Hike Attendance Confirmed',
-            `<p><strong>${user.name}</strong> has confirmed attendance for <strong>${hike.name}</strong> on ${hikeDate}.</p>`
-          );
-        }
-        if (admin.notifications_whatsapp) {
-          await sendWhatsApp(
-            admin.phone,
-            `${user.name} confirmed attendance for ${hike.name} on ${hikeDate}.`
-          );
-        }
-      }
-
-      res.json({ confirmed: true });
-    }
-  } catch (error) {
-    console.error('Confirm attendance error:', error);
-    res.status(500).json({ error: 'Failed to confirm attendance' });
-  }
-};
-
 // Get hike details for current user (includes interest and attendance status)
+// Updated to use hike_interest.attendance_status instead of separate hike_attendees table
 exports.getMyHikeStatus = async (req, res) => {
   try {
     const { id } = req.params;
     const userId = req.user.id;
 
-    const [hikeResult, interestResult, attendeeResult, interestedCount, attendeeCount] = await Promise.all([
+    const [hikeResult, interestResult, interestedCount, confirmedCount] = await Promise.all([
       pool.query('SELECT * FROM hikes WHERE id = $1', [id]),
       pool.query('SELECT * FROM hike_interest WHERE hike_id = $1 AND user_id = $2', [id, userId]),
-      pool.query('SELECT * FROM hike_attendees WHERE hike_id = $1 AND user_id = $2', [id, userId]),
       pool.query('SELECT COUNT(*) as count FROM hike_interest WHERE hike_id = $1', [id]),
-      pool.query('SELECT COUNT(*) as count FROM hike_attendees WHERE hike_id = $1', [id])
+      pool.query('SELECT COUNT(*) as count FROM hike_interest WHERE hike_id = $1 AND attendance_status = $2', [id, 'confirmed'])
     ]);
 
     if (hikeResult.rows.length === 0) {
       return res.status(404).json({ error: 'Hike not found' });
     }
 
+    const interestRecord = interestResult.rows[0];
+    const attendanceStatus = interestRecord?.attendance_status || null;
+
     res.json({
       hike: hikeResult.rows[0],
-      isInterested: interestResult.rows.length > 0,
-      isConfirmed: attendeeResult.rows.length > 0,
-      attendeeInfo: attendeeResult.rows[0] || null,
+      isInterested: interestRecord && (attendanceStatus === 'interested' || attendanceStatus === 'confirmed'),
+      isConfirmed: attendanceStatus === 'confirmed',
+      attendance_status: attendanceStatus,
+      interestInfo: interestRecord || null,
       interestedCount: parseInt(interestedCount.rows[0].count),
-      confirmedCount: parseInt(attendeeCount.rows[0].count)
+      confirmedCount: parseInt(confirmedCount.rows[0].count)
     });
   } catch (error) {
     console.error('Get hike status error:', error);
@@ -771,28 +722,29 @@ exports.updateDefaultPackingList = async (req, res) => {
 };
 
 // Get user's hikes dashboard
+// Updated to use hike_interest.attendance_status
 exports.getMyHikes = async (req, res) => {
   try {
     const userId = req.user.id;
 
     const interested = await pool.query(
       `SELECT h.*,
-              (SELECT COUNT(*) FROM hike_interest WHERE hike_id = h.id) as interested_count,
-              (SELECT COUNT(*) FROM hike_attendees WHERE hike_id = h.id) as confirmed_count
+              (SELECT COUNT(*) FROM hike_interest WHERE hike_id = h.id AND attendance_status IN ('interested', 'confirmed')) as interested_count,
+              (SELECT COUNT(*) FROM hike_interest WHERE hike_id = h.id AND attendance_status = 'confirmed') as confirmed_count
        FROM hikes h
        JOIN hike_interest i ON h.id = i.hike_id
-       WHERE i.user_id = $1 AND h.date >= CURRENT_DATE
+       WHERE i.user_id = $1 AND i.attendance_status = 'interested' AND h.date >= CURRENT_DATE
        ORDER BY h.date ASC`,
       [userId]
     );
 
     const confirmed = await pool.query(
-      `SELECT h.*, a.payment_status, a.amount_paid,
-              (SELECT COUNT(*) FROM hike_interest WHERE hike_id = h.id) as interested_count,
-              (SELECT COUNT(*) FROM hike_attendees WHERE hike_id = h.id) as confirmed_count
+      `SELECT h.*, i.payment_status, i.amount_paid,
+              (SELECT COUNT(*) FROM hike_interest WHERE hike_id = h.id AND attendance_status IN ('interested', 'confirmed')) as interested_count,
+              (SELECT COUNT(*) FROM hike_interest WHERE hike_id = h.id AND attendance_status = 'confirmed') as confirmed_count
        FROM hikes h
-       JOIN hike_attendees a ON h.id = a.hike_id
-       WHERE a.user_id = $1 AND h.date >= CURRENT_DATE
+       JOIN hike_interest i ON h.id = i.hike_id
+       WHERE i.user_id = $1 AND i.attendance_status = 'confirmed' AND h.date >= CURRENT_DATE
        ORDER BY h.date ASC`,
       [userId]
     );
@@ -800,8 +752,8 @@ exports.getMyHikes = async (req, res) => {
     const past = await pool.query(
       `SELECT h.*
        FROM hikes h
-       JOIN hike_attendees a ON h.id = a.hike_id
-       WHERE a.user_id = $1 AND h.date < CURRENT_DATE
+       JOIN hike_interest i ON h.id = i.hike_id
+       WHERE i.user_id = $1 AND i.attendance_status = 'attended' AND h.date < CURRENT_DATE
        ORDER BY h.date DESC
        LIMIT 10`,
       [userId]
@@ -812,8 +764,8 @@ exports.getMyHikes = async (req, res) => {
         COUNT(*) as total_hikes,
         COUNT(CASE WHEN h.type = 'multi' THEN 1 END) as multi_day_hikes
        FROM hikes h
-       JOIN hike_attendees a ON h.id = a.hike_id
-       WHERE a.user_id = $1 AND h.date < CURRENT_DATE`,
+       JOIN hike_interest i ON h.id = i.hike_id
+       WHERE i.user_id = $1 AND i.attendance_status = 'attended' AND h.date < CURRENT_DATE`,
       [userId]
     );
 
@@ -872,6 +824,7 @@ exports.updateEmergencyContact = async (req, res) => {
 };
 
 // Get emergency contacts for hike (Admin only)
+// Updated to use hike_interest with attendance_status='confirmed'
 exports.getHikeEmergencyContacts = async (req, res) => {
   try {
     const { id } = req.params;
@@ -879,8 +832,8 @@ exports.getHikeEmergencyContacts = async (req, res) => {
     const result = await pool.query(
       `SELECT u.name, u.phone, u.email, u.emergency_contact_name, u.emergency_contact_phone, u.medical_info
        FROM users u
-       JOIN hike_attendees a ON u.id = a.user_id
-       WHERE a.hike_id = $1
+       JOIN hike_interest i ON u.id = i.user_id
+       WHERE i.hike_id = $1 AND i.attendance_status = 'confirmed'
        ORDER BY u.name ASC`,
       [id]
     );

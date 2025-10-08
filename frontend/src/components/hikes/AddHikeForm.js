@@ -18,13 +18,13 @@ function AddHikeForm({ show, onClose, hikeToEdit, onSuccess }) {
     status: 'gathering_interest',
     cost: 0,
     image_url: '',
-    destination_url: '',
     daily_distances: [],
     overnight_facilities: '',
     price_is_estimate: false,
     date_is_estimate: false,
     location_link: '',
-    destination_website: ''
+    destination_website: '',
+    gps_coordinates: ''
   });
 
   useEffect(() => {
@@ -41,13 +41,13 @@ function AddHikeForm({ show, onClose, hikeToEdit, onSuccess }) {
         status: hikeToEdit.status || 'gathering_interest',
         cost: hikeToEdit.cost || 0,
         image_url: hikeToEdit.image_url || '',
-        destination_url: hikeToEdit.destination_url || '',
         daily_distances: hikeToEdit.daily_distances || [],
         overnight_facilities: hikeToEdit.overnight_facilities || '',
         price_is_estimate: hikeToEdit.price_is_estimate || false,
         date_is_estimate: hikeToEdit.date_is_estimate || false,
         location_link: hikeToEdit.location_link || '',
-        destination_website: hikeToEdit.destination_website || ''
+        destination_website: hikeToEdit.destination_website || '',
+        gps_coordinates: hikeToEdit.gps_coordinates || ''
       });
     } else {
       setHikeData({
@@ -62,13 +62,13 @@ function AddHikeForm({ show, onClose, hikeToEdit, onSuccess }) {
         status: 'gathering_interest',
         cost: 0,
         image_url: '',
-        destination_url: '',
         daily_distances: [],
         overnight_facilities: '',
         price_is_estimate: false,
         date_is_estimate: false,
         location_link: '',
-        destination_website: ''
+        destination_website: '',
+        gps_coordinates: ''
       });
     }
     setError('');
@@ -260,7 +260,7 @@ function AddHikeForm({ show, onClose, hikeToEdit, onSuccess }) {
                 />
               </div>
 
-              {/* Image and Destination URL */}
+              {/* Image URL */}
               <div className="col-md-6">
                 <label className="form-label">Hike Image URL (optional)</label>
                 <input
@@ -272,16 +272,18 @@ function AddHikeForm({ show, onClose, hikeToEdit, onSuccess }) {
                 />
                 <small className="text-muted">Link to an image of the trail or destination</small>
               </div>
+
+              {/* GPS Coordinates */}
               <div className="col-md-6">
-                <label className="form-label">Destination Website URL (optional)</label>
+                <label className="form-label">GPS Coordinates (optional)</label>
                 <input
-                  type="url"
+                  type="text"
                   className="form-control"
-                  placeholder="https://example.com/trail-info"
-                  value={hikeData.destination_url}
-                  onChange={(e) => setHikeData({...hikeData, destination_url: e.target.value})}
+                  placeholder="-33.9249, 18.4241"
+                  value={hikeData.gps_coordinates}
+                  onChange={(e) => setHikeData({...hikeData, gps_coordinates: e.target.value})}
                 />
-                <small className="text-muted">Link to trail/park website</small>
+                <small className="text-muted">Format: latitude, longitude (e.g., -33.9249, 18.4241)</small>
               </div>
 
               {/* Location and Destination Website Links */}

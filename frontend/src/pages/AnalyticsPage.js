@@ -108,9 +108,9 @@ const AnalyticsPage = () => {
           <div className="col-md-6 col-lg-3">
             <MetricCard
               icon={TrendingUp}
-              title="Total Revenue"
-              value={`R ${overview.total_revenue.toLocaleString()}`}
-              subtitle="All-time earnings"
+              title="Active Users"
+              value={`${overview.active_users_30d}`}
+              subtitle="Last 30 days"
               color="info"
             />
           </div>

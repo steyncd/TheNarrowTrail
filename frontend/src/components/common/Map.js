@@ -11,12 +11,35 @@ L.Icon.Default.mergeOptions({
   shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png',
 });
 
-const Map = ({ locationLink, height = '400px' }) => {
+const Map = ({ locationLink, gpsCoordinates, height = '400px' }) => {
   const [position, setPosition] = React.useState(null);
   const [error, setError] = React.useState(null);
   const [locationName, setLocationName] = React.useState('');
 
   useEffect(() => {
+    // If GPS coordinates are provided, use them directly
+    if (gpsCoordinates) {
+      try {
+        // Parse GPS coordinates in format: "lat, lon" or "lat,lon"
+        const coords = gpsCoordinates.split(',').map(c => c.trim());
+        if (coords.length === 2) {
+          const lat = parseFloat(coords[0]);
+          const lon = parseFloat(coords[1]);
+          if (!isNaN(lat) && !isNaN(lon)) {
+            setPosition([lat, lon]);
+            setLocationName('GPS Location');
+            setError(null);
+            return;
+          }
+        }
+        // If GPS coordinates parsing failed, fall through to locationLink
+        console.warn('Failed to parse GPS coordinates:', gpsCoordinates);
+      } catch (err) {
+        console.error('Error parsing GPS coordinates:', err);
+        // Fall through to locationLink
+      }
+    }
+
     if (!locationLink) {
       setError('No location provided');
       return;
@@ -91,7 +114,7 @@ const Map = ({ locationLink, height = '400px' }) => {
     };
 
     extractCoordinates();
-  }, [locationLink]);
+  }, [locationLink, gpsCoordinates]);
 
   if (error) {
     return (
