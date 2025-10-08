@@ -1,30 +1,55 @@
 {
-  "short_name": "The Narrow Trail",
+  "short_name": "Narrow Trail",
   "name": "The Narrow Trail - Hiking Club",
+  "description": "Connect with fellow hikers, discover trails, and plan adventures with The Narrow Trail hiking community",
   "icons": [
-    {
-      "src": "hiker-favicon.svg",
-      "sizes": "any",
-      "type": "image/svg+xml"
-    },
-    {
-      "src": "logo-hiking.svg",
-      "type": "image/svg+xml",
-      "sizes": "any"
-    },
     {
       "src": "logo192.png",
       "type": "image/png",
-      "sizes": "192x192"
+      "sizes": "192x192",
+      "purpose": "any maskable"
     },
     {
       "src": "logo512.png",
       "type": "image/png",
-      "sizes": "512x512"
+      "sizes": "512x512",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "hiker-favicon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
     }
   ],
-  "start_url": ".",
+  "start_url": "/",
+  "scope": "/",
   "display": "standalone",
+  "orientation": "portrait-primary",
   "theme_color": "#2d5016",
-  "background_color": "#ffffff"
+  "background_color": "#ffffff",
+  "categories": ["lifestyle", "sports", "social"],
+  "shortcuts": [
+    {
+      "name": "Browse Hikes",
+      "short_name": "Hikes",
+      "description": "View all available hikes",
+      "url": "/hikes",
+      "icons": [{ "src": "logo192.png", "sizes": "192x192" }]
+    },
+    {
+      "name": "My Hikes",
+      "short_name": "My Hikes",
+      "description": "View your registered hikes",
+      "url": "/my-hikes",
+      "icons": [{ "src": "logo192.png", "sizes": "192x192" }]
+    },
+    {
+      "name": "Calendar",
+      "short_name": "Calendar",
+      "description": "View hiking calendar",
+      "url": "/calendar",
+      "icons": [{ "src": "logo192.png", "sizes": "192x192" }]
+    }
+  ]
 }

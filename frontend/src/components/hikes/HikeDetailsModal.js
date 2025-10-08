@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Calendar, MapPin, ExternalLink, Printer, Users, DollarSign, Info } from 'lucide-react';
 import { api } from '../../services/api';
 import { useAuth } from '../../contexts/AuthContext';
@@ -18,12 +18,7 @@ const HikeDetailsModal = ({ hike, onClose }) => {
   const [showPrintView, setShowPrintView] = useState(false);
   const [attendees, setAttendees] = useState([]);
 
-  useEffect(() => {
-    fetchHikeStatus();
-    fetchAttendees();
-  }, [hike.id]);
-
-  const fetchHikeStatus = async () => {
+  const fetchHikeStatus = useCallback(async () => {
     setLoading(true);
     try {
       const data = await api.getHikeStatus(hike.id, token);
@@ -33,16 +28,21 @@ const HikeDetailsModal = ({ hike, onClose }) => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [hike.id, token]);
 
-  const fetchAttendees = async () => {
+  const fetchAttendees = useCallback(async () => {
     try {
       const data = await api.getAttendees(hike.id, token);
       setAttendees(data);
     } catch (err) {
       console.error('Fetch attendees error:', err);
     }
-  };
+  }, [hike.id, token]);
+
+  useEffect(() => {
+    fetchHikeStatus();
+    fetchAttendees();
+  }, [fetchHikeStatus, fetchAttendees]);
 
   const handlePrint = () => {
     setShowPrintView(true);

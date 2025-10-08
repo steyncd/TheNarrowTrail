@@ -2,8 +2,11 @@ import React from 'react';
 import { Navigate } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 
-const PrivateRoute = ({ children, adminOnly = false }) => {
+const PrivateRoute = ({ children, requireAdmin = false, adminOnly = false }) => {
   const { currentUser, loading } = useAuth();
+
+  // Support both prop names for backward compatibility
+  const isAdminRequired = requireAdmin || adminOnly;
 
   if (loading) {
     return (
@@ -20,7 +23,7 @@ const PrivateRoute = ({ children, adminOnly = false }) => {
     return <Navigate to="/" replace />;
   }
 
-  if (adminOnly && currentUser.role !== 'admin') {
+  if (isAdminRequired && currentUser.role !== 'admin') {
     return <Navigate to="/hikes" replace />;
   }
 

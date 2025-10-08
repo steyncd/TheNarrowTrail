@@ -1,7 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../../contexts/AuthContext';
 import { api } from '../../services/api';
+import LazyImage from './LazyImage';
 
+// PERFORMANCE OPTIMIZATION: Optimistic updates + Lazy loading images
 function PhotoGallery() {
   const { currentUser, token } = useAuth();
   const [photos, setPhotos] = useState([]);
@@ -20,6 +22,9 @@ function PhotoGallery() {
     }
   };
 
+  // PERFORMANCE OPTIMIZATION: Optimistic UI update
+  // Removes photo immediately from UI, then rolls back if delete fails
+  // This provides instant feedback vs waiting for API response
   const handleDeletePhoto = async (photoId, uploadedBy) => {
     // Only allow deletion if user is admin or they uploaded the photo
     if (currentUser.role !== 'admin' && uploadedBy !== currentUser.email) {
@@ -28,16 +33,24 @@ function PhotoGallery() {
 
     if (!window.confirm('Delete this photo?')) return;
 
+    // Store original state for rollback
+    const originalPhotos = [...photos];
+
+    // Optimistic update - remove from UI immediately
+    setPhotos(prevPhotos => prevPhotos.filter(p => p.id !== photoId));
     setLoading(true);
+
     try {
       const result = await api.deletePhoto(photoId, token);
-      if (result.success) {
-        await fetchPhotos();
-      } else {
+      if (!result.success) {
+        // Rollback on failure
+        setPhotos(originalPhotos);
         alert(result.error || 'Failed to delete photo');
       }
     } catch (err) {
       console.error('Delete photo error:', err);
+      // Rollback on error
+      setPhotos(originalPhotos);
       alert('Failed to delete photo');
     } finally {
       setLoading(false);
@@ -56,7 +69,7 @@ function PhotoGallery() {
         photos.map(photo => (
           <div key={photo.id} className="col-md-4">
             <div className="card">
-              <img
+              <LazyImage
                 src={photo.url}
                 className="card-img-top"
                 alt={photo.hike_name}

@@ -1,21 +1,49 @@
-import React from 'react';
+import React, { memo, useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { Calendar, CheckCircle, Heart, AlertCircle, XCircle, Sparkles } from 'lucide-react';
 import useFavorites from '../../hooks/useFavorites';
 import { useTheme } from '../../contexts/ThemeContext';
+import { useSocket } from '../../contexts/SocketContext';
 
-const HikeCard = ({ hike, isPast, onViewDetails, onToggleInterest, loading, currentUserId }) => {
+// PERFORMANCE OPTIMIZATION: Memoized component to prevent unnecessary re-renders
+// Only re-renders when hike data or user interest status changes
+const HikeCard = memo(({ hike, isPast, onViewDetails, onToggleInterest, loading, currentUserId }) => {
   const { isFavorite, toggleFavorite } = useFavorites();
   const { theme } = useTheme();
+  const { on, off } = useSocket();
+
+  // Local state for real-time interest counts
+  const [interestedCount, setInterestedCount] = useState(hike.interested_users ? hike.interested_users.length : 0);
+  const [confirmedCount, setConfirmedCount] = useState(hike.confirmed_users ? hike.confirmed_users.length : 0);
+
   const isInterested = hike.interested_users && hike.interested_users.includes(currentUserId);
   const isConfirmed = hike.confirmed_users && hike.confirmed_users.includes(currentUserId);
   const displayStatus = isPast
     ? (hike.status === 'trip_booked' ? 'completed' : 'cancelled')
     : hike.status;
 
-  // Calculate status badges
-  const interestedCount = hike.interested_users ? hike.interested_users.length : 0;
-  const confirmedCount = hike.confirmed_users ? hike.confirmed_users.length : 0;
+  // Listen for real-time interest updates via WebSocket
+  useEffect(() => {
+    const handleInterestUpdate = (data) => {
+      // Only update if this is the same hike
+      if (data.hikeId === hike.id) {
+        setInterestedCount(data.interestedCount);
+        setConfirmedCount(data.confirmedCount);
+      }
+    };
+
+    on('interest:updated', handleInterestUpdate);
+
+    return () => {
+      off('interest:updated', handleInterestUpdate);
+    };
+  }, [hike.id, on, off]);
+
+  // Update counts when hike prop changes
+  useEffect(() => {
+    setInterestedCount(hike.interested_users ? hike.interested_users.length : 0);
+    setConfirmedCount(hike.confirmed_users ? hike.confirmed_users.length : 0);
+  }, [hike.interested_users, hike.confirmed_users]);
   const maxCapacity = hike.max_capacity || 20; // Assume default capacity
   const occupancyRate = confirmedCount / maxCapacity;
   const isFewSpotsLeft = occupancyRate > 0.7 && occupancyRate < 1.0;
@@ -250,6 +278,15 @@ const HikeCard = ({ hike, isPast, onViewDetails, onToggleInterest, loading, curr
       </div>
     </div>
   );
-};
+}, (prevProps, nextProps) => {
+  // Custom comparison function - only re-render if these change
+  return prevProps.hike.id === nextProps.hike.id &&
+         prevProps.hike.interested_users?.length === nextProps.hike.interested_users?.length &&
+         prevProps.hike.confirmed_users?.length === nextProps.hike.confirmed_users?.length &&
+         prevProps.loading === nextProps.loading &&
+         prevProps.isPast === nextProps.isPast;
+});
+
+HikeCard.displayName = 'HikeCard';
 
 export default HikeCard;

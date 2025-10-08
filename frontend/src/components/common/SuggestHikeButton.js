@@ -53,25 +53,38 @@ const SuggestHikeButton = () => {
 
   return (
     <>
-      {/* Floating Button */}
+      {/* Floating Button - Small and Subtle */}
       <button
         onClick={() => setShowModal(true)}
-        className="btn btn-warning position-fixed shadow-lg d-flex align-items-center gap-2"
+        className="btn btn-outline-secondary shadow-sm"
         style={{
-          bottom: '100px',
-          right: '30px',
-          borderRadius: '50px',
-          padding: '15px 25px',
+          position: 'fixed',
+          bottom: '78px',
+          right: '20px',
+          borderRadius: '50%',
+          width: '48px',
+          height: '48px',
+          padding: '0',
           zIndex: 1000,
-          fontWeight: '600',
-          border: '2px solid rgba(255, 193, 7, 0.3)',
-          transition: 'all 0.3s ease'
+          border: '1px solid rgba(108, 117, 125, 0.3)',
+          background: theme === 'dark' ? 'rgba(45, 45, 45, 0.95)' : 'rgba(255, 255, 255, 0.95)',
+          backdropFilter: 'blur(10px)',
+          transition: 'all 0.2s ease',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center'
         }}
-        onMouseEnter={(e) => e.currentTarget.style.transform = 'scale(1.05)'}
-        onMouseLeave={(e) => e.currentTarget.style.transform = 'scale(1)'}
+        title="Suggest a Hike"
+        onMouseEnter={(e) => {
+          e.currentTarget.style.transform = 'scale(1.1)';
+          e.currentTarget.style.borderColor = 'rgba(255, 193, 7, 0.5)';
+        }}
+        onMouseLeave={(e) => {
+          e.currentTarget.style.transform = 'scale(1)';
+          e.currentTarget.style.borderColor = 'rgba(108, 117, 125, 0.3)';
+        }}
       >
-        <Lightbulb size={20} />
-        <span className="d-none d-md-inline">Suggest a Hike</span>
+        <Lightbulb size={20} strokeWidth={1.5} />
       </button>
 
       {/* Modal */}
@@ -87,12 +100,13 @@ const SuggestHikeButton = () => {
             tabIndex="-1"
             style={{ zIndex: 1050 }}
           >
-            <div className="modal-dialog modal-dialog-centered modal-lg">
+            <div className="modal-dialog modal-dialog-centered modal-lg modal-dialog-scrollable">
               <div
                 className="modal-content"
                 style={{
                   background: theme === 'dark' ? '#2d2d2d' : 'white',
-                  color: theme === 'dark' ? 'var(--text-primary)' : '#212529'
+                  color: theme === 'dark' ? 'var(--text-primary)' : '#212529',
+                  maxHeight: '90vh'
                 }}
               >
                 <div className="modal-header border-bottom">

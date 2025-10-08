@@ -21,9 +21,14 @@ const calendarRoutes = require('./routes/calendar');
 const tokenRoutes = require('./routes/tokens');
 const weatherRoutes = require('./routes/weather');
 const paymentRoutes = require('./routes/payments');
+const contentRoutes = require('./routes/content');
+const publicContentRoutes = require('./routes/publicContent');
 
 // Import controllers for special routes
 const hikeController = require('./controllers/hikeController');
+
+// Import Socket.IO service
+const socketService = require('./services/socketService');
 
 const app = express();
 
@@ -75,7 +80,9 @@ app.use('/api/homeassistant', homeassistantRoutes);
 app.use('/api/calendar', calendarRoutes);
 app.use('/api/tokens', tokenRoutes);
 app.use('/api/weather', weatherRoutes);
-app.use('/api', paymentRoutes);
+app.use('/api/public-content', publicContentRoutes); // Public content API - NO AUTH (must be before /api)
+app.use('/api/content', contentRoutes);
+app.use('/api', paymentRoutes); // Catch-all for payments - must be LAST
 app.use('/api/hikes', interestRoutes);
 
 // My Hikes Dashboard route
@@ -87,6 +94,9 @@ const server = app.listen(PORT, '0.0.0.0', () => {
   console.log(`Environment: ${process.env.NODE_ENV || 'development'}`);
   console.log(`Server ready to accept connections`);
 });
+
+// Initialize Socket.IO server
+socketService.initializeSocket(server);
 
 // Handle graceful shutdown
 process.on('SIGTERM', () => {

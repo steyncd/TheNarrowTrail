@@ -1,20 +1,35 @@
 import React, { useState, useEffect } from 'react';
-import { Calendar, MapPin, ArrowLeft } from 'lucide-react';
+import { Calendar, MapPin, ArrowLeft, Info } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { API_URL } from '../../services/api';
+import { useAuth } from '../../contexts/AuthContext';
 import LoginForm from '../auth/LoginForm';
 import SignUpForm from '../auth/SignUpForm';
+import { getContent } from '../../services/contentApi';
+import ReactMarkdown from 'react-markdown';
 
 const LandingPage = ({ hideLoginButton = false }) => {
+  const { currentUser } = useAuth();
   const navigate = useNavigate();
   const [hikes, setHikes] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showLoginModal, setShowLoginModal] = useState(false);
   const [showSignUp, setShowSignUp] = useState(false);
+  const [missionVision, setMissionVision] = useState(null);
 
   useEffect(() => {
     fetchPublicHikes();
+    fetchMissionVision();
   }, []);
+
+  const fetchMissionVision = async () => {
+    try {
+      const content = await getContent('mission_vision');
+      setMissionVision(content);
+    } catch (err) {
+      console.error('Error fetching mission & vision:', err);
+    }
+  };
 
   const fetchPublicHikes = async () => {
     try {
@@ -40,64 +55,158 @@ const LandingPage = ({ hideLoginButton = false }) => {
   }
 
   return (
-    <div className="min-vh-100" style={{background: 'linear-gradient(135deg, #2d5a7c 0%, #4a7c59 100%)'}}>
-      {/* Navbar */}
-      <nav className="navbar navbar-dark shadow-lg" style={{background: 'linear-gradient(90deg, #1a1a1a 0%, #2d2d2d 100%)', borderBottom: '3px solid #4a7c7c'}}>
-        <div className="container-fluid px-3">
-          <div className="d-flex align-items-center">
-            <img
-              src="https://media-jnb2-1.cdn.whatsapp.net/v/t61.24694-24/531816244_1267185695145803_3816874698378382952_n.jpg?ccb=11-4&oh=01_Q5Aa2gE6eCgVsJ7VS5mA4tUUzfCHqn50KfOgB46uc6VedXqULA&oe=68F0F796&_nc_sid=5e03e0&_nc_cat=111"
-              alt="Group"
-              style={{width: '50px', height: '50px', borderRadius: '50%', marginRight: '15px', objectFit: 'cover', border: '2px solid #4a7c7c'}}
-            />
-            <div>
-              <span className="navbar-brand mb-0 text-white" style={{fontWeight: '700', letterSpacing: '1px', fontSize: '1.5rem', fontFamily: "'Russo One', sans-serif"}}>
-                THE NARROW TRAIL
-              </span>
-              <br />
-              <small className="text-white-50" style={{fontSize: '0.75rem', fontStyle: 'italic'}}>
-                "Small is the gate and narrow the road that leads to life" - Matthew 7:14
-              </small>
+    <>
+      <style>{`
+        body, html {
+          margin: 0 !important;
+          padding: 0 !important;
+        }
+        #root {
+          margin: 0 !important;
+          padding: 0 !important;
+        }
+        .landing-page-container {
+          margin: 0 !important;
+          padding: 0 !important;
+        }
+        .landing-navbar-wrapper {
+          margin: 0 !important;
+          padding: 0 !important;
+          width: 100vw !important;
+          position: relative;
+          left: 50%;
+          right: 50%;
+          margin-left: -50vw !important;
+          margin-right: -50vw !important;
+        }
+        .landing-nav-content {
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          width: 100%;
+        }
+        @media (max-width: 768px) {
+          .landing-nav-content {
+            flex-direction: column;
+            align-items: stretch;
+            gap: 12px;
+          }
+          .landing-nav-buttons {
+            justify-content: center !important;
+            width: 100%;
+          }
+          .landing-nav-logo {
+            text-align: center;
+          }
+          .landing-nav-logo img {
+            margin: 0 auto 10px auto;
+            display: block;
+          }
+        }
+      `}</style>
+      <div className="landing-page-container min-vh-100" style={{background: 'linear-gradient(135deg, #2d5a7c 0%, #4a7c59 100%)', margin: 0, padding: 0}}>
+        {/* Navbar - hide if user is logged in */}
+        {!currentUser && (
+          <div className="landing-navbar-wrapper">
+            <nav
+              className="navbar navbar-dark shadow-lg"
+              style={{
+                background: 'linear-gradient(90deg, #1a1a1a 0%, #2d2d2d 100%)',
+                borderBottom: '3px solid #4a7c7c',
+                padding: '12px 16px',
+                margin: 0,
+                width: '100%'
+              }}
+            >
+          <div className="landing-nav-content">
+            <div className="d-flex align-items-center landing-nav-logo">
+              <img
+                src="https://media-jnb2-1.cdn.whatsapp.net/v/t61.24694-24/531816244_1267185695145803_3816874698378382952_n.jpg?ccb=11-4&oh=01_Q5Aa2gE6eCgVsJ7VS5mA4tUUzfCHqn50KfOgB46uc6VedXqULA&oe=68F0F796&_nc_sid=5e03e0&_nc_cat=111"
+                alt="Group"
+                style={{width: '50px', height: '50px', borderRadius: '50%', marginRight: '15px', objectFit: 'cover', border: '2px solid #4a7c7c'}}
+              />
+              <div>
+                <span className="navbar-brand mb-0 text-white" style={{fontWeight: '700', letterSpacing: '1px', fontSize: '1.5rem', fontFamily: "'Russo One', sans-serif"}}>
+                  THE NARROW TRAIL
+                </span>
+                <br />
+                <small className="text-white-50 d-none d-sm-block" style={{fontSize: '0.75rem', fontStyle: 'italic'}}>
+                  "Small is the gate and narrow the road that leads to life" - Matthew 7:14
+                </small>
+              </div>
+            </div>
+            <div className="d-flex align-items-center gap-2 landing-nav-buttons">
+              <button
+                className="btn btn-sm d-flex align-items-center gap-2"
+                style={{background: 'rgba(255, 255, 255, 0.1)', color: 'white', border: '1px solid rgba(255, 255, 255, 0.2)', fontWeight: '500'}}
+                onClick={() => navigate('/about')}
+              >
+                <Info size={16} />
+                About Us
+              </button>
+              {hideLoginButton ? (
+                <button
+                  className="btn btn-sm d-flex align-items-center gap-2"
+                  style={{background: 'linear-gradient(90deg, #4a7c7c 0%, #2d5a7c 100%)', color: 'white', border: 'none', fontWeight: '600'}}
+                  onClick={() => navigate('/hikes')}
+                >
+                  <ArrowLeft size={18} />
+                  Return to App
+                </button>
+              ) : (
+                <button
+                  className="btn btn-sm"
+                  style={{background: 'linear-gradient(90deg, #4a7c7c 0%, #2d5a7c 100%)', color: 'white', border: 'none', fontWeight: '600'}}
+                  onClick={() => setShowLoginModal(true)}
+                >
+                  Login / Sign Up
+                </button>
+              )}
             </div>
           </div>
-          {hideLoginButton ? (
-            <button
-              className="btn btn-sm d-flex align-items-center gap-2"
-              style={{background: 'linear-gradient(90deg, #4a7c7c 0%, #2d5a7c 100%)', color: 'white', border: 'none', fontWeight: '600'}}
-              onClick={() => navigate('/hikes')}
-            >
-              <ArrowLeft size={18} />
-              Return to App
-            </button>
-          ) : (
-            <button
-              className="btn btn-sm"
-              style={{background: 'linear-gradient(90deg, #4a7c7c 0%, #2d5a7c 100%)', color: 'white', border: 'none', fontWeight: '600'}}
-              onClick={() => setShowLoginModal(true)}
-            >
-              Login / Sign Up
-            </button>
-          )}
-        </div>
-      </nav>
+        </nav>
+          </div>
+        )}
 
       <div className="container py-5">
         {/* Hero Section */}
         <div className="text-center mb-5">
           <h1 className="display-4 fw-bold text-white mb-3">Join Us on The Narrow Trail</h1>
           <p className="lead text-white-50 mb-4">
-            Experience the beauty of nature with fellow adventurers. Hiking and trekking and stap and gesels and stuff.
+            Experience the beauty of God's creation together with fellow believers. It's a wonderful opportunity to get outdoors, enjoy meaningful fellowship, and talk about what truly matters — away from the noise of everyday life.
           </p>
-          <div className="alert alert-light d-inline-block" style={{background: 'rgba(255,255,255,0.95)', borderRadius: '10px', border: 'none'}}>
-            <p className="mb-0" style={{fontStyle: 'italic', color: '#1a1a1a', fontWeight: '500'}}>
-              "Dit bou karakter" - Jan
-            </p>
-            <small className="text-muted">Remember: Dit is maklikker as wat dit lyk</small>
+        </div>
+
+        {/* Quote Box */}
+        <div className="row mb-5">
+          <div className="col-12">
+            <div className="card border-0" style={{
+              borderRadius: '15px',
+              background: 'rgba(255, 255, 255, 0.12)',
+              backdropFilter: 'blur(10px)',
+              boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)'
+            }}>
+              <div className="card-body p-4">
+                <div className="text-center">
+                  <p className="mb-1" style={{
+                    fontStyle: 'italic',
+                    color: 'rgba(255, 255, 255, 0.95)',
+                    fontWeight: '500',
+                    fontSize: '1.1rem'
+                  }}>
+                    "Dit bou karakter" - Jan
+                  </p>
+                  <small style={{color: 'rgba(255, 255, 255, 0.7)', fontSize: '0.85rem'}}>
+                    Remember: Dit is maklikker as wat dit lyk
+                  </small>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
 
         {/* Upcoming Hikes */}
-        <div className="row mb-4">
+        <div className="row mb-3">
           <div className="col-12">
             <h2 className="text-white mb-4">
               <Calendar size={28} className="me-2" />
@@ -170,6 +279,26 @@ const LandingPage = ({ hideLoginButton = false }) => {
           </div>
         )}
 
+        {/* Mission & Vision Section */}
+        {missionVision && (
+          <div className="row mt-5 mb-4">
+            <div className="col-12">
+              <div className="card border-0" style={{
+                borderRadius: '15px',
+                background: 'rgba(255, 255, 255, 0.12)',
+                backdropFilter: 'blur(10px)',
+                boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)'
+              }}>
+                <div className="card-body p-4">
+                  <ReactMarkdown className="mission-vision-content">
+                    {missionVision.content}
+                  </ReactMarkdown>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
         {/* Call to Action */}
         {!hideLoginButton && (
           <div className="text-center mt-5">
@@ -191,6 +320,7 @@ const LandingPage = ({ hideLoginButton = false }) => {
         )}
       </div>
     </div>
+    </>
   );
 };
 

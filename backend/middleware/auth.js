@@ -4,10 +4,12 @@ const { JWT_SECRET } = require('../config/env');
 
 // Authentication middleware
 function authenticateToken(req, res, next) {
+  console.log(`AUTH MIDDLEWARE CALLED for path: ${req.path}`);
   const authHeader = req.headers['authorization'];
   const token = authHeader && authHeader.split(' ')[1]; // Bearer TOKEN
 
   if (!token) {
+    console.log('No token provided, returning 401');
     return res.status(401).json({ error: 'Access token required' });
   }
 

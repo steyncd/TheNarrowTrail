@@ -91,10 +91,9 @@ exports.getHikePaymentStats = async (req, res) => {
         COUNT(CASE WHEN hp.payment_status = 'refunded' THEN 1 END) as refunded_count,
         COALESCE(SUM(CASE WHEN hp.payment_status = 'paid' THEN hp.amount ELSE 0 END), 0) as total_paid,
         COALESCE(SUM(CASE WHEN hp.payment_status = 'pending' THEN hp.amount ELSE 0 END), 0) as total_pending,
-        COUNT(DISTINCT CASE WHEN hi.attendance_status = 'confirmed' THEN hi.user_id END) as confirmed_attendees
+        (SELECT COUNT(*) FROM hike_interest WHERE hike_id = $1 AND attendance_status = 'confirmed') as confirmed_attendees
       FROM hikes h
       LEFT JOIN hike_payments hp ON h.id = hp.hike_id
-      LEFT JOIN hike_interest hi ON h.id = hi.hike_id
       WHERE h.id = $1
       GROUP BY h.id, h.cost`,
       [hikeId]
@@ -159,6 +158,14 @@ exports.recordPayment = async (req, res) => {
       );
     }
 
+    // Sync payment status to hike_interest table (denormalized cache)
+    await pool.query(
+      `UPDATE hike_interest
+       SET payment_status = $1, amount_paid = $2, updated_at = NOW()
+       WHERE hike_id = $3 AND user_id = $4`,
+      [paymentStatus, amount, hikeId, userId]
+    );
+
     // Log activity
     const ipAddress = req.ip || req.connection.remoteAddress;
     await logActivity(
@@ -190,6 +197,15 @@ exports.deletePayment = async (req, res) => {
     if (result.rows.length === 0) {
       return res.status(404).json({ error: 'Payment record not found' });
     }
+
+    // Reset payment status in hike_interest table
+    const deletedPayment = result.rows[0];
+    await pool.query(
+      `UPDATE hike_interest
+       SET payment_status = 'pending', amount_paid = 0, updated_at = NOW()
+       WHERE hike_id = $1 AND user_id = $2`,
+      [deletedPayment.hike_id, deletedPayment.user_id]
+    );
 
     // Log activity
     const ipAddress = req.ip || req.connection.remoteAddress;
@@ -236,14 +252,22 @@ exports.bulkCreatePayments = async (req, res) => {
       return res.json({ success: true, created: 0, message: 'No new attendees to create payment records for' });
     }
 
-    // Create payment records for each attendee
-    const insertPromises = attendeesResult.rows.map(row =>
-      pool.query(
+    // Create payment records for each attendee and sync to hike_interest
+    const insertPromises = attendeesResult.rows.map(async row => {
+      await pool.query(
         `INSERT INTO hike_payments (hike_id, user_id, amount, payment_status, created_by, created_at, updated_at)
          VALUES ($1, $2, $3, $4, $5, NOW(), NOW())`,
         [hikeId, row.user_id, amount, paymentStatus, req.user.id]
-      )
-    );
+      );
+
+      // Sync to hike_interest
+      await pool.query(
+        `UPDATE hike_interest
+         SET payment_status = $1, amount_paid = $2, updated_at = NOW()
+         WHERE hike_id = $3 AND user_id = $4`,
+        [paymentStatus, amount, hikeId, row.user_id]
+      );
+    });
 
     await Promise.all(insertPromises);
 
@@ -270,3 +294,58 @@ exports.bulkCreatePayments = async (req, res) => {
 };
 
 module.exports = exports;
+
+// Get consolidated payments overview for all upcoming hikes (Admin only)
+exports.getPaymentsOverview = async (req, res) => {
+  try {
+    // Get all upcoming hikes with their payment statistics
+    const result = await pool.query(
+      `SELECT
+        h.id as hike_id,
+        h.name as hike_name,
+        h.date as hike_date,
+        h.cost as hike_cost,
+        h.status as hike_status,
+        (SELECT COUNT(DISTINCT user_id) FROM hike_interest WHERE hike_id = h.id AND attendance_status = 'confirmed') as confirmed_attendees,
+        (SELECT COUNT(*) FROM hike_payments WHERE hike_id = h.id AND payment_status = 'paid') as paid_count,
+        (SELECT COUNT(*) FROM hike_payments WHERE hike_id = h.id AND payment_status = 'pending') as pending_count,
+        COALESCE((SELECT SUM(amount) FROM hike_payments WHERE hike_id = h.id AND payment_status = 'paid'), 0) as total_paid,
+        COALESCE((SELECT SUM(amount) FROM hike_payments WHERE hike_id = h.id AND payment_status = 'pending'), 0) as total_pending
+      FROM hikes h
+      WHERE h.date >= CURRENT_DATE
+      ORDER BY h.date ASC`
+    );
+
+    // Calculate additional metrics for each hike
+    const hikesWithMetrics = result.rows.map(hike => {
+      const expectedTotal = parseFloat(hike.hike_cost || 0) * parseInt(hike.confirmed_attendees || 0);
+      const totalPaid = parseFloat(hike.total_paid || 0);
+      const outstanding = expectedTotal - totalPaid;
+
+      return {
+        ...hike,
+        expected_total: expectedTotal,
+        outstanding: outstanding,
+        paid_percentage: expectedTotal > 0 ? ((totalPaid / expectedTotal) * 100).toFixed(1) : 0
+      };
+    });
+
+    // Calculate overall summary statistics
+    const summary = {
+      total_hikes: hikesWithMetrics.length,
+      total_expected: hikesWithMetrics.reduce((sum, h) => sum + parseFloat(h.expected_total || 0), 0),
+      total_collected: hikesWithMetrics.reduce((sum, h) => sum + parseFloat(h.total_paid || 0), 0),
+      total_outstanding: hikesWithMetrics.reduce((sum, h) => sum + parseFloat(h.outstanding || 0), 0),
+      total_confirmed_attendees: hikesWithMetrics.reduce((sum, h) => sum + parseInt(h.confirmed_attendees || 0), 0),
+      total_paid_attendees: hikesWithMetrics.reduce((sum, h) => sum + parseInt(h.paid_count || 0), 0)
+    };
+
+    res.json({
+      summary,
+      hikes: hikesWithMetrics
+    });
+  } catch (error) {
+    console.error('Get payments overview error:', error);
+    res.status(500).json({ error: 'Failed to fetch payments overview' });
+  }
+};

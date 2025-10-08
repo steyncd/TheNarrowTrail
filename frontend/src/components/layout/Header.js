@@ -1,10 +1,10 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { LogOut, Menu, Calendar, Heart, Image as ImageIcon, Settings, Users, Bell, Eye, BarChart3, User, Activity, MessageSquare } from 'lucide-react';
+import { LogOut, Menu, Calendar, Heart, Settings, Users, Bell, Eye, BarChart3, User, Activity, MessageSquare, DollarSign, Info, FileText, Home } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
 import { useTheme } from '../../contexts/ThemeContext';
-import ThemeToggle from './ThemeToggle';
 import MobileMenu from './MobileMenu';
+import ProfileDropdown from './ProfileDropdown';
 import api from '../../services/api';
 
 const Header = () => {
@@ -17,6 +17,7 @@ const Header = () => {
   const [pendingUsersCount, setPendingUsersCount] = useState(0);
   const [newFeedbackCount, setNewFeedbackCount] = useState(0);
   const [newSuggestionsCount, setNewSuggestionsCount] = useState(0);
+  const profileButtonRef = useRef(null);
 
   const isAdmin = currentUser?.role === 'admin';
 
@@ -49,20 +50,22 @@ const Header = () => {
   };
 
   const navLinks = [
+    { path: '/landing', label: 'Home', icon: Home },
+    { path: '/about', label: 'About', icon: Info },
     { path: '/hikes', label: 'Hikes', icon: Calendar },
     { path: '/my-hikes', label: 'My Hikes', icon: Heart },
-    { path: '/calendar', label: 'Calendar', icon: Calendar },
     { path: '/favorites', label: 'Favorites', icon: Heart },
-    { path: '/photos', label: 'Photos', icon: ImageIcon },
+    { path: '/calendar', label: 'Calendar', icon: Calendar },
   ];
 
   const adminLinks = [
     { path: '/admin', label: 'Manage', icon: Settings },
-    { path: '/users', label: 'Users', icon: Users },
-    { path: '/notifications', label: 'Notifications', icon: Bell },
-    { path: '/analytics', label: 'Analytics', icon: BarChart3 },
-    { path: '/logs', label: 'Logs', icon: Activity },
-    { path: '/feedback', label: 'Feedback', icon: MessageSquare },
+    { path: '/admin/payments', label: 'Payments', icon: DollarSign },
+    { path: '/admin/analytics', label: 'Analytics', icon: BarChart3 },
+    { path: '/admin/users', label: 'Users', icon: Users },
+    { path: '/admin/content', label: 'Content', icon: FileText },
+    { path: '/admin/feedback', label: 'Feedback', icon: MessageSquare },
+    { path: '/admin/logs', label: 'Logs', icon: Activity },
   ];
 
   const isActive = (path) => location.pathname === path;
@@ -76,12 +79,13 @@ const Header = () => {
             ? 'linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 100%)'
             : 'linear-gradient(135deg, #2d5a7c 0%, #1a4d5c 100%)',
           borderBottom: '3px solid #4a7c7c',
-          transition: 'all 0.3s ease'
+          transition: 'all 0.3s ease',
+          padding: 0
         }}
       >
         {/* Main Navigation Bar */}
-        <nav className="navbar navbar-dark py-3">
-          <div className="container-fluid px-3">
+        <nav className="navbar navbar-dark" style={{ padding: '8px 0', margin: 0 }}>
+          <div className="container-fluid px-3" style={{ paddingTop: 0, paddingBottom: 0 }}>
             {/* Left: Logo & Brand */}
             <div className="d-flex align-items-center">
               {/* Mobile Menu Toggle */}
@@ -177,108 +181,30 @@ const Header = () => {
               })}
             </div>
 
-            {/* Right: Theme Toggle & User Profile */}
-            <div className="d-flex align-items-center gap-3">
-              <ThemeToggle />
-
+            {/* Right: User Profile */}
+            <div className="d-flex align-items-center">
               {/* User Profile Dropdown */}
               <div className="position-relative">
                 <button
-                  className="btn d-flex align-items-center gap-2"
+                  ref={profileButtonRef}
+                  className="btn d-flex align-items-center justify-content-center"
                   onClick={() => setShowProfileDropdown(!showProfileDropdown)}
                   style={{
                     background: 'rgba(255,255,255,0.1)',
                     border: '1px solid rgba(255,255,255,0.2)',
                     color: 'white',
-                    borderRadius: '25px',
-                    padding: '8px 16px'
+                    borderRadius: '50%',
+                    padding: '0',
+                    width: '40px',
+                    height: '40px',
+                    minWidth: '40px',
+                    minHeight: '40px'
                   }}
                 >
-                  <div
-                    style={{
-                      width: '32px',
-                      height: '32px',
-                      borderRadius: '50%',
-                      background: 'linear-gradient(135deg, #4a7c7c 0%, #2d5a7c 100%)',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      fontWeight: 'bold',
-                      fontSize: '14px'
-                    }}
-                  >
-                    {currentUser?.name?.charAt(0).toUpperCase() || 'U'}
-                  </div>
-                  <span className="d-none d-md-inline">{currentUser?.name}</span>
+                  <User size={20} />
                 </button>
 
                 {/* Dropdown Menu */}
-                {showProfileDropdown && (
-                  <>
-                    <div
-                      className="position-fixed top-0 start-0 w-100 h-100"
-                      onClick={() => setShowProfileDropdown(false)}
-                      style={{ zIndex: 1040 }}
-                    />
-                    <div
-                      className="position-absolute end-0 mt-2 shadow-lg"
-                      style={{
-                        background: theme === 'dark' ? '#2d2d2d' : 'white',
-                        borderRadius: '8px',
-                        minWidth: '200px',
-                        zIndex: 1050,
-                        border: '1px solid rgba(0,0,0,0.1)'
-                      }}
-                    >
-                      <div className="p-3 border-bottom">
-                        <div className="fw-bold">{currentUser?.name}</div>
-                        <div className="small text-muted">{currentUser?.email}</div>
-                        <div className="small">
-                          <span className="badge bg-primary mt-1">{currentUser?.role}</span>
-                        </div>
-                      </div>
-                      <button
-                        onClick={() => {
-                          setShowProfileDropdown(false);
-                          navigate('/profile');
-                        }}
-                        className="btn btn-link w-100 text-start p-3"
-                        style={{
-                          textDecoration: 'none',
-                          color: theme === 'dark' ? 'var(--text-primary)' : '#212529'
-                        }}
-                      >
-                        <User size={18} className="me-2" />
-                        My Profile
-                      </button>
-                      <button
-                        onClick={() => {
-                          setShowProfileDropdown(false);
-                          navigate('/landing-preview');
-                        }}
-                        className="btn btn-link w-100 text-start p-3"
-                        style={{
-                          textDecoration: 'none',
-                          color: theme === 'dark' ? 'var(--text-primary)' : '#212529'
-                        }}
-                      >
-                        <Eye size={18} className="me-2" />
-                        Preview Landing Page
-                      </button>
-                      <button
-                        onClick={() => {
-                          setShowProfileDropdown(false);
-                          logout();
-                        }}
-                        className="btn btn-link text-danger w-100 text-start p-3"
-                        style={{ textDecoration: 'none' }}
-                      >
-                        <LogOut size={18} className="me-2" />
-                        Logout
-                      </button>
-                    </div>
-                  </>
-                )}
               </div>
             </div>
           </div>
@@ -299,6 +225,13 @@ const Header = () => {
           </p>
         </div>
       </header>
+
+      {/* Profile Dropdown */}
+      <ProfileDropdown
+        show={showProfileDropdown}
+        onClose={() => setShowProfileDropdown(false)}
+        buttonRef={profileButtonRef}
+      />
 
       {/* Mobile Menu */}
       <MobileMenu

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Clock, Calendar, CheckCircle, Settings } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
 import { api } from '../../services/api';
@@ -6,6 +6,8 @@ import AddHikeForm from '../hikes/AddHikeForm';
 import AttendanceModal from '../hikes/AttendanceModal';
 import BulkActions from './BulkActions';
 import PageHeader from '../common/PageHeader';
+import EmergencyContactsModal from './EmergencyContactsModal';
+import PackingListEditorModal from './PackingListEditorModal';
 
 function AdminPanel() {
   const { token } = useAuth();
@@ -14,21 +16,23 @@ function AdminPanel() {
   const [showAddHikeForm, setShowAddHikeForm] = useState(false);
   const [showEditHikeForm, setShowEditHikeForm] = useState(false);
   const [showAttendanceModal, setShowAttendanceModal] = useState(false);
+  const [showEmergencyContactsModal, setShowEmergencyContactsModal] = useState(false);
+  const [showPackingListModal, setShowPackingListModal] = useState(false);
   const [selectedHike, setSelectedHike] = useState(null);
   const [selectedHikes, setSelectedHikes] = useState([]);
 
-  useEffect(() => {
-    fetchHikes();
-  }, []);
-
-  const fetchHikes = async () => {
+  const fetchHikes = useCallback(async () => {
     try {
       const data = await api.getHikes(token);
       setHikes(data);
     } catch (err) {
       console.error('Error fetching hikes:', err);
     }
-  };
+  }, [token]);
+
+  useEffect(() => {
+    fetchHikes();
+  }, [fetchHikes]);
 
   const handleDeleteHike = async (id) => {
     if (!window.confirm('Delete this hike?')) return;
@@ -60,15 +64,13 @@ function AdminPanel() {
   };
 
   const handleViewEmergencyContacts = async () => {
-    // This would open another modal or navigate to emergency contacts view
-    // For now, we'll just alert
-    alert('Emergency contacts feature - implement modal as needed');
+    setShowAttendanceModal(false);
+    setShowEmergencyContactsModal(true);
   };
 
   const handleEditPackingList = async () => {
-    // This would open the packing list editor modal
-    // For now, we'll just alert
-    alert('Packing list editor - implement modal as needed');
+    setShowAttendanceModal(false);
+    setShowPackingListModal(true);
   };
 
   const handleSelectAll = () => {
@@ -287,6 +289,28 @@ function AdminPanel() {
         hikeData={selectedHike}
         onViewEmergencyContacts={handleViewEmergencyContacts}
         onEditPackingList={handleEditPackingList}
+      />
+
+      {/* Emergency Contacts Modal */}
+      <EmergencyContactsModal
+        show={showEmergencyContactsModal}
+        onClose={() => {
+          setShowEmergencyContactsModal(false);
+          setShowAttendanceModal(true);
+        }}
+        hikeId={selectedHike?.id}
+        hikeName={selectedHike?.name}
+      />
+
+      {/* Packing List Editor Modal */}
+      <PackingListEditorModal
+        show={showPackingListModal}
+        onClose={() => {
+          setShowPackingListModal(false);
+          setShowAttendanceModal(true);
+        }}
+        hikeId={selectedHike?.id}
+        hikeName={selectedHike?.name}
       />
     </div>
   );

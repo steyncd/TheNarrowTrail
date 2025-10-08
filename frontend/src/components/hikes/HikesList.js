@@ -1,12 +1,13 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { Calendar, CheckCircle, Clock, Search, Filter, X } from 'lucide-react';
 import { api } from '../../services/api';
 import { useAuth } from '../../contexts/AuthContext';
 import { useTheme } from '../../contexts/ThemeContext';
 import HikeCard from './HikeCard';
 import HikeDetailsModal from './HikeDetailsModal';
-import LoadingSpinner from '../common/LoadingSpinner';
+import { HikeCardSkeleton } from '../common/Skeleton';
 
+// PERFORMANCE OPTIMIZATION: Memoized filtering logic
 const HikesList = () => {
   const { token, currentUser } = useAuth();
   const { theme } = useTheme();
@@ -73,40 +74,75 @@ const HikesList = () => {
     }
   };
 
-  // Filter hikes
-  const filteredHikes = hikes.filter(hike => {
-    // Search filter
-    if (searchTerm && !hike.name.toLowerCase().includes(searchTerm.toLowerCase()) &&
-        !hike.description.toLowerCase().includes(searchTerm.toLowerCase())) {
-      return false;
-    }
-
-    // Difficulty filter
-    if (difficultyFilter !== 'all' && hike.difficulty.toLowerCase() !== difficultyFilter.toLowerCase()) {
-      return false;
-    }
-
-    // Type filter
-    if (typeFilter !== 'all' && hike.type !== typeFilter) {
-      return false;
-    }
-
-    // Status filter
-    if (statusFilter !== 'all') {
-      if (statusFilter === 'open') {
-        const confirmedCount = hike.confirmed_users ? hike.confirmed_users.length : 0;
-        const maxCapacity = hike.max_capacity || 20;
-        if (confirmedCount >= maxCapacity) return false;
-      } else if (hike.status !== statusFilter) {
+  // PERFORMANCE OPTIMIZATION: Memoize filter logic to prevent recalculation on every render
+  // Only recalculates when hikes or filter dependencies change
+  const filteredHikes = useMemo(() => {
+    return hikes.filter(hike => {
+      // Search filter
+      if (searchTerm && !hike.name.toLowerCase().includes(searchTerm.toLowerCase()) &&
+          !hike.description.toLowerCase().includes(searchTerm.toLowerCase())) {
         return false;
       }
-    }
 
-    return true;
-  });
+      // Difficulty filter
+      if (difficultyFilter !== 'all' && hike.difficulty.toLowerCase() !== difficultyFilter.toLowerCase()) {
+        return false;
+      }
+
+      // Type filter
+      if (typeFilter !== 'all' && hike.type !== typeFilter) {
+        return false;
+      }
+
+      // Status filter
+      if (statusFilter !== 'all') {
+        if (statusFilter === 'open') {
+          const confirmedCount = hike.confirmed_users ? hike.confirmed_users.length : 0;
+          const maxCapacity = hike.max_capacity || 20;
+          if (confirmedCount >= maxCapacity) return false;
+        } else if (hike.status !== statusFilter) {
+          return false;
+        }
+      }
+
+      return true;
+    });
+  }, [hikes, searchTerm, difficultyFilter, typeFilter, statusFilter]);
+
+  // PERFORMANCE OPTIMIZATION: Memoize date calculations
+  const { upcomingSoon, future, past } = useMemo(() => {
+    const now = new Date();
+    const twoMonthsFromNow = new Date(now.getTime() + 60 * 24 * 60 * 60 * 1000);
+
+    return {
+      upcomingSoon: filteredHikes.filter(h => {
+        const hikeDate = new Date(h.date);
+        return hikeDate >= now && hikeDate <= twoMonthsFromNow;
+      }),
+      future: filteredHikes.filter(h => {
+        const hikeDate = new Date(h.date);
+        return hikeDate > twoMonthsFromNow;
+      }),
+      past: filteredHikes.filter(h => {
+        const hikeDate = new Date(h.date);
+        return hikeDate < now;
+      })
+    };
+  }, [filteredHikes]);
 
   if (loading && hikes.length === 0) {
-    return <LoadingSpinner size="large" message="Loading hikes..." />;
+    return (
+      <div className="container mt-4">
+        <div className="row">
+          <HikeCardSkeleton />
+          <HikeCardSkeleton />
+          <HikeCardSkeleton />
+          <HikeCardSkeleton />
+          <HikeCardSkeleton />
+          <HikeCardSkeleton />
+        </div>
+      </div>
+    );
   }
 
   if (filteredHikes.length === 0 && hikes.length > 0) {
@@ -132,24 +168,6 @@ const HikesList = () => {
       </div>
     );
   }
-
-  const now = new Date();
-  const twoMonthsFromNow = new Date(now.getTime() + 60 * 24 * 60 * 60 * 1000);
-
-  const upcomingSoon = filteredHikes.filter(h => {
-    const hikeDate = new Date(h.date);
-    return hikeDate >= now && hikeDate <= twoMonthsFromNow;
-  });
-
-  const future = filteredHikes.filter(h => {
-    const hikeDate = new Date(h.date);
-    return hikeDate > twoMonthsFromNow;
-  });
-
-  const past = filteredHikes.filter(h => {
-    const hikeDate = new Date(h.date);
-    return hikeDate < now;
-  });
 
   const renderFilters = () => (
     <div

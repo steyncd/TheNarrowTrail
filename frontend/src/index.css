@@ -1,0 +1,146 @@
+/* Global Mobile-Friendly Styles */
+
+/* Prevent horizontal scroll on mobile */
+body {
+  overflow-x: hidden;
+  -webkit-overflow-scrolling: touch;
+}
+
+/* Ensure container doesn't overflow */
+.container, .container-fluid {
+  max-width: 100%;
+  overflow-x: hidden;
+}
+
+/* Mobile responsive utilities */
+@media (max-width: 768px) {
+  /* Reduce padding on mobile */
+  .container {
+    padding-left: 15px;
+    padding-right: 15px;
+  }
+
+  /* Make cards more mobile-friendly */
+  .card {
+    margin-bottom: 1rem;
+  }
+
+  .card-body {
+    padding: 1rem;
+  }
+
+  /* Tables responsive on mobile */
+  .table-responsive {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  /* Modal improvements for mobile */
+  .modal-dialog {
+    margin: 0.5rem;
+    max-width: calc(100% - 1rem);
+  }
+
+  .modal-body {
+    max-height: 70vh;
+    overflow-y: auto;
+  }
+
+  /* Form inputs better sized for mobile */
+  .form-control,
+  .form-select {
+    font-size: 16px; /* Prevents zoom on iOS */
+  }
+
+  /* Improve hero images on mobile */
+  [style*="height: 400px"] {
+    height: 250px !important;
+  }
+}
+
+/* Extra small devices */
+@media (max-width: 575.98px) {
+  .container {
+    padding-left: 10px;
+    padding-right: 10px;
+  }
+
+  h1 {
+    font-size: 1.75rem;
+  }
+
+  h2 {
+    font-size: 1.5rem;
+  }
+}
+
+/* Touch-friendly improvements */
+@media (hover: none) and (pointer: coarse) {
+  .btn {
+    min-height: 44px;
+    min-width: 44px;
+  }
+}
+
+/* PWA standalone mode */
+@media (display-mode: standalone) {
+  body {
+    padding-top: env(safe-area-inset-top);
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+}
+
+/* Smooth scrolling */
+html {
+  scroll-behavior: smooth;
+}
+
+/* Better focus indicators */
+a:focus,
+button:focus,
+input:focus {
+  outline: 2px solid #0d6efd;
+  outline-offset: 2px;
+}
+
+/* Improve image loading */
+img {
+  max-width: 100%;
+  height: auto;
+}
+
+/* Mission & Vision Content Styling */
+.mission-vision-content h2 {
+  color: rgba(255, 255, 255, 0.95);
+  margin-top: 1.5rem;
+  margin-bottom: 1rem;
+  font-weight: 600;
+  font-size: 1.35rem;
+  letter-spacing: 0.3px;
+}
+
+.mission-vision-content h2:first-child {
+  margin-top: 0;
+}
+
+.mission-vision-content p {
+  margin-bottom: 0.75rem;
+  line-height: 1.7;
+  color: rgba(255, 255, 255, 0.85);
+  font-size: 0.95rem;
+}
+
+.mission-vision-content ul {
+  margin-bottom: 1rem;
+  color: rgba(255, 255, 255, 0.85);
+}
+
+.mission-vision-content li {
+  margin-bottom: 0.5rem;
+  line-height: 1.6;
+}
+
+.mission-vision-content strong {
+  color: rgba(255, 255, 255, 0.95);
+  font-weight: 600;
+}

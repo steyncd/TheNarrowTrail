@@ -81,40 +81,60 @@ exports.createHike = async (req, res) => {
 
     const hike = result.rows[0];
 
-    // Notify all approved users
-    const users = await pool.query(
-      'SELECT email, phone, notifications_email, notifications_whatsapp, name FROM users WHERE status = $1',
-      ['approved']
-    );
-
-    const hikeDate = new Date(date).toLocaleDateString();
-    const groupType = group === 'family' ? 'family' : "men's";
-
-    for (const user of users.rows) {
-      if (user.notifications_email) {
-        await sendEmail(
-          user.email,
-          'New Hike Added!',
-          `<h2>New ${groupType} hike: ${name}</h2>
-           <p><strong>Date:</strong> ${hikeDate}</p>
-           <p><strong>Difficulty:</strong> ${difficulty}</p>
-           <p><strong>Distance:</strong> ${distance}</p>
-           <p><strong>Description:</strong> ${description}</p>
-           ${cost > 0 ? `<p><strong>Cost:</strong> R${cost}</p>` : ''}
-           <p>Log in to express your interest!</p>`
-        );
-      }
-      if (user.notifications_whatsapp) {
-        await sendWhatsApp(
-          user.phone,
-          `New ${groupType} hike: ${name} on ${hikeDate}. ${difficulty} difficulty, ${distance}. ${cost > 0 ? `Cost: R${cost}` : 'Free'}`
-        );
-      }
-    }
-
     // Log activity
     const ipAddress = req.ip || req.connection.remoteAddress;
     await logActivity(req.user.id, 'create_hike', 'hike', hike.id, JSON.stringify({ name, date, difficulty }), ipAddress);
+
+    // Send notifications asynchronously (non-blocking) - PERFORMANCE OPTIMIZATION
+    (async () => {
+      try {
+        const users = await pool.query(
+          'SELECT email, phone, notifications_email, notifications_whatsapp, name FROM users WHERE status = $1',
+          ['approved']
+        );
+
+        const hikeDate = new Date(date).toLocaleDateString();
+        const groupType = group === 'family' ? 'family' : "men's";
+
+        // Send all notifications in parallel
+        await Promise.all(
+          users.rows.map(async (user) => {
+            const promises = [];
+
+            if (user.notifications_email) {
+              promises.push(
+                sendEmail(
+                  user.email,
+                  'New Hike Added!',
+                  `<h2>New ${groupType} hike: ${name}</h2>
+                   <p><strong>Date:</strong> ${hikeDate}</p>
+                   <p><strong>Difficulty:</strong> ${difficulty}</p>
+                   <p><strong>Distance:</strong> ${distance}</p>
+                   <p><strong>Description:</strong> ${description}</p>
+                   ${cost > 0 ? `<p><strong>Cost:</strong> R${cost}</p>` : ''}
+                   <p>Log in to express your interest!</p>`
+                )
+              );
+            }
+
+            if (user.notifications_whatsapp) {
+              promises.push(
+                sendWhatsApp(
+                  user.phone,
+                  `New ${groupType} hike: ${name} on ${hikeDate}. ${difficulty} difficulty, ${distance}. ${cost > 0 ? `Cost: R${cost}` : 'Free'}`
+                )
+              );
+            }
+
+            return Promise.all(promises);
+          })
+        );
+
+        console.log(`Notifications sent for hike: ${name}`);
+      } catch (error) {
+        console.error('Error sending notifications:', error);
+      }
+    })();
 
     res.status(201).json(hike);
   } catch (error) {

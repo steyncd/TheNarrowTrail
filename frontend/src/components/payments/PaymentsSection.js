@@ -58,7 +58,7 @@ function PaymentsSection({ hikeId, hikeCost, isAdmin }) {
   const fetchUsers = async () => {
     try {
       const data = await api.getUsers(token);
-      setUsers(data.filter(u => u.status === 'approved'));
+      setUsers(data || []);
     } catch (error) {
       console.error('Error fetching users:', error);
     }

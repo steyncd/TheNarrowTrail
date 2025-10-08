@@ -255,29 +255,16 @@ function UserManagement() {
         title="User Management"
         subtitle="Manage user accounts, approvals, and permissions"
         action={
-          <div className="d-flex gap-2">
-            <button
-              className="btn btn-secondary"
-              onClick={() => {
-                fetchUsers();
-                fetchPendingUsers();
-              }}
-              disabled={loading}
-              style={{minHeight: '38px'}}
-            >
-              Refresh
-            </button>
-            <button
-              className="btn btn-primary"
-              onClick={() => {
-                setShowAddUser(true);
-                setError('');
-              }}
-              style={{minHeight: '38px'}}
-            >
-              Add User
-            </button>
-          </div>
+          <button
+            className="btn btn-primary"
+            onClick={() => {
+              setShowAddUser(true);
+              setError('');
+            }}
+            style={{minHeight: '38px'}}
+          >
+            Add User
+          </button>
         }
       />
 

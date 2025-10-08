@@ -1,12 +1,12 @@
 const express = require('express');
 const router = express.Router();
+const pool = require('../config/database');
 const { getWeatherForecast, getHikingSuitability } = require('../services/weatherService');
 const { authenticateToken } = require('../middleware/auth');
 
 // Get weather forecast for a hike
 router.get('/hike/:hikeId', authenticateToken, async (req, res) => {
   const { hikeId } = req.params;
-  const pool = req.app.locals.pool;
 
   try {
     // Get hike details

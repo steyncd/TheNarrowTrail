@@ -1,4 +1,4 @@
-export const API_URL = 'https://hiking-portal-api-554106646136.us-central1.run.app';
+export const API_URL = 'https://backend-554106646136.europe-west1.run.app';
 
 class ApiService {
   constructor() {
@@ -26,7 +26,18 @@ class ApiService {
 
     try {
       const response = await fetch(`${this.baseURL}${endpoint}`, config);
-      const data = await response.json();
+
+      // Check content type before parsing
+      const contentType = response.headers.get('content-type');
+      let data;
+
+      if (contentType && contentType.includes('application/json')) {
+        data = await response.json();
+      } else {
+        // If not JSON, get text (likely an HTML error page)
+        const text = await response.text();
+        throw new Error(`Server returned non-JSON response (${response.status}): ${text.substring(0, 100)}`);
+      }
 
       if (!response.ok) {
         throw new Error(data.error || 'Request failed');
@@ -629,6 +640,17 @@ class ApiService {
     }
     const errorData = await response.json().catch(() => ({}));
     return { success: false, error: errorData.error || 'Failed to create payments' };
+  }
+
+  async getPaymentsOverview(token) {
+    const response = await fetch(`${this.baseURL}/api/payments/overview`, {
+      headers: this.getAuthHeaders(token)
+    });
+    if (response.ok) {
+      return response.json();
+    }
+    console.error('Get payments overview error:', response.status, response.statusText);
+    return { summary: {}, hikes: [] };
   }
 }
 

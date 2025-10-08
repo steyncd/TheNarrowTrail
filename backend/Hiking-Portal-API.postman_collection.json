@@ -1,0 +1,1760 @@
+{
+  "info": {
+    "name": "Hiking Portal API - Complete",
+    "_postman_id": "hiking-portal-api-v2",
+    "description": "Complete Postman collection for The Narrow Trail Hiking Portal API with all endpoints",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "auth": {
+    "type": "bearer",
+    "bearer": [
+      {
+        "key": "token",
+        "value": "{{jwt_token}}",
+        "type": "string"
+      }
+    ]
+  },
+  "event": [
+    {
+      "listen": "prerequest",
+      "script": {
+        "type": "text/javascript",
+        "exec": [
+          "// Auto-refresh token if expired",
+          "const token = pm.environment.get('jwt_token');",
+          "if (token) {",
+          "    const payload = JSON.parse(atob(token.split('.')[1]));",
+          "    const exp = payload.exp * 1000;",
+          "    if (Date.now() >= exp) {",
+          "        console.log('Token expired, please login again');",
+          "    }",
+          "}"
+        ]
+      }
+    }
+  ],
+  "item": [
+    {
+      "name": "Authentication",
+      "item": [
+        {
+          "name": "Register User",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 201) {",
+                  "    const response = pm.response.json();",
+                  "    if (response.token) {",
+                  "        pm.environment.set('jwt_token', response.token);",
+                  "        pm.environment.set('user_id', response.user.id);",
+                  "        pm.environment.set('user_email', response.user.email);",
+                  "        console.log('Token saved to environment');",
+                  "    }",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {"key": "Content-Type", "value": "application/json"}
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Test User\",\n  \"email\": \"test@example.com\",\n  \"password\": \"Password123!\",\n  \"phone\": \"0821234567\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/auth/register",
+              "host": ["{{base_url}}"],
+              "path": ["api", "auth", "register"]
+            },
+            "description": "Register a new user account (requires admin approval)"
+          }
+        },
+        {
+          "name": "Login",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 200) {",
+                  "    const response = pm.response.json();",
+                  "    pm.environment.set('jwt_token', response.token);",
+                  "    pm.environment.set('user_id', response.user.id);",
+                  "    pm.environment.set('user_email', response.user.email);",
+                  "    pm.environment.set('user_role', response.user.role);",
+                  "    console.log('✓ Logged in as:', response.user.email);",
+                  "    console.log('✓ Role:', response.user.role);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {"key": "Content-Type", "value": "application/json"}
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"{{user_email}}\",\n  \"password\": \"{{user_password}}\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/auth/login",
+              "host": ["{{base_url}}"],
+              "path": ["api", "auth", "login"]
+            },
+            "description": "Login with email and password to get JWT token"
+          }
+        },
+        {
+          "name": "Forgot Password",
+          "request": {
+            "method": "POST",
+            "header": [
+              {"key": "Content-Type", "value": "application/json"}
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"test@example.com\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/auth/forgot-password",
+              "host": ["{{base_url}}"],
+              "path": ["api", "auth", "forgot-password"]
+            }
+          }
+        },
+        {
+          "name": "Reset Password",
+          "request": {
+            "method": "POST",
+            "header": [
+              {"key": "Content-Type", "value": "application/json"}
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"token\": \"reset_token_here\",\n  \"password\": \"NewPassword123!\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/auth/reset-password",
+              "host": ["{{base_url}}"],
+              "path": ["api", "auth", "reset-password"]
+            }
+          }
+        },
+        {
+          "name": "Verify Reset Token",
+          "request": {
+            "method": "POST",
+            "header": [
+              {"key": "Content-Type", "value": "application/json"}
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"token\": \"reset_token_here\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/auth/verify-reset-token",
+              "host": ["{{base_url}}"],
+              "path": ["api", "auth", "verify-reset-token"]
+            }
+          }
+        },
+        {
+          "name": "Verify Email",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/auth/verify-email/:token",
+              "host": ["{{base_url}}"],
+              "path": ["api", "auth", "verify-email", ":token"],
+              "variable": [
+                {
+                  "key": "token",
+                  "value": "verification_token_here"
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Admin - Users",
+      "item": [
+        {
+          "name": "Get Pending Users",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/admin/pending-users",
+              "host": ["{{base_url}}"],
+              "path": ["api", "admin", "pending-users"]
+            }
+          }
+        },
+        {
+          "name": "Get All Users",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/admin/users",
+              "host": ["{{base_url}}"],
+              "path": ["api", "admin", "users"]
+            }
+          }
+        },
+        {
+          "name": "Create User",
+          "request": {
+            "method": "POST",
+            "header": [
+              {"key": "Content-Type", "value": "application/json"}
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"New User\",\n  \"email\": \"newuser@example.com\",\n  \"password\": \"Password123!\",\n  \"phone\": \"0821234567\",\n  \"role\": \"user\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/admin/users",
+              "host": ["{{base_url}}"],
+              "path": ["api", "admin", "users"]
+            }
+          }
+        },
+        {
+          "name": "Approve User",
+          "request": {
+            "method": "PUT",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/admin/users/:id/approve",
+              "host": ["{{base_url}}"],
+              "path": ["api", "admin", "users", ":id", "approve"],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "1"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Promote User to Admin",
+          "request": {
+            "method": "PUT",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/admin/users/:id/promote",
+              "host": ["{{base_url}}"],
+              "path": ["api", "admin", "users", ":id", "promote"],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "1"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Update User",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {"key": "Content-Type", "value": "application/json"}
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Updated Name\",\n  \"phone\": \"0829876543\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/admin/users/:id",
+              "host": ["{{base_url}}"],
+              "path": ["api", "admin", "users", ":id"],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "1"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Reset User Password",
+          "request": {
+            "method": "POST",
+            "header": [
+              {"key": "Content-Type", "value": "application/json"}
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"password\": \"NewPassword123!\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/admin/users/:id/reset-password",
+              "host": ["{{base_url}}"],
+              "path": ["api", "admin", "users", ":id", "reset-password"],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "1"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Reject User",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/admin/reject-user/:id",
+              "host": ["{{base_url}}"],
+              "path": ["api", "admin", "reject-user", ":id"],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "1"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Delete User",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/admin/users/:id",
+              "host": ["{{base_url}}"],
+              "path": ["api", "admin", "users", ":id"],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "1"
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Admin - Notifications",
+      "item": [
+        {
+          "name": "Get Notifications",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/admin/notifications",
+              "host": ["{{base_url}}"],
+              "path": ["api", "admin", "notifications"]
+            }
+          }
+        },
+        {
+          "name": "Test Notification",
+          "request": {
+            "method": "POST",
+            "header": [
+              {"key": "Content-Type", "value": "application/json"}
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"user_id\": 1,\n  \"title\": \"Test Notification\",\n  \"message\": \"This is a test message\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/admin/test-notification",
+              "host": ["{{base_url}}"],
+              "path": ["api", "admin", "test-notification"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Hikes",
+      "item": [
+        {
+          "name": "Get All Hikes",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 200) {",
+                  "    const hikes = pm.response.json();",
+                  "    if (hikes.length > 0) {",
+                  "        pm.environment.set('hike_id', hikes[0].id);",
+                  "    }",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/hikes",
+              "host": ["{{base_url}}"],
+              "path": ["api", "hikes"]
+            }
+          }
+        },
+        {
+          "name": "Get Public Hikes (No Auth)",
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/hikes/public",
+              "host": ["{{base_url}}"],
+              "path": ["api", "hikes", "public"]
+            }
+          }
+        },
+        {
+          "name": "Get Hike by ID",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/hikes/:id",
+              "host": ["{{base_url}}"],
+              "path": ["api", "hikes", ":id"],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "{{hike_id}}"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get My Hike Status",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/hikes/:id/my-status",
+              "host": ["{{base_url}}"],
+              "path": ["api", "hikes", ":id", "my-status"],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "{{hike_id}}"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Create Hike",
+          "request": {
+            "method": "POST",
+            "header": [
+              {"key": "Content-Type", "value": "application/json"}
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Drakensberg Amphitheatre\",\n  \"date\": \"2025-11-15\",\n  \"difficulty\": \"challenging\",\n  \"distance\": \"15km\",\n  \"description\": \"Spectacular mountain views\",\n  \"type\": \"day\",\n  \"cost\": 350,\n  \"group\": \"adventurous\",\n  \"location\": \"Drakensberg, KZN\",\n  \"latitude\": -28.7489,\n  \"longitude\": 28.9012,\n  \"estimate\": \"8-10 hours\",\n  \"accommodation_link\": null,\n  \"travel_link\": null\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/hikes",
+              "host": ["{{base_url}}"],
+              "path": ["api", "hikes"]
+            }
+          }
+        },
+        {
+          "name": "Update Hike",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {"key": "Content-Type", "value": "application/json"}
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Updated Hike Name\",\n  \"status\": \"trip_booked\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/hikes/:id",
+              "host": ["{{base_url}}"],
+              "path": ["api", "hikes", ":id"],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "{{hike_id}}"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Delete Hike",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/hikes/:id",
+              "host": ["{{base_url}}"],
+              "path": ["api", "hikes", ":id"],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "{{hike_id}}"
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Hike Interest & Attendance",
+      "item": [
+        {
+          "name": "Toggle Interest",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/hikes/:id/interest",
+              "host": ["{{base_url}}"],
+              "path": ["api", "hikes", ":id", "interest"],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "{{hike_id}}"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Confirm Attendance",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/hikes/:id/confirm",
+              "host": ["{{base_url}}"],
+              "path": ["api", "hikes", ":id", "confirm"],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "{{hike_id}}"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Cancel Attendance",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/hikes/:id/cancel",
+              "host": ["{{base_url}}"],
+              "path": ["api", "hikes", ":id", "cancel"],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "{{hike_id}}"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get Interested Users (Admin)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/hikes/:id/interested",
+              "host": ["{{base_url}}"],
+              "path": ["api", "hikes", ":id", "interested"],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "{{hike_id}}"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get Attendees (Admin)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/hikes/:id/attendees",
+              "host": ["{{base_url}}"],
+              "path": ["api", "hikes", ":id", "attendees"],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "{{hike_id}}"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Add Attendee (Admin)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {"key": "Content-Type", "value": "application/json"}
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"user_id\": 2\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/hikes/:id/attendees",
+              "host": ["{{base_url}}"],
+              "path": ["api", "hikes", ":id", "attendees"],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "{{hike_id}}"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Update Attendee (Admin)",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {"key": "Content-Type", "value": "application/json"}
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"payment_status\": \"paid\",\n  \"amount_paid\": 350\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/hikes/:hikeId/attendees/:userId",
+              "host": ["{{base_url}}"],
+              "path": ["api", "hikes", ":hikeId", "attendees", ":userId"],
+              "variable": [
+                {
+                  "key": "hikeId",
+                  "value": "{{hike_id}}"
+                },
+                {
+                  "key": "userId",
+                  "value": "2"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Remove Attendee (Admin)",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/hikes/:hikeId/attendees/:userId",
+              "host": ["{{base_url}}"],
+              "path": ["api", "hikes", ":hikeId", "attendees", ":userId"],
+              "variable": [
+                {
+                  "key": "hikeId",
+                  "value": "{{hike_id}}"
+                },
+                {
+                  "key": "userId",
+                  "value": "2"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get Emergency Contacts (Admin)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/hikes/:id/emergency-contacts",
+              "host": ["{{base_url}}"],
+              "path": ["api", "hikes", ":id", "emergency-contacts"],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "{{hike_id}}"
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Comments",
+      "item": [
+        {
+          "name": "Get Comments",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/hikes/:id/comments",
+              "host": ["{{base_url}}"],
+              "path": ["api", "hikes", ":id", "comments"],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "{{hike_id}}"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Add Comment",
+          "request": {
+            "method": "POST",
+            "header": [
+              {"key": "Content-Type", "value": "application/json"}
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"comment\": \"Looking forward to this hike!\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/hikes/:id/comments",
+              "host": ["{{base_url}}"],
+              "path": ["api", "hikes", ":id", "comments"],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "{{hike_id}}"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Delete Comment",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/hikes/:hikeId/comments/:commentId",
+              "host": ["{{base_url}}"],
+              "path": ["api", "hikes", ":hikeId", "comments", ":commentId"],
+              "variable": [
+                {
+                  "key": "hikeId",
+                  "value": "{{hike_id}}"
+                },
+                {
+                  "key": "commentId",
+                  "value": "1"
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Packing List",
+      "item": [
+        {
+          "name": "Get Packing List",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/hikes/:id/packing-list",
+              "host": ["{{base_url}}"],
+              "path": ["api", "hikes", ":id", "packing-list"],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "{{hike_id}}"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Update Packing List",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {"key": "Content-Type", "value": "application/json"}
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"items\": [\n    {\"item\": \"Water bottle\", \"packed\": true},\n    {\"item\": \"Hiking boots\", \"packed\": false},\n    {\"item\": \"Sunscreen\", \"packed\": true}\n  ]\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/hikes/:id/packing-list",
+              "host": ["{{base_url}}"],
+              "path": ["api", "hikes", ":id", "packing-list"],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "{{hike_id}}"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get Default Packing List (Admin)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/hikes/:id/default-packing-list",
+              "host": ["{{base_url}}"],
+              "path": ["api", "hikes", ":id", "default-packing-list"],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "{{hike_id}}"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Update Default Packing List (Admin)",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {"key": "Content-Type", "value": "application/json"}
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"items\": [\n    {\"item\": \"Water (2L)\", \"category\": \"Essentials\"},\n    {\"item\": \"Hiking boots\", \"category\": \"Clothing\"},\n    {\"item\": \"First aid kit\", \"category\": \"Safety\"}\n  ]\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/hikes/:id/default-packing-list",
+              "host": ["{{base_url}}"],
+              "path": ["api", "hikes", ":id", "default-packing-list"],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "{{hike_id}}"
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Carpool",
+      "item": [
+        {
+          "name": "Get Carpool Offers",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/hikes/:id/carpool-offers",
+              "host": ["{{base_url}}"],
+              "path": ["api", "hikes", ":id", "carpool-offers"],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "{{hike_id}}"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Create Carpool Offer",
+          "request": {
+            "method": "POST",
+            "header": [
+              {"key": "Content-Type", "value": "application/json"}
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"seats_available\": 3,\n  \"departure_location\": \"Sandton City\",\n  \"departure_time\": \"06:00\",\n  \"notes\": \"Can pick up along N1\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/hikes/:id/carpool-offers",
+              "host": ["{{base_url}}"],
+              "path": ["api", "hikes", ":id", "carpool-offers"],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "{{hike_id}}"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Delete Carpool Offer",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/hikes/:hikeId/carpool-offers/:offerId",
+              "host": ["{{base_url}}"],
+              "path": ["api", "hikes", ":hikeId", "carpool-offers", ":offerId"],
+              "variable": [
+                {
+                  "key": "hikeId",
+                  "value": "{{hike_id}}"
+                },
+                {
+                  "key": "offerId",
+                  "value": "1"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get Carpool Requests",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/hikes/:id/carpool-requests",
+              "host": ["{{base_url}}"],
+              "path": ["api", "hikes", ":id", "carpool-requests"],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "{{hike_id}}"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Create Carpool Request",
+          "request": {
+            "method": "POST",
+            "header": [
+              {"key": "Content-Type", "value": "application/json"}
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"pickup_location\": \"Rosebank\",\n  \"notes\": \"Flexible on pickup time\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/hikes/:id/carpool-requests",
+              "host": ["{{base_url}}"],
+              "path": ["api", "hikes", ":id", "carpool-requests"],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "{{hike_id}}"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Delete Carpool Request",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/hikes/:hikeId/carpool-requests/:requestId",
+              "host": ["{{base_url}}"],
+              "path": ["api", "hikes", ":hikeId", "carpool-requests", ":requestId"],
+              "variable": [
+                {
+                  "key": "hikeId",
+                  "value": "{{hike_id}}"
+                },
+                {
+                  "key": "requestId",
+                  "value": "1"
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Payments",
+      "item": [
+        {
+          "name": "Get All Payments (Admin)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/payments",
+              "host": ["{{base_url}}"],
+              "path": ["api", "payments"]
+            }
+          }
+        },
+        {
+          "name": "Get Payments Overview (Admin)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/payments/overview",
+              "host": ["{{base_url}}"],
+              "path": ["api", "payments", "overview"]
+            },
+            "description": "Get consolidated payment statistics for all upcoming hikes"
+          }
+        },
+        {
+          "name": "Get Hike Payments",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/hikes/:hikeId/payments",
+              "host": ["{{base_url}}"],
+              "path": ["api", "hikes", ":hikeId", "payments"],
+              "variable": [
+                {
+                  "key": "hikeId",
+                  "value": "{{hike_id}}"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get Hike Payment Stats",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/hikes/:hikeId/payments/stats",
+              "host": ["{{base_url}}"],
+              "path": ["api", "hikes", ":hikeId", "payments", "stats"],
+              "variable": [
+                {
+                  "key": "hikeId",
+                  "value": "{{hike_id}}"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Record Payment (Admin)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {"key": "Content-Type", "value": "application/json"}
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"hike_id\": {{hike_id}},\n  \"user_id\": 2,\n  \"amount\": 350,\n  \"payment_method\": \"bank_transfer\",\n  \"payment_status\": \"paid\",\n  \"payment_reference\": \"REF123456\",\n  \"notes\": \"Paid via EFT\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/payments",
+              "host": ["{{base_url}}"],
+              "path": ["api", "payments"]
+            }
+          }
+        },
+        {
+          "name": "Bulk Create Payments (Admin)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {"key": "Content-Type", "value": "application/json"}
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"amount\": 350,\n  \"paymentStatus\": \"pending\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/hikes/:hikeId/payments/bulk",
+              "host": ["{{base_url}}"],
+              "path": ["api", "hikes", ":hikeId", "payments", "bulk"],
+              "variable": [
+                {
+                  "key": "hikeId",
+                  "value": "{{hike_id}}"
+                }
+              ]
+            },
+            "description": "Create payment records for all confirmed attendees"
+          }
+        },
+        {
+          "name": "Delete Payment (Admin)",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/payments/:id",
+              "host": ["{{base_url}}"],
+              "path": ["api", "payments", ":id"],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "1"
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Photos",
+      "item": [
+        {
+          "name": "Get All Photos",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/photos",
+              "host": ["{{base_url}}"],
+              "path": ["api", "photos"]
+            }
+          }
+        },
+        {
+          "name": "Upload Photo",
+          "request": {
+            "method": "POST",
+            "header": [
+              {"key": "Content-Type", "value": "application/json"}
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"hike_name\": \"Drakensberg Amphitheatre\",\n  \"date\": \"2025-11-15\",\n  \"url\": \"https://example.com/photos/drakensberg.jpg\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/photos",
+              "host": ["{{base_url}}"],
+              "path": ["api", "photos"]
+            }
+          }
+        },
+        {
+          "name": "Delete Photo",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/photos/:id",
+              "host": ["{{base_url}}"],
+              "path": ["api", "photos", ":id"],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "1"
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Profile",
+      "item": [
+        {
+          "name": "Get User Profile",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/profile/:userId",
+              "host": ["{{base_url}}"],
+              "path": ["api", "profile", ":userId"],
+              "variable": [
+                {
+                  "key": "userId",
+                  "value": "{{user_id}}"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get User Stats",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/profile/:userId/stats",
+              "host": ["{{base_url}}"],
+              "path": ["api", "profile", ":userId", "stats"],
+              "variable": [
+                {
+                  "key": "userId",
+                  "value": "{{user_id}}"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Update Profile",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {"key": "Content-Type", "value": "application/json"}
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Updated Name\",\n  \"phone\": \"0829876543\",\n  \"bio\": \"Love hiking in the mountains\",\n  \"experience_level\": \"intermediate\",\n  \"preferred_difficulty\": \"moderate\",\n  \"hiking_since\": \"2020-01-01\",\n  \"emergency_contact_name\": \"John Doe\",\n  \"emergency_contact_phone\": \"0821234567\",\n  \"emergency_contact_relationship\": \"Spouse\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/profile",
+              "host": ["{{base_url}}"],
+              "path": ["api", "profile"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Calendar",
+      "item": [
+        {
+          "name": "Get All Hikes Calendar (iCal)",
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/calendar/all-hikes.ics",
+              "host": ["{{base_url}}"],
+              "path": ["api", "calendar", "all-hikes.ics"]
+            },
+            "description": "Download iCalendar file for all hikes"
+          }
+        },
+        {
+          "name": "Get My Hikes Calendar (iCal)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/calendar/my-hikes.ics",
+              "host": ["{{base_url}}"],
+              "path": ["api", "calendar", "my-hikes.ics"]
+            },
+            "description": "Download iCalendar file for my hikes"
+          }
+        },
+        {
+          "name": "Get Hike Calendar (iCal)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/calendar/hike/:hikeId",
+              "host": ["{{base_url}}"],
+              "path": ["api", "calendar", "hike", ":hikeId"],
+              "variable": [
+                {
+                  "key": "hikeId",
+                  "value": "{{hike_id}}"
+                }
+              ]
+            },
+            "description": "Download iCalendar file for specific hike"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Weather",
+      "item": [
+        {
+          "name": "Get Weather Forecast",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/weather/forecast?lat=-28.7489&lon=28.9012",
+              "host": ["{{base_url}}"],
+              "path": ["api", "weather", "forecast"],
+              "query": [
+                {
+                  "key": "lat",
+                  "value": "-28.7489",
+                  "description": "Latitude"
+                },
+                {
+                  "key": "lon",
+                  "value": "28.9012",
+                  "description": "Longitude"
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Feedback",
+      "item": [
+        {
+          "name": "Get All Feedback (Admin)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/feedback",
+              "host": ["{{base_url}}"],
+              "path": ["api", "feedback"]
+            }
+          }
+        },
+        {
+          "name": "Get Feedback Stats (Admin)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/feedback/stats",
+              "host": ["{{base_url}}"],
+              "path": ["api", "feedback", "stats"]
+            }
+          }
+        },
+        {
+          "name": "Submit Feedback",
+          "request": {
+            "method": "POST",
+            "header": [
+              {"key": "Content-Type", "value": "application/json"}
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"feedback\": \"Great app! Love the carpool feature.\",\n  \"category\": \"feature\",\n  \"rating\": 5\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/feedback",
+              "host": ["{{base_url}}"],
+              "path": ["api", "feedback"]
+            }
+          }
+        },
+        {
+          "name": "Update Feedback Status (Admin)",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {"key": "Content-Type", "value": "application/json"}
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"reviewed\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/feedback/:id",
+              "host": ["{{base_url}}"],
+              "path": ["api", "feedback", ":id"],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "1"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Delete Feedback (Admin)",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/feedback/:id",
+              "host": ["{{base_url}}"],
+              "path": ["api", "feedback", ":id"],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "1"
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Suggestions",
+      "item": [
+        {
+          "name": "Get All Suggestions (Admin)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/suggestions",
+              "host": ["{{base_url}}"],
+              "path": ["api", "suggestions"]
+            }
+          }
+        },
+        {
+          "name": "Get Suggestion Stats (Admin)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/suggestions/stats",
+              "host": ["{{base_url}}"],
+              "path": ["api", "suggestions", "stats"]
+            }
+          }
+        },
+        {
+          "name": "Submit Suggestion",
+          "request": {
+            "method": "POST",
+            "header": [
+              {"key": "Content-Type", "value": "application/json"}
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"hike_name\": \"Giants Castle\",\n  \"location\": \"Drakensberg\",\n  \"difficulty\": \"moderate\",\n  \"distance\": \"12km\",\n  \"description\": \"Beautiful cave paintings and mountain views\",\n  \"reason\": \"Historical and scenic value\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/suggestions",
+              "host": ["{{base_url}}"],
+              "path": ["api", "suggestions"]
+            }
+          }
+        },
+        {
+          "name": "Update Suggestion Status (Admin)",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {"key": "Content-Type", "value": "application/json"}
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"approved\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/suggestions/:id",
+              "host": ["{{base_url}}"],
+              "path": ["api", "suggestions", ":id"],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "1"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Delete Suggestion (Admin)",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/suggestions/:id",
+              "host": ["{{base_url}}"],
+              "path": ["api", "suggestions", ":id"],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "1"
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Analytics",
+      "item": [
+        {
+          "name": "Get Overview (Admin)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/analytics/overview",
+              "host": ["{{base_url}}"],
+              "path": ["api", "analytics", "overview"]
+            }
+          }
+        },
+        {
+          "name": "Get Hike Analytics (Admin)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/analytics/hikes",
+              "host": ["{{base_url}}"],
+              "path": ["api", "analytics", "hikes"]
+            }
+          }
+        },
+        {
+          "name": "Get User Analytics (Admin)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/analytics/users",
+              "host": ["{{base_url}}"],
+              "path": ["api", "analytics", "users"]
+            }
+          }
+        },
+        {
+          "name": "Get Engagement Metrics (Admin)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/analytics/engagement",
+              "host": ["{{base_url}}"],
+              "path": ["api", "analytics", "engagement"]
+            }
+          }
+        },
+        {
+          "name": "Clear Analytics Cache (Admin)",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/analytics/clear-cache",
+              "host": ["{{base_url}}"],
+              "path": ["api", "analytics", "clear-cache"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Logs",
+      "item": [
+        {
+          "name": "Get Activity Logs (Admin)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/logs/activity?limit=50&offset=0",
+              "host": ["{{base_url}}"],
+              "path": ["api", "logs", "activity"],
+              "query": [
+                {
+                  "key": "limit",
+                  "value": "50"
+                },
+                {
+                  "key": "offset",
+                  "value": "0"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get Signin Logs (Admin)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/logs/signin?limit=50&offset=0",
+              "host": ["{{base_url}}"],
+              "path": ["api", "logs", "signin"],
+              "query": [
+                {
+                  "key": "limit",
+                  "value": "50"
+                },
+                {
+                  "key": "offset",
+                  "value": "0"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get Activity Stats (Admin)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/logs/stats",
+              "host": ["{{base_url}}"],
+              "path": ["api", "logs", "stats"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Tokens",
+      "item": [
+        {
+          "name": "List Tokens",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/tokens",
+              "host": ["{{base_url}}"],
+              "path": ["api", "tokens"]
+            }
+          }
+        },
+        {
+          "name": "Generate Long-Lived Token",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 200) {",
+                  "    const response = pm.response.json();",
+                  "    pm.environment.set('long_lived_token', response.token);",
+                  "    console.log('✓ Long-lived token saved');",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {"key": "Content-Type", "value": "application/json"}
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Home Assistant Integration\",\n  \"expires_in_days\": 365\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/tokens/generate",
+              "host": ["{{base_url}}"],
+              "path": ["api", "tokens", "generate"]
+            }
+          }
+        },
+        {
+          "name": "Revoke Token",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/tokens/:id",
+              "host": ["{{base_url}}"],
+              "path": ["api", "tokens", ":id"],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "1"
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Home Assistant",
+      "item": [
+        {
+          "name": "Register Webhook",
+          "request": {
+            "method": "POST",
+            "header": [
+              {"key": "Content-Type", "value": "application/json"}
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"webhook_url\": \"https://homeassistant.local/api/webhook/hiking_portal\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/homeassistant/webhook/register",
+              "host": ["{{base_url}}"],
+              "path": ["api", "homeassistant", "webhook", "register"]
+            }
+          }
+        },
+        {
+          "name": "Unregister Webhook",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/homeassistant/webhook/unregister",
+              "host": ["{{base_url}}"],
+              "path": ["api", "homeassistant", "webhook", "unregister"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Health Check",
+      "request": {
+        "auth": {
+          "type": "noauth"
+        },
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{base_url}}/health",
+          "host": ["{{base_url}}"],
+          "path": ["health"]
+        },
+        "description": "Check API health status"
+      }
+    }
+  ]
+}

@@ -15,6 +15,7 @@ router.get('/hikes/:hikeId/payments/stats', paymentController.getHikePaymentStat
 
 // Admin-only routes
 router.get('/payments', requireAdmin, paymentController.getAllPayments);
+router.get('/payments/overview', requireAdmin, paymentController.getPaymentsOverview);
 router.post('/payments', requireAdmin, paymentController.recordPayment);
 router.delete('/payments/:id', requireAdmin, paymentController.deletePayment);
 router.post('/hikes/:hikeId/payments/bulk', requireAdmin, paymentController.bulkCreatePayments);

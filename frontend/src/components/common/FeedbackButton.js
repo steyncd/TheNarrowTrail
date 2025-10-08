@@ -1,12 +1,12 @@
 import React, { useState } from 'react';
-import { MessageSquare, X, Send } from 'lucide-react';
+import { MessageSquare, Send } from 'lucide-react';
 import { useTheme } from '../../contexts/ThemeContext';
 import { useAuth } from '../../contexts/AuthContext';
 import api from '../../services/api';
 
 const FeedbackButton = () => {
   const { theme } = useTheme();
-  const { currentUser, token } = useAuth();
+  const { token } = useAuth();
   const [showModal, setShowModal] = useState(false);
   const [feedbackType, setFeedbackType] = useState('suggestion');
   const [message, setMessage] = useState('');
@@ -45,30 +45,38 @@ const FeedbackButton = () => {
 
   return (
     <>
-      {/* Floating Feedback Button */}
+      {/* Floating Feedback Button - Small and Subtle */}
       <button
         onClick={() => setShowModal(true)}
-        className="btn btn-primary shadow-lg"
+        className="btn btn-outline-secondary shadow-sm"
         style={{
           position: 'fixed',
-          bottom: '30px',
-          right: '30px',
-          borderRadius: '50px',
-          padding: '15px 25px',
+          bottom: '20px',
+          right: '20px',
+          borderRadius: '50%',
+          width: '48px',
+          height: '48px',
+          padding: '0',
           zIndex: 1000,
-          fontWeight: '600',
-          border: '2px solid rgba(13, 110, 253, 0.3)',
-          transition: 'all 0.3s ease',
+          border: '1px solid rgba(108, 117, 125, 0.3)',
+          background: theme === 'dark' ? 'rgba(45, 45, 45, 0.95)' : 'rgba(255, 255, 255, 0.95)',
+          backdropFilter: 'blur(10px)',
+          transition: 'all 0.2s ease',
           display: 'flex',
           alignItems: 'center',
-          gap: '10px'
+          justifyContent: 'center'
         }}
         title="Send Feedback"
-        onMouseEnter={(e) => e.currentTarget.style.transform = 'scale(1.05)'}
-        onMouseLeave={(e) => e.currentTarget.style.transform = 'scale(1)'}
+        onMouseEnter={(e) => {
+          e.currentTarget.style.transform = 'scale(1.1)';
+          e.currentTarget.style.borderColor = 'rgba(13, 110, 253, 0.5)';
+        }}
+        onMouseLeave={(e) => {
+          e.currentTarget.style.transform = 'scale(1)';
+          e.currentTarget.style.borderColor = 'rgba(108, 117, 125, 0.3)';
+        }}
       >
-        <MessageSquare size={20} />
-        <span className="d-none d-md-inline">Feedback</span>
+        <MessageSquare size={20} strokeWidth={1.5} />
       </button>
 
       {/* Feedback Modal */}

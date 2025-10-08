@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { AlertCircle, Package, MapPin } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
 import { api } from '../../services/api';
+import PaymentsSection from '../payments/PaymentsSection';
 
 function AttendanceModal({ show, onClose, hikeId, hikeName, hikeData, onViewEmergencyContacts, onEditPackingList }) {
   const { token } = useAuth();
@@ -10,10 +11,7 @@ function AttendanceModal({ show, onClose, hikeId, hikeName, hikeData, onViewEmer
   const [attendees, setAttendees] = useState([]);
   const [users, setUsers] = useState([]);
   const [newAttendee, setNewAttendee] = useState({
-    user_id: '',
-    payment_status: 'unpaid',
-    amount_paid: 0,
-    notes: ''
+    user_id: ''
   });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
@@ -57,9 +55,9 @@ function AttendanceModal({ show, onClose, hikeId, hikeName, hikeData, onViewEmer
 
     setLoading(true);
     try {
-      const result = await api.addAttendee(hikeId, newAttendee, token);
+      const result = await api.addAttendee(hikeId, { ...newAttendee, payment_status: 'pending', amount_paid: 0 }, token);
       if (result.success) {
-        setNewAttendee({ user_id: '', payment_status: 'unpaid', amount_paid: 0, notes: '' });
+        setNewAttendee({ user_id: '' });
         await fetchAttendanceData();
       } else {
         setError(result.error || 'Failed to add attendee');
@@ -67,23 +65,6 @@ function AttendanceModal({ show, onClose, hikeId, hikeName, hikeData, onViewEmer
     } catch (err) {
       setError('Failed to add attendee');
       console.error('Add attendee error:', err);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleUpdateAttendee = async (userId, data) => {
-    setLoading(true);
-    try {
-      const result = await api.updateAttendee(hikeId, userId, data, token);
-      if (result.success) {
-        await fetchAttendanceData();
-      } else {
-        setError(result.error || 'Failed to update attendee');
-      }
-    } catch (err) {
-      console.error('Update attendee error:', err);
-      setError('Failed to update attendee');
     } finally {
       setLoading(false);
     }
@@ -232,8 +213,7 @@ function AttendanceModal({ show, onClose, hikeId, hikeName, hikeData, onViewEmer
                     <thead>
                       <tr>
                         <th>Name</th>
-                        <th>Payment</th>
-                        <th>Amount</th>
+                        <th>Contact</th>
                         <th>Actions</th>
                       </tr>
                     </thead>
@@ -245,39 +225,8 @@ function AttendanceModal({ show, onClose, hikeId, hikeName, hikeData, onViewEmer
                               {attendee.name}
                             </Link>
                           </td>
-                          <td>
-                            <select
-                              className="form-select form-select-sm"
-                              value={attendee.payment_status}
-                              onChange={(e) => handleUpdateAttendee(attendee.user_id, {
-                                ...attendee,
-                                payment_status: e.target.value
-                              })}
-                              disabled={loading}
-                            >
-                              <option value="unpaid">Unpaid</option>
-                              <option value="partial">Partial</option>
-                              <option value="paid">Paid</option>
-                            </select>
-                          </td>
-                          <td>
-                            <input
-                              type="text"
-                              inputMode="decimal"
-                              className="form-control form-control-sm"
-                              style={{width: '80px'}}
-                              value={attendee.amount_paid}
-                              onChange={(e) => {
-                                const value = e.target.value;
-                                if (value === '' || /^\d*\.?\d*$/.test(value)) {
-                                  handleUpdateAttendee(attendee.user_id, {
-                                    ...attendee,
-                                    amount_paid: value === '' ? 0 : parseFloat(value) || 0
-                                  });
-                                }
-                              }}
-                              disabled={loading}
-                            />
+                          <td className="small">
+                            {attendee.email}<br/>{attendee.phone}
                           </td>
                           <td>
                             <button
@@ -305,7 +254,7 @@ function AttendanceModal({ show, onClose, hikeId, hikeName, hikeData, onViewEmer
             <div className="mt-3">
               <h6>Add Attendee Manually</h6>
               <div className="row g-2">
-                <div className="col-md-4">
+                <div className="col-md-10">
                   <select
                     className="form-select form-select-sm"
                     value={newAttendee.user_id}
@@ -318,34 +267,6 @@ function AttendanceModal({ show, onClose, hikeId, hikeName, hikeData, onViewEmer
                     ))}
                   </select>
                 </div>
-                <div className="col-md-3">
-                  <select
-                    className="form-select form-select-sm"
-                    value={newAttendee.payment_status}
-                    onChange={(e) => setNewAttendee({...newAttendee, payment_status: e.target.value})}
-                    disabled={loading}
-                  >
-                    <option value="unpaid">Unpaid</option>
-                    <option value="partial">Partial</option>
-                    <option value="paid">Paid</option>
-                  </select>
-                </div>
-                <div className="col-md-3">
-                  <input
-                    type="text"
-                    inputMode="decimal"
-                    className="form-control form-control-sm"
-                    placeholder="Amount"
-                    value={newAttendee.amount_paid}
-                    onChange={(e) => {
-                      const value = e.target.value;
-                      if (value === '' || /^\d*\.?\d*$/.test(value)) {
-                        setNewAttendee({...newAttendee, amount_paid: value === '' ? 0 : parseFloat(value) || 0});
-                      }
-                    }}
-                    disabled={loading}
-                  />
-                </div>
                 <div className="col-md-2">
                   <button
                     className="btn btn-sm btn-primary w-100"
@@ -356,6 +277,16 @@ function AttendanceModal({ show, onClose, hikeId, hikeName, hikeData, onViewEmer
                   </button>
                 </div>
               </div>
+              <small className="text-muted d-block mt-1">Manage payments in the "Payment Tracking" section below</small>
+            </div>
+
+            {/* Payment Tracking Section */}
+            <div className="mt-4">
+              <PaymentsSection
+                hikeId={hikeId}
+                hikeCost={hikeData?.cost || 0}
+                isAdmin={true}
+              />
             </div>
           </div>
           <div className="modal-footer">
