@@ -153,148 +153,115 @@ const HikesList = () => {
 
   const renderFilters = () => (
     <div
-      className="card shadow-sm mb-4"
+      className="card shadow-sm mb-3"
       style={{
         background: theme === 'dark' ? 'var(--card-bg)' : 'white',
         border: theme === 'dark' ? '1px solid var(--border-color)' : '1px solid #dee2e6'
       }}
     >
-      <div className="card-body">
-        {/* Search Bar */}
-        <div className="mb-3">
-          <div className="input-group">
-            <span className="input-group-text">
-              <Search size={18} />
-            </span>
-            <input
-              type="text"
-              className="form-control"
-              placeholder="Search hikes by name or description..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
+      <div className="card-body py-2 px-3">
+        <div className="row g-2 align-items-center">
+          {/* Search Bar */}
+          <div className="col-12 col-md-5">
+            <div className="input-group input-group-sm">
+              <span className="input-group-text" style={{ padding: '0.25rem 0.5rem' }}>
+                <Search size={14} />
+              </span>
+              <input
+                type="text"
+                className="form-control form-control-sm"
+                placeholder="Search hikes..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                style={{
+                  background: theme === 'dark' ? 'var(--bg-secondary)' : 'white',
+                  color: theme === 'dark' ? 'var(--text-primary)' : '#212529',
+                  border: theme === 'dark' ? '1px solid var(--border-color)' : '1px solid #ced4da',
+                  fontSize: '0.85rem'
+                }}
+              />
+              {searchTerm && (
+                <button
+                  className="btn btn-outline-secondary btn-sm"
+                  onClick={() => setSearchTerm('')}
+                  style={{ padding: '0.25rem 0.5rem' }}
+                >
+                  <X size={14} />
+                </button>
+              )}
+            </div>
+          </div>
+
+          {/* Filter Dropdowns - Inline */}
+          <div className="col-6 col-md-2">
+            <select
+              className="form-select form-select-sm"
+              value={difficultyFilter}
+              onChange={(e) => setDifficultyFilter(e.target.value)}
               style={{
                 background: theme === 'dark' ? 'var(--bg-secondary)' : 'white',
                 color: theme === 'dark' ? 'var(--text-primary)' : '#212529',
-                border: theme === 'dark' ? '1px solid var(--border-color)' : '1px solid #ced4da'
+                border: theme === 'dark' ? '1px solid var(--border-color)' : '1px solid #ced4da',
+                fontSize: '0.85rem'
               }}
-            />
-            {searchTerm && (
-              <button
-                className="btn btn-outline-secondary"
-                onClick={() => setSearchTerm('')}
-              >
-                <X size={18} />
-              </button>
-            )}
+            >
+              <option value="all">All Difficulty</option>
+              <option value="easy">Easy</option>
+              <option value="moderate">Moderate</option>
+              <option value="hard">Hard</option>
+              <option value="expert">Expert</option>
+            </select>
           </div>
-        </div>
 
-        {/* Toggle Filters Button */}
-        <button
-          className="btn btn-outline-primary mb-3 w-100"
-          onClick={() => setShowFilters(!showFilters)}
-        >
-          <Filter size={18} className="me-2" />
-          {showFilters ? 'Hide Filters' : 'Show Filters'}
-        </button>
-
-        {/* Filter Dropdowns */}
-        {showFilters && (
-          <div className="row g-3 mb-3">
-            <div className="col-md-4">
-              <label className="form-label small" style={{ color: theme === 'dark' ? 'var(--text-secondary)' : '#6c757d' }}>
-                Difficulty
-              </label>
-              <select
-                className="form-select"
-                value={difficultyFilter}
-                onChange={(e) => setDifficultyFilter(e.target.value)}
-                style={{
-                  background: theme === 'dark' ? 'var(--bg-secondary)' : 'white',
-                  color: theme === 'dark' ? 'var(--text-primary)' : '#212529',
-                  border: theme === 'dark' ? '1px solid var(--border-color)' : '1px solid #ced4da'
-                }}
-              >
-                <option value="all">All Difficulties</option>
-                <option value="easy">Easy</option>
-                <option value="moderate">Moderate</option>
-                <option value="hard">Hard</option>
-                <option value="expert">Expert</option>
-              </select>
-            </div>
-
-            <div className="col-md-4">
-              <label className="form-label small" style={{ color: theme === 'dark' ? 'var(--text-secondary)' : '#6c757d' }}>
-                Type
-              </label>
-              <select
-                className="form-select"
-                value={typeFilter}
-                onChange={(e) => setTypeFilter(e.target.value)}
-                style={{
-                  background: theme === 'dark' ? 'var(--bg-secondary)' : 'white',
-                  color: theme === 'dark' ? 'var(--text-primary)' : '#212529',
-                  border: theme === 'dark' ? '1px solid var(--border-color)' : '1px solid #ced4da'
-                }}
-              >
-                <option value="all">All Types</option>
-                <option value="day">Day Hike</option>
-                <option value="multi">Multi-Day</option>
-              </select>
-            </div>
-
-            <div className="col-md-4">
-              <label className="form-label small" style={{ color: theme === 'dark' ? 'var(--text-secondary)' : '#6c757d' }}>
-                Status
-              </label>
-              <select
-                className="form-select"
-                value={statusFilter}
-                onChange={(e) => setStatusFilter(e.target.value)}
-                style={{
-                  background: theme === 'dark' ? 'var(--bg-secondary)' : 'white',
-                  color: theme === 'dark' ? 'var(--text-primary)' : '#212529',
-                  border: theme === 'dark' ? '1px solid var(--border-color)' : '1px solid #ced4da'
-                }}
-              >
-                <option value="all">All Statuses</option>
-                <option value="open">Open Spots</option>
-                <option value="gathering_interest">Gathering Interest</option>
-                <option value="pre_planning">Pre Planning</option>
-                <option value="final_planning">Final Planning</option>
-                <option value="trip_booked">Trip Booked</option>
-                <option value="cancelled">Cancelled</option>
-              </select>
-            </div>
+          <div className="col-6 col-md-2">
+            <select
+              className="form-select form-select-sm"
+              value={typeFilter}
+              onChange={(e) => setTypeFilter(e.target.value)}
+              style={{
+                background: theme === 'dark' ? 'var(--bg-secondary)' : 'white',
+                color: theme === 'dark' ? 'var(--text-primary)' : '#212529',
+                border: theme === 'dark' ? '1px solid var(--border-color)' : '1px solid #ced4da',
+                fontSize: '0.85rem'
+              }}
+            >
+              <option value="all">All Types</option>
+              <option value="day">Day</option>
+              <option value="multi">Multi-Day</option>
+            </select>
           </div>
-        )}
 
-        {/* Quick Filter Chips */}
-        <div className="d-flex flex-wrap gap-2">
-          <button
-            className="btn btn-sm btn-outline-primary"
-            onClick={() => applyQuickFilter('thisMonth')}
-          >
-            This Month
-          </button>
-          <button
-            className="btn btn-sm btn-outline-success"
-            onClick={() => applyQuickFilter('easy')}
-          >
-            Easy Hikes
-          </button>
-          <button
-            className="btn btn-sm btn-outline-info"
-            onClick={() => applyQuickFilter('openSpots')}
-          >
-            Open Spots
-          </button>
-          <button
-            className="btn btn-sm btn-outline-secondary"
-            onClick={clearFilters}
-          >
-            Clear All
-          </button>
+          <div className="col-6 col-md-2">
+            <select
+              className="form-select form-select-sm"
+              value={statusFilter}
+              onChange={(e) => setStatusFilter(e.target.value)}
+              style={{
+                background: theme === 'dark' ? 'var(--bg-secondary)' : 'white',
+                color: theme === 'dark' ? 'var(--text-primary)' : '#212529',
+                border: theme === 'dark' ? '1px solid var(--border-color)' : '1px solid #ced4da',
+                fontSize: '0.85rem'
+              }}
+            >
+              <option value="all">All Status</option>
+              <option value="open">Open</option>
+              <option value="gathering_interest">Gathering</option>
+              <option value="pre_planning">Planning</option>
+              <option value="trip_booked">Booked</option>
+            </select>
+          </div>
+
+          {/* Clear Button */}
+          <div className="col-6 col-md-1 text-end">
+            <button
+              className="btn btn-sm btn-outline-secondary w-100"
+              onClick={clearFilters}
+              title="Clear all filters"
+              style={{ fontSize: '0.75rem', padding: '0.25rem' }}
+            >
+              Clear
+            </button>
+          </div>
         </div>
       </div>
     </div>

@@ -172,6 +172,9 @@ class ApiService {
     if (response.ok) {
       return response.json();
     }
+    console.error('Carpool offers API error:', response.status, response.statusText);
+    const errorData = await response.json().catch(() => ({}));
+    console.error('Carpool offers error details:', errorData);
     return [];
   }
 
@@ -182,6 +185,9 @@ class ApiService {
     if (response.ok) {
       return response.json();
     }
+    console.error('Carpool requests API error:', response.status, response.statusText);
+    const errorData = await response.json().catch(() => ({}));
+    console.error('Carpool requests error details:', errorData);
     return [];
   }
 
@@ -207,6 +213,9 @@ class ApiService {
     if (response.ok) {
       return response.json();
     }
+    console.error('Packing list API error:', response.status, response.statusText);
+    const errorData = await response.json().catch(() => ({}));
+    console.error('Packing list error details:', errorData);
     return { items: [] };
   }
 

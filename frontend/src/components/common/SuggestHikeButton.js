@@ -58,14 +58,17 @@ const SuggestHikeButton = () => {
         onClick={() => setShowModal(true)}
         className="btn btn-warning position-fixed shadow-lg d-flex align-items-center gap-2"
         style={{
-          bottom: '30px',
-          right: '100px',
+          bottom: '100px',
+          right: '30px',
           borderRadius: '50px',
           padding: '15px 25px',
           zIndex: 1000,
           fontWeight: '600',
           border: '2px solid rgba(255, 193, 7, 0.3)',
+          transition: 'all 0.3s ease'
         }}
+        onMouseEnter={(e) => e.currentTarget.style.transform = 'scale(1.05)'}
+        onMouseLeave={(e) => e.currentTarget.style.transform = 'scale(1)'}
       >
         <Lightbulb size={20} />
         <span className="d-none d-md-inline">Suggest a Hike</span>

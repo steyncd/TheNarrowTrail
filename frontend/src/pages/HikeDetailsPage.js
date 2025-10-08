@@ -1,12 +1,13 @@
 // pages/HikeDetailsPage.js - Shareable Hike Details Page
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate, useLocation, Link } from 'react-router-dom';
-import { Calendar, MapPin, Users, DollarSign, Info, Mountain, Clock, LogIn, ArrowLeft } from 'lucide-react';
+import { Calendar, MapPin, Users, DollarSign, Info, Mountain, Clock, LogIn, ArrowLeft, MessageSquare, Package, Car, Send, Trash2, Edit, Share2 } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { useTheme } from '../contexts/ThemeContext';
 import api from '../services/api';
 import LoadingSpinner from '../components/common/LoadingSpinner';
 import WeatherWidget from '../components/weather/WeatherWidget';
+import Map from '../components/common/Map';
 
 const HikeDetailsPage = () => {
   const { hikeId } = useParams();
@@ -19,10 +20,16 @@ const HikeDetailsPage = () => {
   const [error, setError] = useState(null);
   const [userStatus, setUserStatus] = useState(null);
   const [interestedUsers, setInterestedUsers] = useState([]);
+  const [comments, setComments] = useState([]);
+  const [newComment, setNewComment] = useState('');
+  const [packingList, setPackingList] = useState({ items: [] });
+  const [carpoolOffers, setCarpoolOffers] = useState([]);
+  const [carpoolRequests, setCarpoolRequests] = useState([]);
 
   useEffect(() => {
     fetchHikeDetails();
-  }, [hikeId, token]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [hikeId]);
 
   const fetchHikeDetails = async () => {
     setLoading(true);
@@ -33,7 +40,9 @@ const HikeDetailsPage = () => {
       setHike(hikeData);
 
       // If user is logged in, fetch their status and interested users for this hike
-      if (token && currentUser) {
+      console.log('Auth check:', { token: !!token, currentUser: !!currentUser, willFetchData: !!token });
+      if (token) {
+        console.log('Fetching authenticated user data...');
         try {
           const status = await api.getHikeStatus(hikeId, token);
           setUserStatus(status);
@@ -48,6 +57,52 @@ const HikeDetailsPage = () => {
         } catch (err) {
           // Not an error if user is not admin
           console.log('Could not fetch interested users (may require admin)');
+        }
+
+        // Fetch comments
+        try {
+          const commentsData = await api.getComments(hikeId, token);
+          setComments(commentsData);
+        } catch (err) {
+          console.log('Could not fetch comments');
+        }
+
+        // Fetch packing list
+        try {
+          const packingData = await api.getPackingList(hikeId, token);
+          console.log('Packing list data received:', packingData);
+          console.log('Items type:', typeof packingData.items, 'Is array:', Array.isArray(packingData.items));
+
+          // Handle different response formats
+          if (packingData.items && typeof packingData.items === 'object' && !Array.isArray(packingData.items)) {
+            // Items came back as an object (likely JSON stringified), check if it has an items property
+            console.log('Items is an object, checking for nested items:', packingData.items);
+            if (packingData.items.items && Array.isArray(packingData.items.items)) {
+              setPackingList({ items: packingData.items.items });
+            } else {
+              // The items object itself might be the array-like structure
+              setPackingList({ items: [] });
+            }
+          } else {
+            setPackingList(packingData);
+          }
+        } catch (err) {
+          console.error('Could not fetch packing list:', err);
+        }
+
+        // Fetch carpool data
+        try {
+          const offers = await api.getCarpoolOffers(hikeId, token);
+          setCarpoolOffers(offers);
+        } catch (err) {
+          console.log('Could not fetch carpool offers');
+        }
+
+        try {
+          const requests = await api.getCarpoolRequests(hikeId, token);
+          setCarpoolRequests(requests);
+        } catch (err) {
+          console.log('Could not fetch carpool requests');
         }
       }
     } catch (err) {
@@ -69,6 +124,42 @@ const HikeDetailsPage = () => {
       await fetchHikeDetails();
     } catch (err) {
       console.error('Error toggling interest:', err);
+    }
+  };
+
+  const handleAddComment = async () => {
+    if (!newComment.trim()) return;
+
+    try {
+      await api.addComment(hikeId, newComment, token);
+      setNewComment('');
+      const commentsData = await api.getComments(hikeId, token);
+      setComments(commentsData);
+    } catch (err) {
+      console.error('Error adding comment:', err);
+    }
+  };
+
+  const handleDeleteComment = async (commentId) => {
+    try {
+      await api.deleteComment(hikeId, commentId, token);
+      const commentsData = await api.getComments(hikeId, token);
+      setComments(commentsData);
+    } catch (err) {
+      console.error('Error deleting comment:', err);
+    }
+  };
+
+  const handlePackingItemToggle = async (itemIndex) => {
+    const updatedItems = packingList.items.map((item, index) =>
+      index === itemIndex ? { ...item, checked: !item.checked } : item
+    );
+    setPackingList({ items: updatedItems });
+
+    try {
+      await api.updatePackingList(hikeId, { items: updatedItems }, token);
+    } catch (err) {
+      console.error('Error updating packing list:', err);
     }
   };
 
@@ -99,6 +190,12 @@ const HikeDetailsPage = () => {
   // Use browser's back navigation instead of trying to determine source
   const handleBack = () => {
     navigate(-1);
+  };
+
+  const handleShare = () => {
+    const shareUrl = `https://www.thenarrowtrail.co.za/hikes/${hikeId}`;
+    navigator.clipboard.writeText(shareUrl);
+    alert('Link copied to clipboard!');
   };
 
   return (
@@ -145,7 +242,18 @@ const HikeDetailsPage = () => {
           {/* Title and Key Info */}
           <div className="card mb-4" style={{ background: isDark ? 'var(--card-bg)' : 'white' }}>
             <div className="card-body">
-              <h1 className="mb-3">{hike.name}</h1>
+              <div className="d-flex justify-content-between align-items-start mb-3">
+                <h1 className="mb-0">{hike.name}</h1>
+                {currentUser && currentUser.role === 'admin' && (
+                  <button
+                    className="btn btn-outline-primary"
+                    onClick={() => navigate(`/admin/hikes/edit/${hikeId}`)}
+                  >
+                    <Edit size={16} className="me-2" />
+                    Edit
+                  </button>
+                )}
+              </div>
 
               <div className="d-flex flex-wrap gap-2 mb-3">
                 <span
@@ -278,10 +386,280 @@ const HikeDetailsPage = () => {
               </div>
             </div>
           )}
+
+          {/* Map Section */}
+          {hike.location_link && (
+            <div className="card mb-4" style={{ background: isDark ? 'var(--card-bg)' : 'white' }}>
+              <div className="card-body">
+                <h5 className="mb-3">
+                  <MapPin size={20} className="me-2" />
+                  Location
+                </h5>
+                <Map locationLink={hike.location_link} height="350px" />
+              </div>
+            </div>
+          )}
+
+          {/* Comments Section */}
+          {token && (
+            <div className="card mb-4" style={{ background: isDark ? 'var(--card-bg)' : 'white' }}>
+              <div className="card-body">
+                <h5 className="mb-3">
+                  <MessageSquare size={20} className="me-2" />
+                  Comments
+                </h5>
+
+                {/* Comments List */}
+                <div className="mb-3" style={{ maxHeight: '400px', overflowY: 'auto' }}>
+                  {comments.length === 0 ? (
+                    <p className="text-muted">No comments yet. Be the first to comment!</p>
+                  ) : (
+                    comments.map(comment => (
+                      <div key={comment.id} className="mb-3 pb-3 border-bottom">
+                        <div className="d-flex justify-content-between align-items-start">
+                          <div>
+                            <Link
+                              to={`/profile/${comment.user_id}`}
+                              className="fw-bold text-decoration-none"
+                              style={{ color: isDark ? '#8ab4f8' : '#1a73e8' }}
+                            >
+                              {comment.user_name}
+                            </Link>
+                            <small className="text-muted ms-2">
+                              {new Date(comment.created_at).toLocaleDateString()}
+                            </small>
+                          </div>
+                          {currentUser && comment.user_id === currentUser.id && (
+                            <button
+                              className="btn btn-sm btn-link text-danger p-0"
+                              onClick={() => handleDeleteComment(comment.id)}
+                            >
+                              <Trash2 size={16} />
+                            </button>
+                          )}
+                        </div>
+                        <p className="mb-0 mt-1" style={{ whiteSpace: 'pre-wrap' }}>{comment.comment}</p>
+                      </div>
+                    ))
+                  )}
+                </div>
+
+                {/* Add Comment */}
+                <div className="mt-3">
+                  <textarea
+                    className="form-control mb-2"
+                    rows="3"
+                    placeholder="Add a comment..."
+                    value={newComment}
+                    onChange={(e) => setNewComment(e.target.value)}
+                  />
+                  <button
+                    className="btn btn-primary"
+                    onClick={handleAddComment}
+                    disabled={!newComment.trim()}
+                  >
+                    <Send size={16} className="me-2" />
+                    Post Comment
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Packing List Section */}
+          {console.log('Packing list render check:', { token: !!token, packingList, itemsLength: packingList.items?.length })}
+          {token && packingList.items && packingList.items.length > 0 && (
+            <div className="card mb-4" style={{
+              background: isDark ? 'var(--card-bg)' : 'white',
+              borderColor: isDark ? 'var(--border-color)' : '#dee2e6'
+            }}>
+              <div className="card-body">
+                <h5 className="mb-3" style={{ color: isDark ? 'var(--text-primary)' : '#212529' }}>
+                  <Package size={20} className="me-2" />
+                  Packing List
+                </h5>
+                <div className="list-group list-group-flush">
+                  {packingList.items.map((item, index) => (
+                    <div key={index} className="list-group-item bg-transparent border-0 px-0 py-2">
+                      <div className="form-check">
+                        <input
+                          className="form-check-input"
+                          type="checkbox"
+                          checked={item.checked || false}
+                          onChange={() => handlePackingItemToggle(index)}
+                          id={`packing-${index}`}
+                        />
+                        <label
+                          className="form-check-label"
+                          htmlFor={`packing-${index}`}
+                          style={{
+                            textDecoration: item.checked ? 'line-through' : 'none',
+                            color: isDark ? '#ffffff' : '#212529',
+                            cursor: 'pointer'
+                          }}
+                        >
+                          {item.name}
+                          {item.category && (
+                            <span className="badge bg-secondary ms-2 small">{item.category}</span>
+                          )}
+                        </label>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Lift Club Section */}
+          {token && (
+            <div className="card mb-4" style={{
+              background: isDark ? 'var(--card-bg)' : 'white',
+              borderColor: isDark ? 'var(--border-color)' : '#dee2e6'
+            }}>
+              <div className="card-body">
+                <h5 className="mb-3" style={{ color: isDark ? 'var(--text-primary)' : '#212529' }}>
+                  <Car size={20} className="me-2" />
+                  Lift Club
+                </h5>
+
+                {/* Carpool Offers */}
+                <div className="mb-4">
+                  <div className="d-flex justify-content-between align-items-center mb-3">
+                    <h6 className="mb-0 text-success">Offering Rides</h6>
+                    <button
+                      className="btn btn-sm btn-success"
+                      onClick={() => navigate(`/hikes/${hikeId}/carpool`)}
+                    >
+                      Offer a Ride
+                    </button>
+                  </div>
+
+                  {carpoolOffers.length === 0 ? (
+                    <p className="text-muted small">No ride offers yet.</p>
+                  ) : (
+                    carpoolOffers.map(offer => (
+                      <div key={offer.id} className="mb-3 p-3 border rounded" style={{
+                        borderColor: isDark ? 'var(--border-color)' : '#dee2e6',
+                        backgroundColor: isDark ? 'rgba(255,255,255,0.05)' : '#f8f9fa'
+                      }}>
+                        <div>
+                          <Link
+                            to={`/profile/${offer.user_id}`}
+                            className="fw-bold text-decoration-none d-block mb-2"
+                            style={{ color: isDark ? '#8ab4f8' : '#1a73e8' }}
+                          >
+                            {offer.driver_name}
+                          </Link>
+                          <div className="mb-1">
+                            <small style={{ color: isDark ? '#b0b0b0' : '#6c757d' }}>
+                              <MapPin size={14} className="me-1" />
+                              From: {offer.departure_location}
+                            </small>
+                          </div>
+                          <div className="mb-1">
+                            <small style={{ color: isDark ? '#b0b0b0' : '#6c757d' }}>
+                              Available Seats: <strong style={{ color: isDark ? '#ffffff' : '#212529' }}>{offer.available_seats}</strong>
+                            </small>
+                          </div>
+                          {offer.departure_time && (
+                            <div className="mb-1">
+                              <small style={{ color: isDark ? '#b0b0b0' : '#6c757d' }}>
+                                <Clock size={14} className="me-1" />
+                                Departure: {offer.departure_time}
+                              </small>
+                            </div>
+                          )}
+                          {offer.driver_phone && (
+                            <div className="mb-1">
+                              <small style={{ color: isDark ? '#b0b0b0' : '#6c757d' }}>
+                                📞 {offer.driver_phone}
+                              </small>
+                            </div>
+                          )}
+                          {offer.notes && (
+                            <p className="mb-0 mt-2 small" style={{ color: isDark ? '#ffffff' : '#212529' }}>
+                              {offer.notes}
+                            </p>
+                          )}
+                        </div>
+                      </div>
+                    ))
+                  )}
+                </div>
+
+                {/* Carpool Requests */}
+                <div>
+                  <div className="d-flex justify-content-between align-items-center mb-3">
+                    <h6 className="mb-0 text-info">Looking for Rides</h6>
+                    <button
+                      className="btn btn-sm btn-info"
+                      onClick={() => navigate(`/hikes/${hikeId}/carpool`)}
+                    >
+                      Request a Ride
+                    </button>
+                  </div>
+
+                  {carpoolRequests.length === 0 ? (
+                    <p className="text-muted small">No ride requests yet.</p>
+                  ) : (
+                    carpoolRequests.map(request => (
+                      <div key={request.id} className="mb-3 p-3 border rounded" style={{
+                        borderColor: isDark ? 'var(--border-color)' : '#dee2e6',
+                        backgroundColor: isDark ? 'rgba(255,255,255,0.05)' : '#f8f9fa'
+                      }}>
+                        <Link
+                          to={`/profile/${request.user_id}`}
+                          className="fw-bold text-decoration-none d-block mb-2"
+                          style={{ color: isDark ? '#8ab4f8' : '#1a73e8' }}
+                        >
+                          {request.requester_name || request.user_name}
+                        </Link>
+                        <div className="mb-1">
+                          <small style={{ color: isDark ? '#b0b0b0' : '#6c757d' }}>
+                            <MapPin size={14} className="me-1" />
+                            Pickup: {request.pickup_location || request.departure_location}
+                          </small>
+                        </div>
+                        {request.notes && (
+                          <p className="mb-0 mt-2 small" style={{ color: isDark ? '#ffffff' : '#212529' }}>
+                            {request.notes}
+                          </p>
+                        )}
+                      </div>
+                    ))
+                  )}
+                </div>
+              </div>
+            </div>
+          )}
         </div>
 
         {/* Sidebar */}
         <div className="col-lg-4">
+          {/* Share Button Card */}
+          <div className="card mb-4" style={{ background: isDark ? 'var(--card-bg)' : 'white', border: '2px solid #0d6efd' }}>
+            <div className="card-body text-center">
+              <Share2 size={32} className="text-primary mb-2" />
+              <h5 className="mb-2">Share This Hike</h5>
+              <p className="text-muted small mb-3">Spread the word with fellow hikers</p>
+              <button
+                className="btn btn-primary w-100 shadow-sm"
+                onClick={handleShare}
+                style={{
+                  fontWeight: '600',
+                  padding: '12px',
+                  transition: 'all 0.2s ease'
+                }}
+                onMouseEnter={(e) => e.currentTarget.style.transform = 'scale(1.02)'}
+                onMouseLeave={(e) => e.currentTarget.style.transform = 'scale(1)'}
+              >
+                <Share2 size={18} className="me-2" />
+                Copy Link
+              </button>
+            </div>
+          </div>
+
           {/* Login Prompt for Non-logged-in Users */}
           {!token && (
             <div className="card mb-4 border-primary" style={{ background: isDark ? 'var(--card-bg)' : 'white' }}>
@@ -305,12 +683,12 @@ const HikeDetailsPage = () => {
               <div className="card-body">
                 <h5 className="mb-3">Your Status</h5>
                 <button
-                  className={`btn w-100 ${userStatus?.is_interested ? 'btn-success' : 'btn-outline-success'}`}
+                  className={`btn w-100 ${userStatus?.isInterested ? 'btn-success' : 'btn-outline-success'}`}
                   onClick={handleInterestToggle}
                 >
-                  {userStatus?.is_interested ? 'Interested ✓' : 'Express Interest'}
+                  {userStatus?.isInterested ? 'Interested ✓' : 'Express Interest'}
                 </button>
-                {userStatus?.is_interested && (
+                {userStatus?.isInterested && (
                   <small className="text-muted d-block mt-2 text-center">
                     You've expressed interest in this hike
                   </small>
@@ -383,12 +761,17 @@ const HikeDetailsPage = () => {
       {/* Share Button */}
       <div className="text-center mt-4 mb-5">
         <button
-          className="btn btn-outline-primary"
-          onClick={() => {
-            navigator.clipboard.writeText(window.location.href);
-            alert('Link copied to clipboard!');
+          className="btn btn-primary btn-lg shadow"
+          onClick={handleShare}
+          style={{
+            fontWeight: '600',
+            padding: '15px 40px',
+            transition: 'all 0.2s ease'
           }}
+          onMouseEnter={(e) => e.currentTarget.style.transform = 'scale(1.05)'}
+          onMouseLeave={(e) => e.currentTarget.style.transform = 'scale(1)'}
         >
+          <Share2 size={20} className="me-2" />
           Share This Hike
         </button>
       </div>

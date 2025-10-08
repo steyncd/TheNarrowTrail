@@ -51,22 +51,24 @@ const FeedbackButton = () => {
         className="btn btn-primary shadow-lg"
         style={{
           position: 'fixed',
-          bottom: '20px',
-          right: '20px',
-          borderRadius: '50%',
-          width: '60px',
-          height: '60px',
+          bottom: '30px',
+          right: '30px',
+          borderRadius: '50px',
+          padding: '15px 25px',
+          zIndex: 1000,
+          fontWeight: '600',
+          border: '2px solid rgba(13, 110, 253, 0.3)',
+          transition: 'all 0.3s ease',
           display: 'flex',
           alignItems: 'center',
-          justifyContent: 'center',
-          zIndex: 1000,
-          transition: 'all 0.3s ease'
+          gap: '10px'
         }}
         title="Send Feedback"
-        onMouseEnter={(e) => e.currentTarget.style.transform = 'scale(1.1)'}
+        onMouseEnter={(e) => e.currentTarget.style.transform = 'scale(1.05)'}
         onMouseLeave={(e) => e.currentTarget.style.transform = 'scale(1)'}
       >
-        <MessageSquare size={24} />
+        <MessageSquare size={20} />
+        <span className="d-none d-md-inline">Feedback</span>
       </button>
 
       {/* Feedback Modal */}
