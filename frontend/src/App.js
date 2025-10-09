@@ -53,7 +53,7 @@ function PublicRouteWrapper({ children }) {
       {/* Show header if user is logged in */}
       {currentUser && <Header />}
 
-      <div className="container-fluid px-3 pb-5 pt-4">
+      <div className="container-fluid px-3 pb-5">
         {children}
       </div>
 

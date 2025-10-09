@@ -13,6 +13,7 @@ const HikeCard = memo(({ hike, isPast, onViewDetails, onToggleInterest, loading,
   const { on, off } = useSocket();
 
   // Local state for real-time interest counts
+  // eslint-disable-next-line no-unused-vars
   const [interestedCount, setInterestedCount] = useState(hike.interested_users ? hike.interested_users.length : 0);
   const [confirmedCount, setConfirmedCount] = useState(hike.confirmed_users ? hike.confirmed_users.length : 0);
 

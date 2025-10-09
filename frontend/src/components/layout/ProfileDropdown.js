@@ -1,6 +1,6 @@
 import React, { useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { User, Eye, LogOut, Sun, Moon } from 'lucide-react';
+import { User, LogOut, Sun, Moon, Bell, Activity, MessageSquare } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
 import { useTheme } from '../../contexts/ThemeContext';
 
@@ -9,6 +9,7 @@ const ProfileDropdown = ({ show, onClose, buttonRef }) => {
   const { currentUser, logout } = useAuth();
   const { theme, toggleTheme } = useTheme();
   const dropdownRef = useRef(null);
+  const isAdmin = currentUser?.role === 'admin';
 
   useEffect(() => {
     if (!show || !buttonRef.current || !dropdownRef.current) return;
@@ -76,6 +77,60 @@ const ProfileDropdown = ({ show, onClose, buttonRef }) => {
           <User size={18} className="me-2" style={{ verticalAlign: 'text-bottom' }} />
           My Profile
         </button>
+
+        {isAdmin && (
+          <>
+            <button
+              onClick={() => {
+                onClose();
+                navigate('/admin/notifications');
+              }}
+              className="btn btn-link w-100 text-start p-3 border-0"
+              style={{
+                textDecoration: 'none',
+                color: theme === 'dark' ? '#fff' : '#212529',
+                borderRadius: 0
+              }}
+            >
+              <Bell size={18} className="me-2" style={{ verticalAlign: 'text-bottom' }} />
+              Notifications
+            </button>
+
+            <button
+              onClick={() => {
+                onClose();
+                navigate('/admin/feedback');
+              }}
+              className="btn btn-link w-100 text-start p-3 border-0"
+              style={{
+                textDecoration: 'none',
+                color: theme === 'dark' ? '#fff' : '#212529',
+                borderRadius: 0
+              }}
+            >
+              <MessageSquare size={18} className="me-2" style={{ verticalAlign: 'text-bottom' }} />
+              Feedback
+            </button>
+
+            <button
+              onClick={() => {
+                onClose();
+                navigate('/admin/logs');
+              }}
+              className="btn btn-link w-100 text-start p-3 border-0"
+              style={{
+                textDecoration: 'none',
+                color: theme === 'dark' ? '#fff' : '#212529',
+                borderRadius: 0
+              }}
+            >
+              <Activity size={18} className="me-2" style={{ verticalAlign: 'text-bottom' }} />
+              Activity Logs
+            </button>
+
+            <div className="border-top" style={{ borderColor: theme === 'dark' ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)' }} />
+          </>
+        )}
 
         <button
           onClick={toggleTheme}

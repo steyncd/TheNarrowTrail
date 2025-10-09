@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { BarChart3, Users, Calendar, TrendingUp, MessageSquare, Image, Target } from 'lucide-react';
+import { BarChart3, Users, Calendar, TrendingUp, Target } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { useTheme } from '../contexts/ThemeContext';
 import api from '../services/api';

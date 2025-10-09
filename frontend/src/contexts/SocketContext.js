@@ -15,6 +15,7 @@ export const useSocket = () => {
 
 export const SocketProvider = ({ children }) => {
   const { token, currentUser } = useAuth();
+  // eslint-disable-next-line no-unused-vars
   const [socket, setSocket] = useState(null);
   const [connected, setConnected] = useState(false);
   const socketRef = useRef(null);

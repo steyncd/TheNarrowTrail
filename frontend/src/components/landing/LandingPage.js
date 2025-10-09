@@ -168,9 +168,9 @@ const LandingPage = ({ hideLoginButton = false }) => {
           </div>
         )}
 
-      <div className="container py-5">
+      <div className="container pb-5 pt-0">
         {/* Hero Section */}
-        <div className="text-center mb-5">
+        <div className="text-center mb-5 pt-5">
           <h1 className="display-4 fw-bold text-white mb-3">Join Us on The Narrow Trail</h1>
           <p className="lead text-white-50 mb-4">
             Experience the beauty of God's creation together with fellow believers. It's a wonderful opportunity to get outdoors, enjoy meaningful fellowship, and talk about what truly matters — away from the noise of everyday life.
@@ -248,30 +248,110 @@ const LandingPage = ({ hideLoginButton = false }) => {
                     <div className="card-body">
                       <div className="d-flex justify-content-between align-items-start mb-2">
                         <h5 className="card-title mb-0">{hike.name}</h5>
-                        <span className="badge bg-warning text-dark">{hike.difficulty}</span>
+                        <div className="d-flex flex-column gap-1 align-items-end">
+                          <span className={`badge ${
+                            hike.difficulty === 'Easy' ? 'bg-success' :
+                            hike.difficulty === 'Moderate' ? 'bg-warning text-dark' :
+                            'bg-danger'
+                          }`}>{hike.difficulty}</span>
+                          {hike.status && (
+                            <span className={`badge ${
+                              hike.status === 'trip_booked' ? 'bg-success' :
+                              hike.status === 'pre_planning' ? 'bg-info' :
+                              hike.status === 'cancelled' ? 'bg-danger' :
+                              'bg-secondary'
+                            }`} style={{ fontSize: '0.7rem' }}>
+                              {hike.status === 'trip_booked' ? 'Trip Booked' :
+                               hike.status === 'pre_planning' ? 'Pre-Planning' :
+                               hike.status === 'gathering_interest' ? 'Gathering Interest' :
+                               hike.status === 'cancelled' ? 'Cancelled' :
+                               hike.status}
+                            </span>
+                          )}
+                        </div>
                       </div>
-                      <p className="card-text text-muted small mb-3">{hike.description}</p>
-                      <div className="d-flex justify-content-between align-items-center text-muted small">
-                        <span>
-                          <Calendar size={14} className="me-1" />
-                          {hikeDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
+                      <p className="card-text text-muted small mb-3" style={{
+                        display: '-webkit-box',
+                        WebkitLineClamp: 2,
+                        WebkitBoxOrient: 'vertical',
+                        overflow: 'hidden'
+                      }}>
+                        {hike.description}
+                      </p>
+
+                      {/* Type and Group Badges */}
+                      <div className="d-flex flex-wrap gap-2 mb-3">
+                        <span className="badge bg-info">
+                          {hike.type === 'day' ? 'Day Hike' : 'Multi-Day'}
                         </span>
-                        <span>
-                          <MapPin size={14} className="me-1" />
-                          {hike.distance}
+                        <span className="badge bg-secondary">
+                          {hike.group_type === 'family' ? 'Family' : "Men's"}
                         </span>
+                        {hike.cost > 0 && (
+                          <span className="badge bg-success" title={hike.price_is_estimate ? "Estimated price" : "Confirmed price"}>
+                            R{hike.cost}{hike.price_is_estimate && ' ~'}
+                          </span>
+                        )}
                       </div>
+
+                      <div className="mb-2">
+                        <div className="d-flex align-items-center text-muted small mb-1">
+                          <Calendar size={14} className="me-2" />
+                          <span title={hike.date_is_estimate ? "Estimated date" : "Confirmed date"}>
+                            {hikeDate.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' })}
+                            {hike.date_is_estimate && <span className="ms-1" style={{ fontStyle: 'italic', opacity: 0.7 }}>~</span>}
+                          </span>
+                        </div>
+                        {hike.time && (
+                          <div className="d-flex align-items-center text-muted small mb-1">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="me-2">
+                              <circle cx="12" cy="12" r="10"></circle>
+                              <polyline points="12 6 12 12 16 14"></polyline>
+                            </svg>
+                            <span>{hike.time}</span>
+                          </div>
+                        )}
+                        <div className="d-flex align-items-center text-muted small mb-1">
+                          <MapPin size={14} className="me-2" />
+                          <span>{hike.distance}</span>
+                        </div>
+                        {hike.location && (
+                          <div className="d-flex align-items-center text-muted small mb-1">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="me-2">
+                              <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
+                              <circle cx="12" cy="10" r="3"></circle>
+                            </svg>
+                            <span style={{
+                              whiteSpace: 'nowrap',
+                              overflow: 'hidden',
+                              textOverflow: 'ellipsis'
+                            }}>{hike.location}</span>
+                          </div>
+                        )}
+                      </div>
+                      {(hike.interested_count > 0 || hike.confirmed_count > 0) && (
+                        <div className="d-flex gap-2 mb-2">
+                          {hike.interested_count > 0 && (
+                            <span className="badge bg-info">
+                              {hike.interested_count} interested
+                            </span>
+                          )}
+                          {hike.confirmed_count > 0 && (
+                            <span className="badge bg-success">
+                              {hike.confirmed_count} confirmed
+                            </span>
+                          )}
+                        </div>
+                      )}
                     </div>
-                    {!hideLoginButton && (
-                      <div className="card-footer bg-light border-0">
-                        <button
-                          className="btn btn-primary btn-sm w-100"
-                          onClick={() => setShowLoginModal(true)}
-                        >
-                          Login to Join
-                        </button>
-                      </div>
-                    )}
+                    <div className="card-footer bg-light border-0">
+                      <button
+                        className="btn btn-primary btn-sm w-100"
+                        onClick={() => navigate(`/hikes/${hike.id}`)}
+                      >
+                        View Details
+                      </button>
+                    </div>
                   </div>
                 </div>
               );
@@ -290,9 +370,11 @@ const LandingPage = ({ hideLoginButton = false }) => {
                 boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)'
               }}>
                 <div className="card-body p-4">
-                  <ReactMarkdown className="mission-vision-content">
-                    {missionVision.content}
-                  </ReactMarkdown>
+                  <div className="mission-vision-content">
+                    <ReactMarkdown>
+                      {missionVision.content}
+                    </ReactMarkdown>
+                  </div>
                 </div>
               </div>
             </div>

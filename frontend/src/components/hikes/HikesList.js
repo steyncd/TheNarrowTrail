@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { Calendar, CheckCircle, Clock, Search, Filter, X } from 'lucide-react';
+import { Calendar, CheckCircle, Clock, Search, X } from 'lucide-react';
 import { api } from '../../services/api';
 import { useAuth } from '../../contexts/AuthContext';
 import { useTheme } from '../../contexts/ThemeContext';
@@ -21,10 +21,10 @@ const HikesList = () => {
   const [difficultyFilter, setDifficultyFilter] = useState('all');
   const [typeFilter, setTypeFilter] = useState('all');
   const [statusFilter, setStatusFilter] = useState('all');
-  const [showFilters, setShowFilters] = useState(false);
 
   useEffect(() => {
     fetchHikes();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const fetchHikes = async () => {
@@ -63,6 +63,7 @@ const HikesList = () => {
     setStatusFilter('all');
   };
 
+  // eslint-disable-next-line no-unused-vars
   const applyQuickFilter = (filterType) => {
     clearFilters();
     if (filterType === 'thisMonth') {
@@ -148,6 +149,7 @@ const HikesList = () => {
   if (filteredHikes.length === 0 && hikes.length > 0) {
     return (
       <>
+        {/* eslint-disable-next-line no-use-before-define */}
         {renderFilters()}
         <div className="card">
           <div className="card-body text-center text-muted py-5">

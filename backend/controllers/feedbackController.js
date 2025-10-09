@@ -2,6 +2,7 @@
 const pool = require('../config/database');
 const { sendEmail } = require('../services/notificationService');
 const { logActivity } = require('../utils/activityLogger');
+const emailTemplates = require('../services/emailTemplates');
 
 // Submit feedback (authenticated users)
 exports.submitFeedback = async (req, res) => {
@@ -41,12 +42,7 @@ exports.submitFeedback = async (req, res) => {
         await sendEmail(
           admin.email,
           `New Feedback: ${feedback_type}`,
-          `<h3>New Feedback Received</h3>
-           <p><strong>From:</strong> ${user.name} (${user.email})</p>
-           <p><strong>Type:</strong> ${feedback_type}</p>
-           <p><strong>Message:</strong></p>
-           <p>${message}</p>
-           <p><a href="https://helloliam.web.app/feedback">View in Admin Panel</a></p>`
+          emailTemplates.feedbackAdminEmail(user.name, user.email, feedback_type, message)
         );
       }
     }

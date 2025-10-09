@@ -78,6 +78,13 @@ class ApiService {
     }, token);
   }
 
+  async emailHikeAttendees(hikeId, emailData, token) {
+    return this.request(`/api/hikes/${hikeId}/email-attendees`, {
+      method: 'POST',
+      body: JSON.stringify(emailData)
+    }, token);
+  }
+
   async getHikeById(hikeId, token) {
     // This endpoint should work without authentication for public viewing
     const headers = token ? this.getAuthHeaders(token) : { 'Content-Type': 'application/json' };
@@ -381,6 +388,44 @@ class ApiService {
     return this.request('/api/admin/test-notification', {
       method: 'POST',
       body: JSON.stringify(notificationData)
+    }, token);
+  }
+
+  // Notification Preferences
+  async getNotificationTypes(token) {
+    const response = await fetch(`${this.baseURL}/api/notification-preferences/types`, {
+      headers: this.getAuthHeaders(token)
+    });
+    return response.json();
+  }
+
+  async getNotificationPreferences(token) {
+    const response = await fetch(`${this.baseURL}/api/notification-preferences`, {
+      headers: this.getAuthHeaders(token)
+    });
+    return response.json();
+  }
+
+  async updateNotificationPreferences(preferences, token) {
+    return this.request('/api/notification-preferences', {
+      method: 'PUT',
+      body: JSON.stringify(preferences)
+    }, token);
+  }
+
+  // Admin: Get another user's notification preferences
+  async getUserNotificationPreferences(userId, token) {
+    const response = await fetch(`${this.baseURL}/api/notification-preferences/user/${userId}`, {
+      headers: this.getAuthHeaders(token)
+    });
+    return response.json();
+  }
+
+  // Admin: Update another user's notification preferences
+  async updateUserNotificationPreferences(userId, preferences, token) {
+    return this.request(`/api/notification-preferences/user/${userId}`, {
+      method: 'PUT',
+      body: JSON.stringify(preferences)
     }, token);
   }
 

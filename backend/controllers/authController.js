@@ -6,6 +6,8 @@ const pool = require('../config/database');
 const { JWT_SECRET, FRONTEND_URL } = require('../config/env');
 const { sendEmail, sendWhatsApp } = require('../services/notificationService');
 const { logActivity } = require('../utils/activityLogger');
+const emailTemplates = require('../services/emailTemplates');
+const { validateRegistrationForAutoApproval, getValidationSummary } = require('../utils/registrationValidator');
 
 // Register new user
 exports.register = async (req, res) => {
@@ -27,6 +29,12 @@ exports.register = async (req, res) => {
       return res.status(400).json({ error: 'Email already registered' });
     }
 
+    // Validate registration for auto-approval
+    const validation = await validateRegistrationForAutoApproval(name, email, phone);
+    const initialStatus = validation.shouldAutoApprove ? 'approved' : 'pending';
+    
+    console.log(`Registration validation for ${email}:`, getValidationSummary(validation));
+
     // Hash password
     const hashedPassword = await bcrypt.hash(password, 10);
 
@@ -34,60 +42,127 @@ exports.register = async (req, res) => {
     const verificationToken = crypto.randomBytes(32).toString('hex');
     const verificationExpiry = new Date(Date.now() + 24 * 60 * 60 * 1000); // 24 hours
 
-    // Insert pending user
+    // Insert user with auto-approved or pending status
     const result = await pool.query(
       `INSERT INTO users (name, email, password, phone, role, status, email_verified, email_verification_token, email_verification_expiry, notifications_email, notifications_whatsapp, created_at)
-       VALUES ($1, $2, $3, $4, 'hiker', 'pending', false, $5, $6, true, true, NOW())
+       VALUES ($1, $2, $3, $4, 'hiker', $5, false, $6, $7, true, true, NOW())
        RETURNING id, name, email, phone, status`,
-      [name, email, hashedPassword, phone, verificationToken, verificationExpiry]
+      [name, email, hashedPassword, phone, initialStatus, verificationToken, verificationExpiry]
     );
+
+    const user = result.rows[0];
 
     // Send verification email
     const verificationUrl = `https://helloliam.web.app/verify-email?token=${verificationToken}`;
     await sendEmail(
       email,
-      'Verify Your Email - Hiking Portal',
-      `<h2>Welcome to the Hiking Portal!</h2>
-       <p>Hi ${name},</p>
-       <p>Thank you for registering! Please verify your email address by clicking the link below:</p>
-       <p><a href="${verificationUrl}" style="background-color: #4CAF50; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px; display: inline-block;">Verify Email</a></p>
-       <p>Or copy and paste this link into your browser:</p>
-       <p>${verificationUrl}</p>
-       <p>This link will expire in 24 hours.</p>
-       <p>Once your email is verified, an admin will review your account for approval.</p>`
+      'Verify Your Email - The Narrow Trail',
+      emailTemplates.verificationEmail(name, verificationUrl)
     );
 
-    // Notify admins
+    // Get admins for notifications
     const admins = await pool.query(
       'SELECT email, phone, notifications_email, notifications_whatsapp FROM users WHERE role = $1 AND status = $2',
       ['admin', 'approved']
     );
 
-    for (const admin of admins.rows) {
-      if (admin.notifications_email) {
-        await sendEmail(
-          admin.email,
-          'New Registration Pending',
-          `<p><strong>${name}</strong> has registered and is awaiting approval.</p>
-           <p>Email: ${email}</p>
-           <p>Phone: ${phone}</p>`
-        );
+    if (validation.shouldAutoApprove) {
+      // AUTO-APPROVED: Send welcome email and SMS to user
+      await sendEmail(
+        email,
+        'Welcome to The Narrow Trail!',
+        emailTemplates.welcomeEmail(name)
+      );
+
+      // Send welcome WhatsApp/SMS to user
+      await sendWhatsApp(
+        phone,
+        `Welcome ${name}! Your hiking group registration has been approved. You can now log in after verifying your email.`
+      );
+
+      // Notify admins of auto-approval
+      for (const admin of admins.rows) {
+        if (admin.notifications_email) {
+          await sendEmail(
+            admin.email,
+            'New User Auto-Approved',
+            `<p><strong>${name}</strong> has registered and been auto-approved.</p>
+             <p>Email: ${email}</p>
+             <p>Phone: ${phone}</p>
+             <p><strong>Validation:</strong></p>
+             <pre>${validation.checks.join('\n')}</pre>`
+          );
+        }
+        if (admin.notifications_whatsapp) {
+          await sendWhatsApp(
+            admin.phone,
+            `New user auto-approved: ${name} (${email}).`
+          );
+        }
       }
-      if (admin.notifications_whatsapp) {
-        await sendWhatsApp(
-          admin.phone,
-          `New registration: ${name} (${email}) is awaiting approval.`
-        );
+
+      // Log auto-approval
+      const ipAddress = req.ip || req.connection.remoteAddress;
+      await logActivity(
+        user.id, 
+        'user_auto_approved', 
+        'user', 
+        user.id, 
+        JSON.stringify({ 
+          email, 
+          name, 
+          validation_reason: validation.reason,
+          checks: validation.checks 
+        }), 
+        ipAddress
+      );
+
+    } else {
+      // PENDING APPROVAL: Notify admins for manual review
+      for (const admin of admins.rows) {
+        if (admin.notifications_email) {
+          await sendEmail(
+            admin.email,
+            'New Registration Pending Review',
+            `<p><strong>${name}</strong> has registered and requires manual approval.</p>
+             <p>Email: ${email}</p>
+             <p>Phone: ${phone}</p>
+             <p><strong>Reason for Manual Review:</strong> ${validation.reason}</p>
+             <p><strong>Validation Details:</strong></p>
+             <pre>${validation.checks.join('\n')}</pre>`
+          );
+        }
+        if (admin.notifications_whatsapp) {
+          await sendWhatsApp(
+            admin.phone,
+            `New registration requires review: ${name} (${email}). Reason: ${validation.reason}`
+          );
+        }
       }
+
+      // Log pending registration
+      const ipAddress = req.ip || req.connection.remoteAddress;
+      await logActivity(
+        user.id, 
+        'user_registration', 
+        'user', 
+        user.id, 
+        JSON.stringify({ 
+          email, 
+          name, 
+          requires_review: validation.reason,
+          checks: validation.checks 
+        }), 
+        ipAddress
+      );
     }
 
-    // Log activity
-    const ipAddress = req.ip || req.connection.remoteAddress;
-    await logActivity(result.rows[0].id, 'user_registration', 'user', result.rows[0].id, JSON.stringify({ email, name }), ipAddress);
-
     res.status(201).json({
-      message: 'Registration successful! Please check your email to verify your account.',
-      user: result.rows[0]
+      message: validation.shouldAutoApprove 
+        ? 'Registration successful! Please check your email to verify your account. Your account has been approved and you can log in after verification.'
+        : 'Registration successful! Please check your email to verify your account. Your registration will be reviewed by an admin.',
+      user: user,
+      autoApproved: validation.shouldAutoApprove
     });
   } catch (error) {
     console.error('Registration error:', error);
@@ -171,13 +246,7 @@ exports.forgotPassword = async (req, res) => {
       await sendEmail(
         user.email,
         'Password Reset Request',
-        `<h2>Password Reset Request</h2>
-         <p>Hello ${user.name},</p>
-         <p>You requested to reset your password. Use the code below or click the link:</p>
-         <h3 style="color: #4CAF50; letter-spacing: 2px;">${resetToken}</h3>
-         <p><a href="${resetLink}" style="background-color: #4CAF50; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px; display: inline-block;">Reset Password</a></p>
-         <p>This code will expire in 1 hour.</p>
-         <p>If you didn't request this, please ignore this email.</p>`
+        emailTemplates.passwordResetEmail(user.name, resetToken, resetLink)
       );
     }
 
@@ -270,10 +339,7 @@ exports.resetPassword = async (req, res) => {
     await sendEmail(
       email,
       'Password Reset Successful',
-      `<h2>Password Reset Successful</h2>
-       <p>Hello ${user.name},</p>
-       <p>Your password has been successfully reset.</p>
-       <p>If you didn't make this change, please contact an administrator immediately.</p>`
+      emailTemplates.passwordResetConfirmationEmail(user.name)
     );
 
     res.json({ message: 'Password reset successful' });

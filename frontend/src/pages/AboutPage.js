@@ -3,7 +3,6 @@ import { Info, Edit } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { getContent } from '../services/contentApi';
 import ReactMarkdown from 'react-markdown';
-import PageHeader from '../components/common/PageHeader';
 import { useNavigate } from 'react-router-dom';
 
 function AboutPage() {

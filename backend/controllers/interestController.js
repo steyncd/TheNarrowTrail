@@ -3,6 +3,7 @@ const pool = require('../config/database');
 const { sendEmail, sendWhatsApp } = require('../services/notificationService');
 const { logActivity } = require('../utils/activityLogger');
 const { emitInterestUpdate } = require('../services/socketService');
+const emailTemplates = require('../services/emailTemplates');
 
 // Toggle interest in hike
 exports.toggleInterest = async (req, res) => {
@@ -78,7 +79,7 @@ exports.toggleInterest = async (req, res) => {
             sendEmail(
               admin.email,
               'Hike Interest',
-              `<p><strong>${user.name}</strong> is interested in <strong>${hike.name}</strong> on ${hikeDate}.</p>`
+              emailTemplates.hikeInterestAdminEmail(user.name, hike.name, hikeDate)
             ).catch(err => console.error('Email notification error:', err))
           );
         }
@@ -197,7 +198,7 @@ exports.confirmAttendance = async (req, res) => {
             sendEmail(
               admin.email,
               'Hike Attendance Confirmed',
-              `<p><strong>${user.name}</strong> has confirmed attendance for <strong>${hike.name}</strong> on ${hikeDate}.</p>`
+              emailTemplates.attendanceConfirmedAdminEmail(user.name, hike.name, hikeDate)
             ).catch(err => console.error('Email notification error:', err))
           );
         }

@@ -86,6 +86,9 @@ router.put('/:id/default-packing-list', authenticateToken, requireAdmin, hikeCon
 // GET /api/hikes/:id/emergency-contacts - Get emergency contacts for hike (Admin only)
 router.get('/:id/emergency-contacts', authenticateToken, requireAdmin, hikeController.getHikeEmergencyContacts);
 
+// POST /api/hikes/:id/email-attendees - Email hike attendees (Admin only)
+router.post('/:id/email-attendees', authenticateToken, requireAdmin, hikeController.emailHikeAttendees);
+
 // GET /api/hikes/:id - Get single hike details (public for sharing)
 // IMPORTANT: This must be LAST to avoid catching other /:id/* routes
 router.get('/:id', (req, res, next) => {

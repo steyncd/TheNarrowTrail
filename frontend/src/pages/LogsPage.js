@@ -1,6 +1,6 @@
 // pages/LogsPage.js - Admin Logs Page
 import React, { useState, useEffect } from 'react';
-import { Activity, LogIn, Users, Calendar, Filter } from 'lucide-react';
+import { Activity, LogIn } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { useTheme } from '../contexts/ThemeContext';
 import api from '../services/api';
@@ -17,6 +17,7 @@ const LogsPage = () => {
   const [activityLogs, setActivityLogs] = useState([]);
   const [stats, setStats] = useState(null);
   const [loading, setLoading] = useState(false);
+  // eslint-disable-next-line no-unused-vars
   const [filters, setFilters] = useState({
     limit: 50,
     offset: 0,

@@ -13,6 +13,7 @@ import PaymentsSection from '../components/payments/PaymentsSection';
 const HikeDetailsPage = () => {
   const { hikeId } = useParams();
   const navigate = useNavigate();
+  // eslint-disable-next-line no-unused-vars
   const location = useLocation();
   const { token, currentUser } = useAuth();
   const { theme } = useTheme();

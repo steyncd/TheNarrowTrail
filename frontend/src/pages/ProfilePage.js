@@ -1,7 +1,7 @@
 // pages/ProfilePage.js - User Profile Page
 import React, { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
-import { User, MapPin, Calendar, Award, TrendingUp, Edit2, Lock, Camera, Mountain, Activity, Phone, Mail, Heart } from 'lucide-react';
+import { MapPin, Calendar, Award, TrendingUp, Edit2, Lock, Camera, Mountain, Activity, Phone, Mail, Heart } from 'lucide-react';
 import api from '../services/api';
 import { useAuth } from '../contexts/AuthContext';
 import { useTheme } from '../contexts/ThemeContext';

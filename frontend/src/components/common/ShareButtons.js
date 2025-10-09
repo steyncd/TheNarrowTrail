@@ -1,9 +1,7 @@
 import React, { useState } from 'react';
 import { Share2, Mail, Copy, Check } from 'lucide-react';
-import { useTheme } from '../../contexts/ThemeContext';
 
 const ShareButtons = ({ hike }) => {
-  const { theme } = useTheme();
   const [copied, setCopied] = useState(false);
 
   const shareText = `Check out this hike: ${hike.name}\n${hike.description}\nDate: ${new Date(hike.date).toLocaleDateString()}\nDifficulty: ${hike.difficulty}`;

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { FileText, Save, Eye, History } from 'lucide-react';
+import { FileText, Save, Eye } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { getAllContent, updateContent } from '../services/contentApi';
 import PageHeader from '../components/common/PageHeader';

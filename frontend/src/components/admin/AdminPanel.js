@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { Clock, Calendar, CheckCircle, Settings } from 'lucide-react';
+import { Clock, Calendar, CheckCircle, Settings, MoreVertical, Edit, Trash2, Eye, Mail } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
 import { api } from '../../services/api';
 import AddHikeForm from '../hikes/AddHikeForm';
@@ -8,6 +8,7 @@ import BulkActions from './BulkActions';
 import PageHeader from '../common/PageHeader';
 import EmergencyContactsModal from './EmergencyContactsModal';
 import PackingListEditorModal from './PackingListEditorModal';
+import EmailAttendeesModal from './EmailAttendeesModal';
 
 function AdminPanel() {
   const { token } = useAuth();
@@ -18,8 +19,10 @@ function AdminPanel() {
   const [showAttendanceModal, setShowAttendanceModal] = useState(false);
   const [showEmergencyContactsModal, setShowEmergencyContactsModal] = useState(false);
   const [showPackingListModal, setShowPackingListModal] = useState(false);
+  const [showEmailModal, setShowEmailModal] = useState(false);
   const [selectedHike, setSelectedHike] = useState(null);
   const [selectedHikes, setSelectedHikes] = useState([]);
+  const [openDropdown, setOpenDropdown] = useState(null);
 
   const fetchHikes = useCallback(async () => {
     try {
@@ -33,6 +36,20 @@ function AdminPanel() {
   useEffect(() => {
     fetchHikes();
   }, [fetchHikes]);
+
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = () => {
+      if (openDropdown) {
+        setOpenDropdown(null);
+      }
+    };
+
+    if (openDropdown) {
+      document.addEventListener('click', handleClickOutside);
+      return () => document.removeEventListener('click', handleClickOutside);
+    }
+  }, [openDropdown]);
 
   const handleDeleteHike = async (id) => {
     if (!window.confirm('Delete this hike?')) return;
@@ -157,31 +174,124 @@ function AdminPanel() {
                 </div>
                 </div>
               </div>
-              <div className="d-flex flex-column flex-sm-row gap-2" style={{flexShrink: 0}}>
+              <div style={{flexShrink: 0, position: 'relative'}}>
                 <button
-                  className="btn btn-sm btn-success"
-                  style={{minHeight: '36px', minWidth: '90px'}}
-                  onClick={() => handleOpenAttendance(hike)}
+                  className="btn btn-sm btn-secondary"
+                  style={{minHeight: '36px', minWidth: '100px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '4px'}}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setOpenDropdown(openDropdown === hike.id ? null : hike.id);
+                  }}
                   disabled={loading}
                 >
-                  View Details
+                  <MoreVertical size={16} />
+                  Actions
                 </button>
-                <button
-                  className="btn btn-sm btn-info"
-                  style={{minHeight: '36px', minWidth: '60px'}}
-                  onClick={() => handleOpenEditHike(hike)}
-                  disabled={loading}
-                >
-                  Edit
-                </button>
-                <button
-                  className="btn btn-sm btn-danger"
-                  style={{minHeight: '36px', minWidth: '70px'}}
-                  onClick={() => handleDeleteHike(hike.id)}
-                  disabled={loading}
-                >
-                  {loading ? 'Deleting...' : 'Delete'}
-                </button>
+                {openDropdown === hike.id && (
+                  <div
+                    style={{
+                      position: 'absolute',
+                      right: 0,
+                      top: '100%',
+                      marginTop: '4px',
+                      backgroundColor: '#fff',
+                      border: '1px solid #dee2e6',
+                      borderRadius: '4px',
+                      boxShadow: '0 2px 8px rgba(0,0,0,0.15)',
+                      zIndex: 1000,
+                      minWidth: '180px'
+                    }}
+                    onClick={(e) => e.stopPropagation()}
+                  >
+                    <button
+                      className="dropdown-item"
+                      style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '8px',
+                        padding: '8px 16px',
+                        border: 'none',
+                        background: 'none',
+                        width: '100%',
+                        textAlign: 'left',
+                        cursor: 'pointer'
+                      }}
+                      onClick={() => {
+                        handleOpenAttendance(hike);
+                        setOpenDropdown(null);
+                      }}
+                    >
+                      <Eye size={16} />
+                      View Details
+                    </button>
+                    <button
+                      className="dropdown-item"
+                      style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '8px',
+                        padding: '8px 16px',
+                        border: 'none',
+                        background: 'none',
+                        width: '100%',
+                        textAlign: 'left',
+                        cursor: 'pointer'
+                      }}
+                      onClick={() => {
+                        handleOpenEditHike(hike);
+                        setOpenDropdown(null);
+                      }}
+                    >
+                      <Edit size={16} />
+                      Edit Hike
+                    </button>
+                    <button
+                      className="dropdown-item"
+                      style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '8px',
+                        padding: '8px 16px',
+                        border: 'none',
+                        background: 'none',
+                        width: '100%',
+                        textAlign: 'left',
+                        cursor: 'pointer'
+                      }}
+                      onClick={() => {
+                        setSelectedHike(hike);
+                        setShowEmailModal(true);
+                        setOpenDropdown(null);
+                      }}
+                    >
+                      <Mail size={16} />
+                      Email Attendees
+                    </button>
+                    <div style={{borderTop: '1px solid #dee2e6', margin: '4px 0'}}></div>
+                    <button
+                      className="dropdown-item text-danger"
+                      style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '8px',
+                        padding: '8px 16px',
+                        border: 'none',
+                        background: 'none',
+                        width: '100%',
+                        textAlign: 'left',
+                        cursor: 'pointer',
+                        color: '#dc3545'
+                      }}
+                      onClick={() => {
+                        handleDeleteHike(hike.id);
+                        setOpenDropdown(null);
+                      }}
+                    >
+                      <Trash2 size={16} />
+                      Delete Hike
+                    </button>
+                  </div>
+                )}
               </div>
             </div>
           </div>
@@ -312,6 +422,20 @@ function AdminPanel() {
         hikeId={selectedHike?.id}
         hikeName={selectedHike?.name}
       />
+
+      {/* Email Attendees Modal */}
+      {showEmailModal && selectedHike && (
+        <EmailAttendeesModal
+          hike={selectedHike}
+          onClose={() => {
+            setShowEmailModal(false);
+            setSelectedHike(null);
+          }}
+          onSuccess={(message) => {
+            alert(message);
+          }}
+        />
+      )}
     </div>
   );
 }

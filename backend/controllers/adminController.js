@@ -3,6 +3,7 @@ const bcrypt = require('bcryptjs');
 const pool = require('../config/database');
 const { sendEmail, sendWhatsApp } = require('../services/notificationService');
 const { logActivity } = require('../utils/activityLogger');
+const emailTemplates = require('../services/emailTemplates');
 
 // Get all pending users
 exports.getPendingUsers = async (req, res) => {
@@ -53,10 +54,8 @@ exports.approveUser = async (req, res) => {
     if (user.notifications_email) {
       await sendEmail(
         user.email,
-        'Welcome to Hiking Group!',
-        `<h2>Welcome ${user.name}!</h2>
-         <p>Your hiking group registration has been approved.</p>
-         <p>You can now log in and view upcoming hikes.</p>`
+        'Welcome to The Narrow Trail',
+        emailTemplates.welcomeEmail(user.name)
       );
     }
 
@@ -95,8 +94,7 @@ exports.rejectUser = async (req, res) => {
       await sendEmail(
         user.email,
         'Registration Update',
-        `<p>Hello ${user.name},</p>
-         <p>Unfortunately, your registration request could not be approved at this time.</p>`
+        emailTemplates.rejectionEmail(user.name)
       );
     }
 
@@ -244,11 +242,7 @@ exports.resetUserPassword = async (req, res) => {
     await sendEmail(
       user.email,
       'Password Reset by Administrator',
-      `<h2>Password Reset</h2>
-       <p>Hello ${user.name},</p>
-       <p>Your password has been reset by an administrator.</p>
-       <p>Your new password is: <strong>${newPassword}</strong></p>
-       <p>Please sign in and change your password for security.</p>`
+      emailTemplates.adminPasswordResetEmail(user.name, newPassword)
     );
 
     res.json({ message: 'Password reset successfully' });
@@ -289,9 +283,7 @@ exports.promoteUser = async (req, res) => {
     await sendEmail(
       user.email,
       'Admin Access Granted',
-      `<h2>Admin Access Granted</h2>
-       <p>Hello ${user.name},</p>
-       <p>You have been promoted to administrator. You now have full access to manage users, hikes, and view analytics.</p>`
+      emailTemplates.adminPromotionEmail(user.name)
     );
 
     res.json({

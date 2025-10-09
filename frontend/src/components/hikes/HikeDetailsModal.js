@@ -10,6 +10,7 @@ import ShareButtons from '../common/ShareButtons';
 import HikePrintView from './HikePrintView';
 
 const HikeDetailsModal = ({ hike, onClose }) => {
+  // eslint-disable-next-line no-unused-vars
   const { token, currentUser } = useAuth();
   const { theme } = useTheme();
   const [activeTab, setActiveTab] = useState('info');

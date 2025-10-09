@@ -2,12 +2,13 @@
 const pool = require('../config/database');
 const { sendEmail, sendWhatsApp } = require('../services/notificationService');
 const { logActivity } = require('../utils/activityLogger');
+const emailTemplates = require('../services/emailTemplates');
 
 // Get all public hikes (no auth required)
 exports.getPublicHikes = async (req, res) => {
   try {
     const result = await pool.query(
-      `SELECT id, name, date, difficulty, distance, description, type, cost, group_type, status, image_url, gps_coordinates
+      `SELECT id, name, date, difficulty, distance, description, type, cost, group_type, status, image_url, gps_coordinates, price_is_estimate, date_is_estimate
        FROM hikes
        WHERE date >= CURRENT_DATE
        ORDER BY date ASC
@@ -106,13 +107,7 @@ exports.createHike = async (req, res) => {
                 sendEmail(
                   user.email,
                   'New Hike Added!',
-                  `<h2>New ${groupType} hike: ${name}</h2>
-                   <p><strong>Date:</strong> ${hikeDate}</p>
-                   <p><strong>Difficulty:</strong> ${difficulty}</p>
-                   <p><strong>Distance:</strong> ${distance}</p>
-                   <p><strong>Description:</strong> ${description}</p>
-                   ${cost > 0 ? `<p><strong>Cost:</strong> R${cost}</p>` : ''}
-                   <p>Log in to express your interest!</p>`
+                  emailTemplates.newHikeEmail(name, hikeDate, difficulty, distance, description, cost, groupType)
                 )
               );
             }
@@ -862,5 +857,95 @@ exports.getHikeEmergencyContacts = async (req, res) => {
   } catch (error) {
     console.error('Get emergency contacts error:', error);
     res.status(500).json({ error: 'Failed to fetch emergency contacts' });
+  }
+};
+
+// Email hike attendees
+exports.emailHikeAttendees = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { subject, message } = req.body;
+
+    if (!subject || !message) {
+      return res.status(400).json({ error: 'Subject and message are required' });
+    }
+
+    // Get hike details
+    const hikeResult = await pool.query(
+      'SELECT name, date FROM hikes WHERE id = $1',
+      [id]
+    );
+
+    if (hikeResult.rows.length === 0) {
+      return res.status(404).json({ error: 'Hike not found' });
+    }
+
+    const hike = hikeResult.rows[0];
+
+    // Get all confirmed attendees with email notifications enabled
+    const attendeesResult = await pool.query(
+      `SELECT u.id, u.name, u.email, u.notifications_email
+       FROM users u
+       JOIN hike_interest i ON u.id = i.user_id
+       WHERE i.hike_id = $1 AND i.attendance_status = 'confirmed'
+       AND u.notifications_email = true`,
+      [id]
+    );
+
+    const attendees = attendeesResult.rows;
+
+    if (attendees.length === 0) {
+      return res.status(400).json({ error: 'No confirmed attendees with email enabled found for this hike' });
+    }
+
+    // Send email to each attendee
+    const emailPromises = attendees.map(attendee => {
+      const emailBody = emailTemplates.hikeAnnouncementEmail(
+        attendee.name,
+        hike.name,
+        hike.date,
+        subject,
+        message
+      );
+
+      return sendEmail(
+        attendee.email,
+        subject,
+        emailBody,
+        attendee.id,
+        'hike_announcement'
+      ).catch(err => {
+        console.error(`Failed to send email to ${attendee.email}:`, err);
+        return { success: false, email: attendee.email, error: err.message };
+      });
+    });
+
+    const results = await Promise.all(emailPromises);
+    const successCount = results.filter(r => r.success !== false).length;
+    const failureCount = results.length - successCount;
+
+    // Log activity
+    const ipAddress = req.ip || req.connection.remoteAddress;
+    await logActivity(
+      req.user.id,
+      'email_hike_attendees',
+      'hike',
+      id,
+      JSON.stringify({ subject, recipientCount: attendees.length, successCount, failureCount }),
+      ipAddress
+    );
+
+    res.json({
+      success: true,
+      message: `Email sent to ${successCount} attendee${successCount !== 1 ? 's' : ''}`,
+      details: {
+        total: attendees.length,
+        success: successCount,
+        failed: failureCount
+      }
+    });
+  } catch (error) {
+    console.error('Email hike attendees error:', error);
+    res.status(500).json({ error: 'Failed to send emails to attendees' });
   }
 };

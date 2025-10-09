@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { LogOut, Menu, Calendar, Heart, Settings, Users, Bell, Eye, BarChart3, User, Activity, MessageSquare, DollarSign, Info, FileText, Home } from 'lucide-react';
+import { Link, useLocation } from 'react-router-dom';
+import { Menu, Calendar, Heart, Settings, Users, BarChart3, User, DollarSign, Info, FileText, Home } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
 import { useTheme } from '../../contexts/ThemeContext';
 import MobileMenu from './MobileMenu';
@@ -8,10 +8,9 @@ import ProfileDropdown from './ProfileDropdown';
 import api from '../../services/api';
 
 const Header = () => {
-  const { currentUser, logout, token } = useAuth();
+  const { currentUser, token } = useAuth();
   const { theme } = useTheme();
   const location = useLocation();
-  const navigate = useNavigate();
   const [showMobileMenu, setShowMobileMenu] = useState(false);
   const [showProfileDropdown, setShowProfileDropdown] = useState(false);
   const [pendingUsersCount, setPendingUsersCount] = useState(0);
@@ -22,15 +21,6 @@ const Header = () => {
   const isAdmin = currentUser?.role === 'admin';
 
   // Fetch unread counts for admins
-  useEffect(() => {
-    if (isAdmin && token) {
-      fetchUnreadCounts();
-      // Refresh counts every 60 seconds
-      const interval = setInterval(fetchUnreadCounts, 60000);
-      return () => clearInterval(interval);
-    }
-  }, [isAdmin, token]);
-
   const fetchUnreadCounts = async () => {
     try {
       // Fetch pending users
@@ -49,6 +39,16 @@ const Header = () => {
     }
   };
 
+  useEffect(() => {
+    if (isAdmin && token) {
+      fetchUnreadCounts();
+      // Refresh counts every 60 seconds
+      const interval = setInterval(fetchUnreadCounts, 60000);
+      return () => clearInterval(interval);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isAdmin, token]);
+
   const navLinks = [
     { path: '/landing', label: 'Home', icon: Home },
     { path: '/about', label: 'About', icon: Info },
@@ -64,8 +64,6 @@ const Header = () => {
     { path: '/admin/analytics', label: 'Analytics', icon: BarChart3 },
     { path: '/admin/users', label: 'Users', icon: Users },
     { path: '/admin/content', label: 'Content', icon: FileText },
-    { path: '/admin/feedback', label: 'Feedback', icon: MessageSquare },
-    { path: '/admin/logs', label: 'Logs', icon: Activity },
   ];
 
   const isActive = (path) => location.pathname === path;

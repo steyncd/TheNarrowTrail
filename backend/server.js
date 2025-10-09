@@ -23,6 +23,7 @@ const weatherRoutes = require('./routes/weather');
 const paymentRoutes = require('./routes/payments');
 const contentRoutes = require('./routes/content');
 const publicContentRoutes = require('./routes/publicContent');
+const notificationPreferencesRoutes = require('./routes/notificationPreferences');
 
 // Import controllers for special routes
 const hikeController = require('./controllers/hikeController');
@@ -80,6 +81,7 @@ app.use('/api/homeassistant', homeassistantRoutes);
 app.use('/api/calendar', calendarRoutes);
 app.use('/api/tokens', tokenRoutes);
 app.use('/api/weather', weatherRoutes);
+app.use('/api/notification-preferences', notificationPreferencesRoutes);
 app.use('/api/public-content', publicContentRoutes); // Public content API - NO AUTH (must be before /api)
 app.use('/api/content', contentRoutes);
 app.use('/api', paymentRoutes); // Catch-all for payments - must be LAST

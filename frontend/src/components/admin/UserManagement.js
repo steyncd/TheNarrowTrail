@@ -4,6 +4,7 @@ import { Users } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
 import { api } from '../../services/api';
 import PageHeader from '../common/PageHeader';
+import UserNotificationPreferences from './UserNotificationPreferences';
 
 function UserManagement() {
   const { currentUser, token } = useAuth();
@@ -19,6 +20,7 @@ function UserManagement() {
   const [showAddUser, setShowAddUser] = useState(false);
   const [showEditUser, setShowEditUser] = useState(false);
   const [showResetUserPassword, setShowResetUserPassword] = useState(false);
+  const [showNotificationPreferences, setShowNotificationPreferences] = useState(false);
   const [selectedUser, setSelectedUser] = useState(null);
 
   const [newUser, setNewUser] = useState({
@@ -32,7 +34,10 @@ function UserManagement() {
   const [editUser, setEditUser] = useState({
     name: '',
     email: '',
-    phone: ''
+    phone: '',
+    role: 'hiker',
+    notifications_email: true,
+    notifications_whatsapp: true
   });
 
   const [resetPasswordData, setResetPasswordData] = useState({
@@ -147,7 +152,10 @@ function UserManagement() {
     setEditUser({
       name: user.name,
       email: user.email,
-      phone: user.phone
+      phone: user.phone,
+      role: user.role || 'hiker',
+      notifications_email: user.notifications_email ?? true,
+      notifications_whatsapp: user.notifications_whatsapp ?? true
     });
     setShowEditUser(true);
     setError('');
@@ -231,6 +239,23 @@ function UserManagement() {
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleOpenNotificationPreferences = (user) => {
+    setSelectedUser(user);
+    setShowNotificationPreferences(true);
+    setError('');
+  };
+
+  const handleCloseNotificationPreferences = () => {
+    setShowNotificationPreferences(false);
+    setSelectedUser(null);
+  };
+
+  const handleSaveNotificationPreferences = () => {
+    setShowNotificationPreferences(false);
+    setSelectedUser(null);
+    alert('Notification preferences updated successfully');
   };
 
   // Filter and paginate users
@@ -354,7 +379,7 @@ function UserManagement() {
           </div>
 
           {/* Desktop view - table */}
-          <div className="d-none d-lg-block">
+          <div className="d-none d-md-block">
             <div className="table-responsive">
               <table className="table table-hover">
                 <thead>
@@ -390,6 +415,14 @@ function UserManagement() {
                           Edit
                         </button>
                         <button
+                          className="btn btn-sm btn-secondary me-2"
+                          onClick={() => handleOpenNotificationPreferences(user)}
+                          disabled={loading}
+                          title="Manage notification preferences"
+                        >
+                          Notifications
+                        </button>
+                        <button
                           className="btn btn-sm btn-warning me-2"
                           onClick={() => handleOpenResetPassword(user)}
                           disabled={loading}
@@ -423,7 +456,7 @@ function UserManagement() {
           </div>
 
           {/* Mobile view - cards */}
-          <div className="d-lg-none">
+          <div className="d-md-none">
             {currentUsers.map(user => (
               <div key={user.id} className="card mb-3 shadow-sm">
                 <div className="card-body p-2">
@@ -451,6 +484,14 @@ function UserManagement() {
                       disabled={loading}
                     >
                       Edit
+                    </button>
+                    <button
+                      className="btn btn-sm btn-secondary"
+                      style={{fontSize: '0.75rem', flex: '1 1 45%'}}
+                      onClick={() => handleOpenNotificationPreferences(user)}
+                      disabled={loading}
+                    >
+                      Notifications
                     </button>
                     <button
                       className="btn btn-sm btn-warning"
@@ -630,6 +671,44 @@ function UserManagement() {
                     onChange={(e) => setEditUser({...editUser, phone: e.target.value})}
                   />
                 </div>
+                <div className="mb-3">
+                  <label className="form-label">Role</label>
+                  <select
+                    className="form-select"
+                    value={editUser.role}
+                    onChange={(e) => setEditUser({...editUser, role: e.target.value})}
+                  >
+                    <option value="hiker">Hiker</option>
+                    <option value="admin">Admin</option>
+                  </select>
+                </div>
+                <div className="mb-3">
+                  <label className="form-label">Notification Settings</label>
+                  <div className="form-check form-switch">
+                    <input
+                      className="form-check-input"
+                      type="checkbox"
+                      id="editEmailNotifications"
+                      checked={editUser.notifications_email}
+                      onChange={(e) => setEditUser({...editUser, notifications_email: e.target.checked})}
+                    />
+                    <label className="form-check-label" htmlFor="editEmailNotifications">
+                      Enable Email Notifications
+                    </label>
+                  </div>
+                  <div className="form-check form-switch mt-2">
+                    <input
+                      className="form-check-input"
+                      type="checkbox"
+                      id="editSMSNotifications"
+                      checked={editUser.notifications_whatsapp}
+                      onChange={(e) => setEditUser({...editUser, notifications_whatsapp: e.target.checked})}
+                    />
+                    <label className="form-check-label" htmlFor="editSMSNotifications">
+                      Enable SMS Notifications
+                    </label>
+                  </div>
+                </div>
               </div>
               <div className="modal-footer">
                 <button type="button" className="btn btn-secondary" onClick={() => { setShowEditUser(false); setError(''); }} disabled={loading}>Cancel</button>
@@ -686,6 +765,15 @@ function UserManagement() {
             </div>
           </div>
         </div>
+      )}
+
+      {/* Notification Preferences Modal */}
+      {showNotificationPreferences && selectedUser && (
+        <UserNotificationPreferences
+          user={selectedUser}
+          onClose={handleCloseNotificationPreferences}
+          onSave={handleSaveNotificationPreferences}
+        />
       )}
     </div>
   );

@@ -1,5 +1,6 @@
-// services/notificationService.js - Email and WhatsApp notification services
+// services/notificationService.js - Email and SMS notification services
 const pool = require('../config/database');
+const notificationPreferencesController = require('../controllers/notificationPreferencesController');
 
 // Initialize SendGrid (optional)
 let sgMail = null;
@@ -10,7 +11,7 @@ if (process.env.SENDGRID_API_KEY && process.env.SENDGRID_API_KEY !== 'placeholde
   console.log('SendGrid configured');
 }
 
-// Initialize Twilio (optional)
+// Initialize Twilio for SMS (optional)
 let twilioClient = null;
 if (process.env.TWILIO_ACCOUNT_SID &&
     process.env.TWILIO_ACCOUNT_SID !== 'placeholder' &&
@@ -21,7 +22,7 @@ if (process.env.TWILIO_ACCOUNT_SID &&
     process.env.TWILIO_ACCOUNT_SID.trim(),
     process.env.TWILIO_AUTH_TOKEN.trim()
   );
-  console.log('Twilio configured');
+  console.log('Twilio configured for SMS');
 }
 
 // Log notification to database
@@ -37,8 +38,18 @@ async function logNotification(type, recipient, subject, message, status, error 
   }
 }
 
-// Send Email
-async function sendEmail(to, subject, html) {
+// Send Email with notification preference check
+async function sendEmail(to, subject, html, userId = null, notificationType = null) {
+  // Check notification preferences if userId and notificationType provided
+  if (userId && notificationType) {
+    const shouldSend = await notificationPreferencesController.shouldSendNotification(userId, notificationType, 'email');
+    if (!shouldSend) {
+      console.log(`Email to ${to} skipped due to user preferences (type: ${notificationType})`);
+      await logNotification('email', to, subject, html, 'skipped', 'User preference disabled');
+      return false;
+    }
+  }
+
   if (!sgMail) {
     console.log('Email not configured, skipping email to:', to);
     await logNotification('email', to, subject, html, 'skipped', 'SendGrid not configured');
@@ -78,32 +89,67 @@ async function sendEmail(to, subject, html) {
   }
 }
 
-// Send WhatsApp
-async function sendWhatsApp(to, message) {
+// Send SMS with notification preference check
+async function sendSMS(to, message, userId = null, notificationType = null) {
+  // Check notification preferences if userId and notificationType provided
+  if (userId && notificationType) {
+    const shouldSend = await notificationPreferencesController.shouldSendNotification(userId, notificationType, 'sms');
+    if (!shouldSend) {
+      console.log(`SMS to ${to} skipped due to user preferences (type: ${notificationType})`);
+      await logNotification('sms', to, null, message, 'skipped', 'User preference disabled');
+      return false;
+    }
+  }
+
   if (!twilioClient) {
-    console.log('WhatsApp not configured, skipping message to:', to);
-    await logNotification('whatsapp', to, null, message, 'skipped', 'Twilio not configured');
+    console.log('SMS not configured (Twilio required), skipping message to:', to);
+    await logNotification('sms', to, null, message, 'skipped', 'Twilio not configured');
+    return false;
+  }
+
+  if (!process.env.TWILIO_WHATSAPP_NUMBER) {
+    console.log('TWILIO_WHATSAPP_NUMBER not configured, skipping SMS to:', to);
+    await logNotification('sms', to, null, message, 'skipped', 'TWILIO_WHATSAPP_NUMBER not configured');
     return false;
   }
 
   try {
+    // Format phone number for international dialing
+    let formattedTo = to.trim();
+    
+    // If number starts with 0 (South African local format), replace with +27
+    if (formattedTo.startsWith('0')) {
+      formattedTo = '+27' + formattedTo.substring(1);
+    } else if (!formattedTo.startsWith('+')) {
+      // If no country code and doesn't start with 0, assume it needs +27
+      formattedTo = '+27' + formattedTo;
+    }
+    
+    const formattedFrom = process.env.TWILIO_WHATSAPP_NUMBER.startsWith('+')
+      ? process.env.TWILIO_WHATSAPP_NUMBER
+      : `+${process.env.TWILIO_WHATSAPP_NUMBER}`;
+
     await twilioClient.messages.create({
       body: message,
-      from: `whatsapp:${process.env.TWILIO_WHATSAPP_NUMBER}`,
-      to: `whatsapp:${to}`
+      from: formattedFrom,
+      to: formattedTo
     });
-    console.log(`WhatsApp sent to ${to}`);
-    await logNotification('whatsapp', to, null, message, 'sent');
+    console.log(`SMS sent to ${formattedTo} (original: ${to}) via Twilio`);
+    await logNotification('sms', to, null, message, 'sent');
     return true;
   } catch (error) {
-    console.error('WhatsApp error:', error);
-    await logNotification('whatsapp', to, null, message, 'failed', error.message);
+    console.error('SMS error:', error);
+    await logNotification('sms', to, null, message, 'failed', error.message);
     return false;
   }
 }
 
+// Alias for backwards compatibility
+const sendWhatsApp = sendSMS;
+
 module.exports = {
   sendEmail,
-  sendWhatsApp,
+  sendSMS,
+  sendWhatsApp, // Alias for backwards compatibility
   logNotification
 };

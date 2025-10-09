@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { CheckSquare, Mail, Edit, Download, X } from 'lucide-react';
+import { Mail, Download, X } from 'lucide-react';
 import { useTheme } from '../../contexts/ThemeContext';
 import { exportToCSV } from '../../utils/exportUtils';
 

@@ -368,3 +368,467 @@
     padding-bottom: max(16px, env(safe-area-inset-bottom));
   }
 }
+
+/* ===================================
+   VERY SMALL SCREENS (iPhone SE, etc.)
+   =================================== */
+@media (max-width: 375px) {
+  /* Reduce font sizes */
+  .card-title {
+    font-size: 0.95rem !important;
+    line-height: 1.3;
+  }
+  
+  .card-text {
+    font-size: 0.85rem !important;
+  }
+  
+  /* Reduce badge sizes */
+  .badge {
+    font-size: 0.7rem !important;
+    padding: 0.25rem 0.5rem !important;
+  }
+  
+  /* Reduce gaps */
+  .d-flex.gap-2, .d-flex.flex-wrap.gap-2 {
+    gap: 0.5rem !important;
+  }
+  
+  .d-flex.gap-3 {
+    gap: 0.75rem !important;
+  }
+  
+  /* Reduce button sizes */
+  .btn-sm {
+    padding: 6px 10px !important;
+    font-size: 0.75rem !important;
+    min-height: 38px;
+  }
+  
+  /* Reduce card padding */
+  .card-body {
+    padding: 0.75rem !important;
+  }
+  
+  /* Smaller navbar brand */
+  .navbar-brand {
+    font-size: 0.85rem !important;
+  }
+  
+  /* Reduce modal header/footer padding */
+  .modal-header, .modal-footer {
+    padding: 0.75rem !important;
+  }
+  
+  /* Smaller page headers */
+  h1 {
+    font-size: 1.5rem !important;
+  }
+  
+  h2 {
+    font-size: 1.25rem !important;
+  }
+  
+  h3 {
+    font-size: 1.1rem !important;
+  }
+}
+
+/* Extra small phones (< 360px) */
+@media (max-width: 359px) {
+  .btn {
+    font-size: 0.8rem !important;
+    padding: 8px 10px !important;
+  }
+  
+  .navbar-brand img {
+    width: 35px !important;
+    height: 35px !important;
+  }
+  
+  /* Even smaller card padding */
+  .card-body {
+    padding: 0.5rem !important;
+  }
+  
+  /* Compact table cards on mobile */
+  .table-responsive .card {
+    margin-bottom: 0.5rem !important;
+  }
+}
+
+/* ===================================
+   OVERFLOW PROTECTION
+   =================================== */
+@media (max-width: 767px) {
+  /* Prevent horizontal scroll */
+  body, html, #root {
+    overflow-x: hidden !important;
+    max-width: 100vw;
+  }
+  
+  /* Break long words */
+  .card-text, .card-title, p, li {
+    word-wrap: break-word;
+    overflow-wrap: break-word;
+    hyphens: auto;
+  }
+  
+  /* Break long URLs and emails */
+  a {
+    word-break: break-word;
+  }
+  
+  /* Prevent images from overflowing */
+  img {
+    max-width: 100%;
+    height: auto;
+  }
+  
+  /* Prevent pre/code blocks from overflowing */
+  pre, code {
+    white-space: pre-wrap;
+    word-wrap: break-word;
+  }
+  
+  /* Container max width */
+  .container, .container-fluid {
+    max-width: 100vw;
+    overflow-x: hidden;
+  }
+  
+  /* Prevent table overflow */
+  .table-responsive {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+}
+
+/* ===================================
+   TOUCH GESTURE IMPROVEMENTS
+   =================================== */
+@media (max-width: 767px) {
+  /* Add momentum scrolling to all scrollable areas */
+  .overflow-auto, .overflow-scroll, .modal-body {
+    -webkit-overflow-scrolling: touch;
+  }
+  
+  /* Prevent pull-to-refresh on modals */
+  .modal {
+    overscroll-behavior-y: contain;
+  }
+  
+  /* Improve swipe performance */
+  .carousel, .tab-content {
+    -webkit-overflow-scrolling: touch;
+    transform: translateZ(0);
+  }
+}
+
+/* ===================================
+   TABLET LANDSCAPE OPTIMIZATIONS
+   =================================== */
+@media (min-width: 768px) and (max-width: 991px) and (orientation: landscape) {
+  /* Make better use of horizontal space */
+  .modal-dialog {
+    max-width: 90% !important;
+    margin: 1.75rem auto !important;
+  }
+  
+  /* Adjust card columns */
+  .col-md-6 {
+    flex: 0 0 50%;
+    max-width: 50%;
+  }
+  
+  .col-md-4 {
+    flex: 0 0 33.333%;
+    max-width: 33.333%;
+  }
+}
+
+/* ===================================
+   PERFORMANCE OPTIMIZATIONS
+   =================================== */
+@media (max-width: 767px) {
+  /* Reduce shadows on mobile for better performance */
+  .shadow-lg {
+    box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15) !important;
+  }
+  
+  .shadow {
+    box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075) !important;
+  }
+  
+  /* Simplify transitions */
+  * {
+    transition-duration: 0.2s !important;
+  }
+  
+  /* Reduce animation complexity */
+  @keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+  }
+}
+
+/* ===================================
+   IMPROVED MOBILE NAVIGATION
+   =================================== */
+@media (max-width: 767px) {
+  /* Make navbar items more touch-friendly */
+  .navbar-nav .nav-link {
+    padding: 0.75rem 1rem !important;
+    font-size: 1rem;
+  }
+  
+  /* Better dropdown behavior */
+  .navbar-collapse {
+    max-height: calc(100vh - 60px);
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+  
+  /* Add subtle dividers between nav items */
+  .navbar-nav .nav-item {
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  }
+  
+  .navbar-nav .nav-item:last-child {
+    border-bottom: none;
+  }
+}
+
+/* ===================================
+   STICKY ELEMENTS ON MOBILE
+   =================================== */
+@media (max-width: 767px) {
+  /* Ensure sticky headers don't overlap content */
+  .sticky-top {
+    position: sticky;
+    top: 0;
+    z-index: 1020;
+    background: inherit;
+  }
+  
+  /* Add shadow to sticky elements for depth */
+  .sticky-top::after {
+    content: '';
+    position: absolute;
+    bottom: -8px;
+    left: 0;
+    right: 0;
+    height: 8px;
+    background: linear-gradient(to bottom, rgba(0,0,0,0.1), transparent);
+    pointer-events: none;
+  }
+}
+
+/* ===================================
+   IMPROVED CARD INTERACTIONS
+   =================================== */
+@media (max-width: 767px) {
+  /* Add active state for better feedback */
+  .card:active, .btn:active {
+    transform: scale(0.98);
+    transition: transform 0.1s;
+  }
+  
+  /* Better card spacing */
+  .card + .card {
+    margin-top: 1rem;
+  }
+  
+  /* Improve card readability */
+  .card-body {
+    line-height: 1.6;
+  }
+}
+
+/* ===================================
+   ACCESSIBILITY IMPROVEMENTS
+   =================================== */
+@media (max-width: 767px) {
+  /* Improve focus indicators for keyboard/switch control users */
+  button:focus, a:focus, input:focus, select:focus, textarea:focus {
+    outline: 3px solid #0d6efd;
+    outline-offset: 2px;
+  }
+  
+  /* Ensure sufficient color contrast */
+  .text-muted {
+    color: #6c757d !important;
+  }
+  
+  /* Larger click targets for accessibility */
+  .form-check-input {
+    width: 1.25em;
+    height: 1.25em;
+    margin-top: 0.15em;
+  }
+}
+
+/* ===================================
+   LOADING STATE IMPROVEMENTS
+   =================================== */
+@media (max-width: 767px) {
+  /* Better loading spinner */
+  .spinner-border {
+    width: 2rem;
+    height: 2rem;
+    border-width: 0.25em;
+  }
+  
+  .spinner-border-sm {
+    width: 1rem;
+    height: 1rem;
+    border-width: 0.15em;
+  }
+  
+  /* Loading overlay for better UX */
+  .loading-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.3);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 9999;
+  }
+}
+
+/* ===================================
+   IMPROVED ALERTS AND TOASTS
+   =================================== */
+@media (max-width: 767px) {
+  /* Make alerts more prominent */
+  .alert {
+    font-size: 0.9rem;
+    padding: 0.75rem 1rem;
+    margin-bottom: 1rem;
+  }
+  
+  /* Better close button */
+  .btn-close {
+    padding: 0.5rem;
+    min-width: 44px;
+    min-height: 44px;
+  }
+  
+  /* Position toasts appropriately */
+  .toast-container {
+    position: fixed;
+    bottom: 1rem;
+    right: 1rem;
+    z-index: 1090;
+  }
+}
+
+/* ===================================
+   PAGINATION IMPROVEMENTS
+   =================================== */
+@media (max-width: 767px) {
+  /* Better pagination controls */
+  .pagination {
+    justify-content: center;
+    flex-wrap: wrap;
+    gap: 0.25rem;
+  }
+  
+  .page-link {
+    min-width: 44px;
+    min-height: 44px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0.5rem;
+  }
+  
+  /* Hide page numbers on very small screens, keep prev/next */
+  @media (max-width: 375px) {
+    .pagination .page-item:not(.page-item:first-child):not(.page-item:last-child) {
+      display: none;
+    }
+    
+    .pagination .page-item.active {
+      display: inline-flex !important;
+    }
+  }
+}
+
+/* ===================================
+   SEARCH AND FILTER IMPROVEMENTS
+   =================================== */
+@media (max-width: 767px) {
+  /* Better search input */
+  .form-control[type="search"] {
+    font-size: 16px;
+    padding: 0.75rem 1rem;
+  }
+  
+  /* Filter buttons full width */
+  .filter-buttons {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+  
+  .filter-buttons .btn {
+    width: 100%;
+  }
+}
+
+/* ===================================
+   DATE AND TIME PICKER IMPROVEMENTS
+   =================================== */
+@media (max-width: 767px) {
+  /* Better date inputs */
+  input[type="date"],
+  input[type="time"],
+  input[type="datetime-local"] {
+    font-size: 16px;
+    min-height: 44px;
+    padding: 0.75rem;
+  }
+}
+
+/* ===================================
+   BADGE AND TAG IMPROVEMENTS
+   =================================== */
+@media (max-width: 767px) {
+  /* Ensure badges are readable */
+  .badge {
+    padding: 0.35em 0.65em;
+    font-size: 0.75rem;
+    font-weight: 500;
+  }
+  
+  /* Wrap badges on mobile */
+  .d-flex.flex-wrap .badge {
+    margin: 0.25rem;
+  }
+}
+
+/* ===================================
+   ICON IMPROVEMENTS
+   =================================== */
+@media (max-width: 767px) {
+  /* Ensure icons are touch-friendly when clickable */
+  .btn svg, button svg, a svg {
+    pointer-events: none; /* Let parent handle clicks */
+  }
+  
+  /* Better icon sizing */
+  .icon-lg {
+    width: 24px;
+    height: 24px;
+  }
+  
+  .icon-sm {
+    width: 16px;
+    height: 16px;
+  }
+}
