@@ -42,4 +42,8 @@ router.get('/notifications', adminController.getNotifications);
 // POST /api/admin/test-notification - Test notification
 router.post('/test-notification', adminController.testNotification);
 
+// POPIA Compliance routes
+// GET /api/admin/consent-status - Get consent status for all users
+router.get('/consent-status', adminController.getConsentStatus);
+
 module.exports = router;

@@ -1,30 +1,37 @@
-# Hiking Portal
+# The Narrow Trail - Hiking Portal
 
 Full-stack hiking club management application with React frontend and Node.js backend.
 
 ## 🚀 Quick Links
 
 - **📱 Live Application**: https://helloliam.web.app
-- **🔧 API Endpoint**: https://hiking-portal-api-554106646136.us-central1.run.app
+- **🔧 API Endpoint**: https://backend-554106646136.europe-west1.run.app
 - **📚 Documentation**: [docs/README.md](docs/README.md)
-- **📊 Current Status**: [SESSION_STATUS.md](SESSION_STATUS.md)
 
 ## 📖 Documentation
 
-All documentation is organized in the [`docs/`](docs/) directory:
+All documentation is organized in the [`docs/`](docs/) directory by topic:
 
-- **[Deployment](docs/deployment/)** - How to deploy frontend and backend
-- **[Development](docs/development/)** - Architecture and development guides  
-- **[Features](docs/features/)** - Feature documentation and roadmap
+- **[Compliance](docs/compliance/)** - POPIA compliance and data protection
+- **[Features](docs/features/)** - Feature documentation and user guides
+- **[Mobile](docs/mobile/)** - Mobile responsiveness documentation
+- **[Notifications](docs/notifications/)** - Notification system guides
+- **[Performance](docs/performance/)** - Performance optimization
+- **[Development](docs/development/)** - Architecture and development guides
+- **[Deployment](docs/deployment/)** - Deployment procedures
 
 ## 🏗️ Project Structure
 
 ```
 hiking-portal/
-├── docs/                    # All documentation
+├── docs/                    # Documentation (organized by topic)
+│   ├── compliance/          # POPIA and data protection
+│   ├── features/            # Feature docs
+│   ├── mobile/              # Mobile responsiveness
+│   ├── notifications/       # Notification system
+│   ├── performance/         # Performance docs
+│   ├── development/         # Dev guides
 │   ├── deployment/          # Deployment guides
-│   ├── development/         # Development docs
-│   ├── features/            # Feature documentation
 │   └── archive/             # Historical docs
 ├── frontend/                # React application
 │   ├── src/
@@ -40,20 +47,42 @@ hiking-portal/
 │   ├── config/              # Configuration
 │   ├── migrations/          # SQL migrations
 │   └── docs/                # Backend-specific docs
-├── SESSION_STATUS.md        # Current session status
 └── README.md                # This file
 ```
 
 ## ✨ Key Features
 
-- 👥 User authentication and profiles
+### User Management
+- 🔐 Authentication and authorization (JWT)
+- 👥 User profiles with emergency contacts
+- ✅ Intelligent auto-approval system
+- 📊 Admin dashboard
+
+### Hike Management
 - 🥾 Hike creation and management
-- 📝 Interest expression and attendance confirmation
+- 📝 Interest expression and attendance tracking
 - 💰 Payment tracking for hike costs
-- 💬 Comments and carpool coordination
+- 📸 Photo galleries
 - 📦 Packing list management
 - 🌤️ Weather integration
-- 📊 Analytics and reporting
+
+### Communication
+- 💬 Comments and discussions
+- 🚗 Carpool coordination
+- 🔔 Customizable notifications (Email/SMS/WhatsApp)
+- 📧 Automated email notifications
+
+### Compliance & Security
+- 🔒 POPIA compliance (South African data protection)
+- 📄 Editable Privacy Policy and Terms
+- 🗑️ Automated data retention
+- 📊 Data export capabilities
+- ❌ Account deletion
+
+### Analytics & Monitoring
+- 📊 Usage analytics
+- 📝 Activity logging
+- 💾 Payment reporting
 
 ## 🛠️ Tech Stack
 
@@ -61,6 +90,7 @@ hiking-portal/
 - React 18
 - Bootstrap 5
 - React Router
+- Socket.IO (real-time)
 - Firebase Hosting
 
 ### Backend
@@ -69,6 +99,7 @@ hiking-portal/
 - PostgreSQL (Cloud SQL)
 - Cloud Run
 - JWT Authentication
+- Socket.IO
 
 ### Infrastructure
 - Google Cloud Platform
@@ -76,6 +107,7 @@ hiking-portal/
 - Cloud Run (Backend)
 - Firebase Hosting (Frontend)
 - Secret Manager
+- Cloud Build
 
 ## 🚀 Quick Start
 
@@ -83,6 +115,7 @@ hiking-portal/
 - Node.js 18+
 - Google Cloud SDK (`gcloud`)
 - Firebase CLI (`firebase`)
+- PostgreSQL client (`psql`)
 
 ### Local Development
 
@@ -110,33 +143,36 @@ cd frontend
 npm run build
 firebase deploy --only hosting
 
-# Backend (after removing nul files!)
+# Backend
 cd backend
-find . -name "nul" -exec rm -f {} +
-gcloud run deploy hiking-portal-api --source . --region us-central1 [...]
+gcloud run deploy backend \
+  --source . \
+  --region europe-west1 \
+  --allow-unauthenticated \
+  --set-env-vars NODE_ENV=production
 ```
 
-## 📝 Recent Updates (2025-10-08)
+## 📝 Recent Updates (2025-10-09)
 
-- ✅ Consolidated attendance tracking to single table
-- ✅ Added payment tracking system
-- ✅ Frontend alignment with new attendance flow
-- ✅ Resolved Windows deployment issues
-- ✅ Organized documentation structure
-
-See [SESSION_STATUS.md](SESSION_STATUS.md) for detailed recent changes.
+- ✅ **Editable Legal Documents**: Privacy Policy and Terms & Conditions now editable through admin panel
+- ✅ **POPIA Compliance**: Full compliance with South African data protection laws
+- ✅ **Data Retention**: Automated cleanup of old logs and data
+- ✅ **Mobile Optimization**: Enhanced mobile responsiveness across all pages
+- ✅ **Notification System**: User-customizable notification preferences
+- ✅ **Auto Approval**: Intelligent user registration approval system
+- ✅ **Performance**: Lazy loading and code splitting implemented
 
 ## 🆘 Getting Help
 
 1. **Deployment Issues**: See [docs/deployment/troubleshooting.md](docs/deployment/troubleshooting.md)
 2. **Development Guides**: See [docs/development/](docs/development/)
 3. **Feature Documentation**: See [docs/features/](docs/features/)
-4. **Backend API**: See `backend/docs/`
+4. **POPIA Compliance**: See [docs/compliance/](docs/compliance/)
 
 ## 📧 Support
 
-For questions or issues, check the documentation first. Common issues and solutions are documented in [docs/deployment/troubleshooting.md](docs/deployment/troubleshooting.md).
+Contact: steyncd@gmail.com
 
 ---
 
-**Last Updated:** 2025-10-08
+**Last Updated:** 2025-10-09

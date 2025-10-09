@@ -1,10 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { Users } from 'lucide-react';
+import { Users, Shield } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
 import { api } from '../../services/api';
 import PageHeader from '../common/PageHeader';
 import UserNotificationPreferences from './UserNotificationPreferences';
+import ConsentManagement from './ConsentManagement';
 
 function UserManagement() {
   const { currentUser, token } = useAuth();
@@ -15,6 +16,7 @@ function UserManagement() {
   const [userSearchTerm, setUserSearchTerm] = useState('');
   const [userRoleFilter, setUserRoleFilter] = useState('all');
   const [userCurrentPage, setUserCurrentPage] = useState(1);
+  const [activeTab, setActiveTab] = useState('users'); // 'users' or 'consent'
   const usersPerPage = 10;
 
   const [showAddUser, setShowAddUser] = useState(false);
@@ -48,6 +50,7 @@ function UserManagement() {
   useEffect(() => {
     fetchUsers();
     fetchPendingUsers();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const fetchUsers = async () => {
@@ -280,22 +283,53 @@ function UserManagement() {
         title="User Management"
         subtitle="Manage user accounts, approvals, and permissions"
         action={
-          <button
-            className="btn btn-primary"
-            onClick={() => {
-              setShowAddUser(true);
-              setError('');
-            }}
-            style={{minHeight: '38px'}}
-          >
-            Add User
-          </button>
+          activeTab === 'users' ? (
+            <button
+              className="btn btn-primary"
+              onClick={() => {
+                setShowAddUser(true);
+                setError('');
+              }}
+              style={{minHeight: '38px'}}
+            >
+              Add User
+            </button>
+          ) : null
         }
       />
 
-      {error && <div className="alert alert-danger">{error}</div>}
+      {/* Tabs */}
+      <ul className="nav nav-tabs mb-4">
+        <li className="nav-item">
+          <button 
+            className={`nav-link ${activeTab === 'users' ? 'active' : ''}`}
+            onClick={() => setActiveTab('users')}
+            style={{ cursor: 'pointer', border: 'none', background: 'none' }}
+          >
+            <Users size={18} className="me-2" />
+            Users
+          </button>
+        </li>
+        <li className="nav-item">
+          <button 
+            className={`nav-link ${activeTab === 'consent' ? 'active' : ''}`}
+            onClick={() => setActiveTab('consent')}
+            style={{ cursor: 'pointer', border: 'none', background: 'none' }}
+          >
+            <Shield size={18} className="me-2" />
+            POPIA Consent
+          </button>
+        </li>
+      </ul>
 
-      {/* Pending Users */}
+      {/* Tab Content */}
+      {activeTab === 'consent' ? (
+        <ConsentManagement />
+      ) : (
+        <>
+          {error && <div className="alert alert-danger">{error}</div>}
+
+          {/* Pending Users */}
       {pendingUsers.length > 0 && (
         <div className="card border-warning mb-4">
           <div className="card-header bg-warning bg-opacity-10">
@@ -774,6 +808,8 @@ function UserManagement() {
           onClose={handleCloseNotificationPreferences}
           onSave={handleSaveNotificationPreferences}
         />
+      )}
+        </>
       )}
     </div>
   );

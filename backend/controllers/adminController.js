@@ -344,3 +344,39 @@ exports.testNotification = async (req, res) => {
     res.status(500).json({ error: 'Failed to send test notification', details: error.message });
   }
 };
+
+// Get POPIA consent status for all users (Admin only)
+exports.getConsentStatus = async (req, res) => {
+  try {
+    const result = await pool.query(
+      `SELECT 
+        id, name, email, phone, status, role,
+        privacy_consent_accepted, privacy_consent_date,
+        terms_accepted, terms_accepted_date,
+        data_processing_consent, data_processing_consent_date,
+        created_at
+      FROM users 
+      WHERE status = 'approved'
+      ORDER BY created_at DESC`
+    );
+
+    const stats = {
+      total_users: result.rows.length,
+      all_consents: result.rows.filter(u => 
+        u.privacy_consent_accepted && u.terms_accepted && u.data_processing_consent
+      ).length,
+      missing_privacy: result.rows.filter(u => !u.privacy_consent_accepted).length,
+      missing_terms: result.rows.filter(u => !u.terms_accepted).length,
+      missing_data_processing: result.rows.filter(u => !u.data_processing_consent).length
+    };
+
+    res.json({
+      users: result.rows,
+      stats
+    });
+  } catch (error) {
+    console.error('Get consent status error:', error);
+    res.status(500).json({ error: 'Failed to fetch consent status' });
+  }
+};
+

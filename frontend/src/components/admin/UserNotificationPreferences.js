@@ -275,8 +275,21 @@ function UserNotificationPreferences({ user, onClose, onSave }) {
               </tbody>
             </table>
           </div>
-          <div className="alert alert-info" style={{ fontSize: '0.875rem', marginBottom: 0 }}>
-            <strong>Note:</strong> Critical notifications () are always enabled for security and cannot be disabled.
+          <div 
+            className="alert alert-info" 
+            style={{ 
+              fontSize: '0.875rem', 
+              marginBottom: 0,
+              borderRadius: '8px',
+              display: 'flex',
+              alignItems: 'start',
+              gap: '8px'
+            }}
+          >
+            <span style={{ fontSize: '1.1rem' }}>ℹ️</span>
+            <div>
+              <strong>Note:</strong> Critical notifications (🔒) are always enabled for security and cannot be disabled.
+            </div>
           </div>
         </div>
 

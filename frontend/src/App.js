@@ -35,6 +35,10 @@ const PaymentsAdminPage = lazy(() => import('./pages/PaymentsAdminPage'));
 const AboutPage = lazy(() => import('./pages/AboutPage'));
 const ContentManagementPage = lazy(() => import('./pages/ContentManagementPage'));
 
+// Legal pages
+const PrivacyPolicy = lazy(() => import('./components/legal/PrivacyPolicy'));
+const TermsAndConditions = lazy(() => import('./components/legal/TermsAndConditions'));
+
 // Public Route Wrapper (allows access without authentication)
 function PublicRouteWrapper({ children }) {
   const { theme } = useTheme();
@@ -325,6 +329,28 @@ function App() {
                 <PrivateRouteWrapper>
                   <Suspense fallback={<LazyLoadFallback />}>
                     <AboutPage />
+                  </Suspense>
+                </PrivateRouteWrapper>
+              }
+            />
+
+            {/* Legal pages - accessible to all */}
+            <Route
+              path="/privacy-policy"
+              element={
+                <PrivateRouteWrapper>
+                  <Suspense fallback={<LazyLoadFallback />}>
+                    <PrivacyPolicy />
+                  </Suspense>
+                </PrivateRouteWrapper>
+              }
+            />
+            <Route
+              path="/terms"
+              element={
+                <PrivateRouteWrapper>
+                  <Suspense fallback={<LazyLoadFallback />}>
+                    <TermsAndConditions />
                   </Suspense>
                 </PrivateRouteWrapper>
               }

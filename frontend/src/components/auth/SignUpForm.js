@@ -10,6 +10,11 @@ const SignUpForm = ({ onBack }) => {
     password: '',
     confirmPassword: ''
   });
+  const [consents, setConsents] = useState({
+    termsAccepted: false,
+    privacyAccepted: false,
+    dataProcessingAccepted: false
+  });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
@@ -38,6 +43,11 @@ const SignUpForm = ({ onBack }) => {
 
     if (formData.password.length < 6) {
       setError('Password must be at least 6 characters long');
+      return;
+    }
+
+    if (!consents.termsAccepted || !consents.privacyAccepted || !consents.dataProcessingAccepted) {
+      setError('You must accept all consent requirements to register');
       return;
     }
 
@@ -164,6 +174,72 @@ const SignUpForm = ({ onBack }) => {
                   required
                   disabled={loading}
                 />
+              </div>
+
+              {/* POPIA Compliance Consents */}
+              <div className="mb-3 p-3" style={{ backgroundColor: '#f8f9fa', borderRadius: '8px', border: '2px solid #dee2e6' }}>
+                <h6 className="mb-3" style={{ color: '#2d5a7c', fontWeight: '600' }}>
+                  📋 Required Consents (POPIA Compliance)
+                </h6>
+                
+                <div className="form-check mb-2">
+                  <input
+                    className="form-check-input"
+                    type="checkbox"
+                    id="termsCheck"
+                    checked={consents.termsAccepted}
+                    onChange={(e) => setConsents({...consents, termsAccepted: e.target.checked})}
+                    disabled={loading}
+                  />
+                  <label className="form-check-label small" htmlFor="termsCheck">
+                    I have read and agree to the{' '}
+                    <a href="/terms" target="_blank" rel="noopener noreferrer" className="text-primary">
+                      Terms and Conditions
+                    </a>
+                    <span className="text-danger">*</span>
+                  </label>
+                </div>
+
+                <div className="form-check mb-2">
+                  <input
+                    className="form-check-input"
+                    type="checkbox"
+                    id="privacyCheck"
+                    checked={consents.privacyAccepted}
+                    onChange={(e) => setConsents({...consents, privacyAccepted: e.target.checked})}
+                    disabled={loading}
+                  />
+                  <label className="form-check-label small" htmlFor="privacyCheck">
+                    I have read and understand the{' '}
+                    <a href="/privacy-policy" target="_blank" rel="noopener noreferrer" className="text-primary">
+                      Privacy Policy
+                    </a>
+                    <span className="text-danger">*</span>
+                  </label>
+                </div>
+
+                <div className="form-check">
+                  <input
+                    className="form-check-input"
+                    type="checkbox"
+                    id="dataCheck"
+                    checked={consents.dataProcessingAccepted}
+                    onChange={(e) => setConsents({...consents, dataProcessingAccepted: e.target.checked})}
+                    disabled={loading}
+                  />
+                  <label className="form-check-label small" htmlFor="dataCheck">
+                    I consent to the collection and processing of my personal information (name, email, phone) 
+                    for the purpose of hiking club membership and communications, as outlined in the Privacy Policy
+                    <span className="text-danger">*</span>
+                  </label>
+                </div>
+
+                <div className="mt-2">
+                  <small className="text-muted">
+                    <strong>Why we need this:</strong> South African law (POPIA) requires your explicit consent 
+                    before we can collect and process your personal information.
+                  </small>
+                </div>
               </div>
 
               <button

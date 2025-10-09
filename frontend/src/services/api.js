@@ -331,6 +331,13 @@ class ApiService {
     return response.json();
   }
 
+  async getConsentStatus(token) {
+    const response = await fetch(`${this.baseURL}/api/admin/consent-status`, {
+      headers: this.getAuthHeaders(token)
+    });
+    return response.json();
+  }
+
   async approveUser(userId, token) {
     return this.request(`/api/admin/users/${userId}/approve`, {
       method: 'PUT'
@@ -448,6 +455,13 @@ class ApiService {
     return this.request('/api/profile', {
       method: 'PUT',
       body: JSON.stringify(profileData)
+    }, token);
+  }
+
+  async deleteAccount(password, token) {
+    return this.request('/api/profile/delete/account', {
+      method: 'DELETE',
+      body: JSON.stringify({ password })
     }, token);
   }
 
@@ -696,6 +710,17 @@ class ApiService {
     }
     console.error('Get payments overview error:', response.status, response.statusText);
     return { summary: {}, hikes: [] };
+  }
+
+  // Public Content (no auth required)
+  async getPublicContent(contentKey) {
+    const response = await fetch(`${this.baseURL}/api/public-content/${contentKey}`, {
+      headers: { 'Content-Type': 'application/json' }
+    });
+    if (!response.ok) {
+      throw new Error(`Failed to fetch content: ${contentKey}`);
+    }
+    return response.json();
   }
 }
 

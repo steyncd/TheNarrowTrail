@@ -42,10 +42,18 @@ exports.register = async (req, res) => {
     const verificationToken = crypto.randomBytes(32).toString('hex');
     const verificationExpiry = new Date(Date.now() + 24 * 60 * 60 * 1000); // 24 hours
 
-    // Insert user with auto-approved or pending status
+    // Insert user with auto-approved or pending status and POPIA consent tracking
     const result = await pool.query(
-      `INSERT INTO users (name, email, password, phone, role, status, email_verified, email_verification_token, email_verification_expiry, notifications_email, notifications_whatsapp, created_at)
-       VALUES ($1, $2, $3, $4, 'hiker', $5, false, $6, $7, true, true, NOW())
+      `INSERT INTO users (
+        name, email, password, phone, role, status, email_verified, 
+        email_verification_token, email_verification_expiry, 
+        notifications_email, notifications_whatsapp, 
+        privacy_consent_accepted, privacy_consent_date,
+        terms_accepted, terms_accepted_date,
+        data_processing_consent, data_processing_consent_date,
+        created_at
+      )
+       VALUES ($1, $2, $3, $4, 'hiker', $5, false, $6, $7, true, true, true, NOW(), true, NOW(), true, NOW(), NOW())
        RETURNING id, name, email, phone, status`,
       [name, email, hashedPassword, phone, initialStatus, verificationToken, verificationExpiry]
     );

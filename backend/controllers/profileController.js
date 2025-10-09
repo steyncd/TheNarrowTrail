@@ -202,4 +202,148 @@ exports.getUserStats = async (req, res) => {
   }
 };
 
+// Delete user account (POPIA Right to Deletion)
+exports.deleteAccount = async (req, res) => {
+  try {
+    const userId = req.user.id; // Can only delete own account
+    const { confirmPassword } = req.body;
+
+    if (!confirmPassword) {
+      return res.status(400).json({ error: 'Password confirmation required' });
+    }
+
+    // Verify password before deletion
+    const userResult = await pool.query(
+      'SELECT password FROM users WHERE id = $1',
+      [userId]
+    );
+
+    if (userResult.rows.length === 0) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+
+    const bcrypt = require('bcryptjs');
+    const validPassword = await bcrypt.compare(confirmPassword, userResult.rows[0].password);
+
+    if (!validPassword) {
+      return res.status(401).json({ error: 'Invalid password' });
+    }
+
+    // Log the deletion before deleting
+    const ipAddress = req.ip || req.connection.remoteAddress;
+    await logActivity(userId, 'account_deleted', 'user', userId, JSON.stringify({ reason: 'user_request' }), ipAddress);
+
+    // Delete user and all related data (cascading deletes should handle most)
+    await pool.query('BEGIN');
+
+    try {
+      // Delete user's data
+      await pool.query('DELETE FROM hike_photos WHERE uploaded_by = $1', [userId]);
+      await pool.query('DELETE FROM hike_comments WHERE user_id = $1', [userId]);
+      await pool.query('DELETE FROM hike_interest WHERE user_id = $1', [userId]);
+      await pool.query('DELETE FROM emergency_contacts WHERE user_id = $1', [userId]);
+      await pool.query('DELETE FROM user_feedback WHERE user_id = $1', [userId]);
+      await pool.query('DELETE FROM hike_suggestions WHERE user_id = $1', [userId]);
+      await pool.query('DELETE FROM payment_records WHERE user_id = $1', [userId]);
+      await pool.query('DELETE FROM carpool_participation WHERE user_id = $1', [userId]);
+      
+      // Delete the user account (activity logs preserved for audit)
+      await pool.query('DELETE FROM users WHERE id = $1', [userId]);
+
+      await pool.query('COMMIT');
+
+      res.json({
+        success: true,
+        message: 'Your account has been permanently deleted'
+      });
+    } catch (err) {
+      await pool.query('ROLLBACK');
+      throw err;
+    }
+  } catch (err) {
+    console.error('Delete account error:', err);
+    res.status(500).json({ error: 'Failed to delete account' });
+  }
+};
+
+// Export user data (POPIA Right to Data Portability)
+exports.exportUserData = async (req, res) => {
+  try {
+    const userId = req.user.id;
+
+    // Get all user data
+    const userData = await pool.query(
+      `SELECT id, name, email, phone, role, status, email_verified,
+        profile_photo_url, bio, hiking_since, experience_level, preferred_difficulty,
+        privacy_consent_accepted, privacy_consent_date,
+        terms_accepted, terms_accepted_date,
+        data_processing_consent, data_processing_consent_date,
+        notification_preferences, notifications_email, notifications_whatsapp,
+        created_at, updated_at
+      FROM users WHERE id = $1`,
+      [userId]
+    );
+
+    const hikeInterest = await pool.query(
+      'SELECT * FROM hike_interest WHERE user_id = $1',
+      [userId]
+    );
+
+    const emergencyContacts = await pool.query(
+      'SELECT * FROM emergency_contacts WHERE user_id = $1',
+      [userId]
+    );
+
+    const payments = await pool.query(
+      'SELECT * FROM payment_records WHERE user_id = $1',
+      [userId]
+    );
+
+    const photos = await pool.query(
+      'SELECT * FROM hike_photos WHERE uploaded_by = $1',
+      [userId]
+    );
+
+    const comments = await pool.query(
+      'SELECT * FROM hike_comments WHERE user_id = $1',
+      [userId]
+    );
+
+    const feedback = await pool.query(
+      'SELECT * FROM user_feedback WHERE user_id = $1',
+      [userId]
+    );
+
+    const suggestions = await pool.query(
+      'SELECT * FROM hike_suggestions WHERE user_id = $1',
+      [userId]
+    );
+
+    const exportData = {
+      export_date: new Date().toISOString(),
+      user_profile: userData.rows[0],
+      hike_participation: hikeInterest.rows,
+      emergency_contacts: emergencyContacts.rows,
+      payments: payments.rows,
+      photos: photos.rows,
+      comments: comments.rows,
+      feedback: feedback.rows,
+      suggestions: suggestions.rows
+    };
+
+    // Log the export
+    const ipAddress = req.ip || req.connection.remoteAddress;
+    await logActivity(userId, 'data_export', 'user', userId, JSON.stringify({ export_size: JSON.stringify(exportData).length }), ipAddress);
+
+    res.json({
+      success: true,
+      data: exportData
+    });
+  } catch (err) {
+    console.error('Export user data error:', err);
+    res.status(500).json({ error: 'Failed to export user data' });
+  }
+};
+
 module.exports = exports;
+

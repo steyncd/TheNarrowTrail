@@ -1,73 +1,120 @@
-# Hiking Portal Documentation
+# The Narrow Trail - Documentation
 
-Complete documentation for the Hiking Portal project.
+Complete documentation for The Narrow Trail hiking portal project.
 
 ## 📋 Quick Links
 
-- **[Current Status](SESSION_STATUS.md)** - Current session context and recent changes
+- **[Documentation Map](DOCUMENTATION_MAP.md)** - Complete documentation index
 - **[Deployment Guide](deployment/README.md)** - How to deploy frontend and backend
 - **[Development Guide](development/README.md)** - Setup and development workflows
 - **[Features](features/README.md)** - Implemented features and documentation
 
 ## 📂 Documentation Structure
 
-### Deployment (`deployment/`)
-- **deployment-guide.md** - Complete deployment instructions
-- **troubleshooting.md** - Common deployment issues and solutions (Windows-specific)
-- **deployment-history.md** - Past deployment records and summaries
+### [Compliance](./compliance/) 🔒
+POPIA compliance and data protection:
+- [POPIA Compliance Overview](./compliance/POPIA_COMPLIANCE.md)
+- [Implementation Guide](./compliance/POPIA_COMPLIANCE_IMPLEMENTATION.md)
+- [Deployment Guide](./compliance/POPIA_DEPLOYMENT_GUIDE.md)
+- [Data Retention Automation](./compliance/DATA_RETENTION_AUTOMATION.md)
 
-### Development (`development/`)
-- **backend-architecture.md** - Backend structure and additions
-- **frontend-architecture.md** - Frontend structure and additions
-- **refactoring-guide.md** - Code refactoring documentation
-- **email-configuration.md** - Email service setup and troubleshooting
+### [Features](./features/) ⚡
+Feature implementation and user guides:
+- [Implemented Features](./features/implemented-features.md)
+- [Future Features](./features/future-features.md)
+- [Auto Approval System](./features/AUTO_APPROVAL_SYSTEM.md)
+- [Attendance Tracking](./features/attendance-tracking.md)
+- [PWA Analysis](./features/pwa-analysis.md)
 
-### Features (`features/`)
-- **attendance-tracking.md** - Interest and attendance flow documentation
-- **payment-tracking.md** - Payment tracking system design
-- **implemented-features.md** - Complete list of implemented features
-- **future-features.md** - Planned features and enhancements
-- **pwa-analysis.md** - Progressive Web App analysis
+### [Mobile](./mobile/) 📱
+Mobile responsiveness and optimization:
+- [Assessment](./mobile/MOBILE_RESPONSIVENESS_ASSESSMENT.md)
+- [Action Plan](./mobile/MOBILE_RESPONSIVENESS_ACTION_PLAN.md)
+- [Improvements](./mobile/MOBILE_RESPONSIVENESS_IMPROVEMENTS.md)
+- [Quick Reference](./mobile/MOBILE_QUICK_REFERENCE.md)
 
-### Archive (`archive/`)
-- Historical documentation and old summaries
+### [Notifications](./notifications/) 🔔
+Notification system and preferences:
+- [Notification Preferences](./notifications/NOTIFICATION_PREFERENCES_IMPLEMENTATION.md)
+- [Notification Types](./notifications/NOTIFICATION_TYPES_UPDATE.md)
+- [Admin Config Guide](./notifications/ADMIN_NOTIFICATION_CONFIG_GUIDE.md)
+- [SMS Implementation](./notifications/SMS_IMPLEMENTATION.md)
 
-## 🚀 Quick Start
+### [Performance](./performance/) ⚡
+Performance optimization:
+- [Analysis Results](./performance/PERFORMANCE_ANALYSIS_RESULTS.md)
+- [Lazy Loading](./performance/LAZY_LOADING_OPTIMIZATION.md)
 
-1. **First Time Setup**: See [Deployment Guide](deployment/README.md)
-2. **Current Session**: See [SESSION_STATUS.md](SESSION_STATUS.md)
-3. **Deploy Changes**: See [deployment/deployment-guide.md](deployment/deployment-guide.md)
-4. **Troubleshooting**: See [deployment/troubleshooting.md](deployment/troubleshooting.md)
+### [Development](./development/) 💻
+Development guides and technical docs:
+- [Backend Architecture](./development/backend-architecture.md)
+- [Frontend Architecture](./development/frontend-architecture.md)
+- [Email Configuration](./development/email-configuration.md)
+
+### [Deployment](./deployment/) 🚀
+Deployment guides and procedures:
+- [Deployment Guide](./deployment/deployment-guide.md)
+- [Troubleshooting](./deployment/troubleshooting.md)
+
+### [Archive](./archive/) 📦
+Historical documentation and deprecated guides
+
+## 🚀 Quick Start Guides
+
+### For Administrators
+1. [POPIA Compliance Overview](./compliance/POPIA_COMPLIANCE.md)
+2. [Admin Notification Config](./notifications/ADMIN_NOTIFICATION_CONFIG_GUIDE.md)
+3. [Auto Approval System](./features/AUTO_APPROVAL_SYSTEM.md)
+
+### For Developers
+1. [Development Guide](./development/README.md)
+2. [Deployment Guide](./deployment/README.md)
+3. [Performance Analysis](./performance/PERFORMANCE_ANALYSIS_RESULTS.md)
+
+### For Users
+1. [Implemented Features](./features/implemented-features.md)
+2. [Mobile Quick Reference](./mobile/MOBILE_QUICK_REFERENCE.md)
+
+## 📝 Recent Updates (2025-10-09)
+
+- ✅ **Privacy Policy & Terms**: Now editable through Content Management system
+- ✅ **POPIA Compliance**: Fully deployed with data retention automation
+- ✅ **Mobile Phase 2**: Advanced mobile responsiveness completed
+- ✅ **Notification System**: Enhanced with user preferences
+- ✅ **Auto Approval**: Intelligent user registration approval
 
 ## 📦 Project Structure
 
 ```
 hiking-portal/
-├── docs/                    # All documentation (this folder)
+├── docs/                    # Documentation (organized by topic)
+│   ├── compliance/          # POPIA and data protection
+│   ├── features/            # Feature docs
+│   ├── mobile/              # Mobile responsiveness
+│   ├── notifications/       # Notification system
+│   ├── performance/         # Performance optimization
+│   ├── development/         # Dev guides
 │   ├── deployment/          # Deployment guides
-│   ├── development/         # Development docs
-│   ├── features/            # Feature documentation
 │   └── archive/             # Historical docs
 ├── frontend/                # React application
 ├── backend/                 # Node.js API
+│   ├── migrations/          # Database migrations
 │   └── docs/                # Backend-specific docs
-└── SESSION_STATUS.md        # Current session status
+└── README.md                # Project readme
 ```
 
-## 🔄 Recent Changes (2025-10-08)
+## 🔗 External Resources
 
-- ✅ Consolidated attendance tracking to single `hike_interest` table
-- ✅ Added payment tracking system
-- ✅ Frontend alignment with new attendance flow
-- ✅ Resolved Windows deployment issues
-- ✅ All systems deployed and operational
+- **Live Application**: [https://helloliam.web.app](https://helloliam.web.app)
+- **Backend API**: [https://backend-554106646136.europe-west1.run.app](https://backend-554106646136.europe-west1.run.app)
+- **Contact**: steyncd@gmail.com
 
 ## 🆘 Getting Help
 
-1. Check [deployment/troubleshooting.md](deployment/troubleshooting.md) for common issues
-2. Review [SESSION_STATUS.md](SESSION_STATUS.md) for current context
+1. Check [Troubleshooting Guide](deployment/troubleshooting.md)
+2. Review [Documentation Map](DOCUMENTATION_MAP.md)
 3. See backend-specific docs in `backend/docs/`
 
 ---
 
-**Last Updated:** 2025-10-08
+**Last Updated:** 2025-10-09

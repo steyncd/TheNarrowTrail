@@ -8,6 +8,8 @@ import { useTheme } from '../contexts/ThemeContext';
 import { ProfileSkeleton } from '../components/common/Skeleton';
 import EditProfileModal from '../components/profile/EditProfileModal';
 import IntegrationTokens from '../components/profile/IntegrationTokens';
+import DataExport from '../components/profile/DataExport';
+import AccountDeletion from '../components/profile/AccountDeletion';
 
 const ProfilePage = () => {
   const { userId } = useParams();
@@ -18,6 +20,7 @@ const ProfilePage = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [showEditModal, setShowEditModal] = useState(false);
+  const [showAccountDeletion, setShowAccountDeletion] = useState(false);
   const [uploadingPhoto, setUploadingPhoto] = useState(false);
   const [photoError, setPhotoError] = useState(null);
 
@@ -364,12 +367,45 @@ const ProfilePage = () => {
         </div>
       )}
 
+      {/* Data Export and Account Management (only show for own profile) */}
+      {isOwnProfile && (
+        <div className="row mt-4 g-3">
+          <div className="col-md-6">
+            <DataExport />
+          </div>
+          <div className="col-md-6">
+            <div className="card shadow-sm border-danger">
+              <div className="card-body">
+                <h5 className="card-title text-danger">
+                  Danger Zone
+                </h5>
+                <p className="text-muted">
+                  Permanently delete your account and all associated data. This action cannot be undone.
+                </p>
+                <button
+                  className="btn btn-outline-danger"
+                  onClick={() => setShowAccountDeletion(true)}
+                >
+                  Delete My Account
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Edit Profile Modal */}
       <EditProfileModal
         show={showEditModal}
         profile={profile}
         onHide={() => setShowEditModal(false)}
         onProfileUpdated={handleProfileUpdate}
+      />
+
+      {/* Account Deletion Modal */}
+      <AccountDeletion 
+        show={showAccountDeletion}
+        onClose={() => setShowAccountDeletion(false)}
       />
     </div>
   );

@@ -74,7 +74,9 @@ function ContentManagementPage() {
 
   const contentLabels = {
     'mission_vision': 'Mission & Vision (Landing Page)',
-    'about_us': 'About Us Page'
+    'about_us': 'About Us Page',
+    'privacy_policy': 'Privacy Policy',
+    'terms_conditions': 'Terms & Conditions'
   };
 
   return (
@@ -82,7 +84,7 @@ function ContentManagementPage() {
       <PageHeader
         icon={FileText}
         title="Content Management"
-        subtitle="Edit site content, mission, vision, and About Us page"
+        subtitle="Edit site content, mission, vision, About Us, Privacy Policy, and Terms & Conditions"
       />
 
       <div className="container-fluid py-4">
@@ -182,6 +184,13 @@ function ContentManagementPage() {
                     </div>
                   ) : (
                     <form onSubmit={handleSubmit}>
+                      {(selectedContent.content_key === 'privacy_policy' || selectedContent.content_key === 'terms_conditions') && (
+                        <div className="alert alert-warning mb-3">
+                          <strong>Important:</strong> Updating this legal document will change its version date.
+                          The updated date will be displayed to users automatically.
+                        </div>
+                      )}
+
                       <div className="mb-3">
                         <label className="form-label">Title</label>
                         <input

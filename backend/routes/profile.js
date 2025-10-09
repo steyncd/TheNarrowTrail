@@ -13,4 +13,10 @@ router.get('/:userId/stats', authenticateToken, profileController.getUserStats);
 // Update own profile
 router.put('/', authenticateToken, profileController.updateProfile);
 
+// POPIA: Export user data (Right to Data Portability)
+router.get('/export/data', authenticateToken, profileController.exportUserData);
+
+// POPIA: Delete account (Right to Deletion)
+router.delete('/delete/account', authenticateToken, profileController.deleteAccount);
+
 module.exports = router;

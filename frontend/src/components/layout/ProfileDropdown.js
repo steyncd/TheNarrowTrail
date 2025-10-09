@@ -1,6 +1,6 @@
 import React, { useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { User, LogOut, Sun, Moon, Bell, Activity, MessageSquare } from 'lucide-react';
+import { User, LogOut, Sun, Moon, Bell, Activity, MessageSquare, Shield, FileText } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
 import { useTheme } from '../../contexts/ThemeContext';
 
@@ -153,6 +153,42 @@ const ProfileDropdown = ({ show, onClose, buttonRef }) => {
             </>
           )}
         </button>
+
+        <div className="border-top" style={{ borderColor: theme === 'dark' ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)' }} />
+
+        <button
+          onClick={() => {
+            onClose();
+            navigate('/privacy-policy');
+          }}
+          className="btn btn-link w-100 text-start p-3 border-0"
+          style={{
+            textDecoration: 'none',
+            color: theme === 'dark' ? '#fff' : '#212529',
+            borderRadius: 0
+          }}
+        >
+          <Shield size={18} className="me-2" style={{ verticalAlign: 'text-bottom' }} />
+          Privacy Policy
+        </button>
+
+        <button
+          onClick={() => {
+            onClose();
+            navigate('/terms');
+          }}
+          className="btn btn-link w-100 text-start p-3 border-0"
+          style={{
+            textDecoration: 'none',
+            color: theme === 'dark' ? '#fff' : '#212529',
+            borderRadius: 0
+          }}
+        >
+          <FileText size={18} className="me-2" style={{ verticalAlign: 'text-bottom' }} />
+          Terms & Conditions
+        </button>
+
+        <div className="border-top" style={{ borderColor: theme === 'dark' ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)' }} />
 
         <button
           onClick={() => {
