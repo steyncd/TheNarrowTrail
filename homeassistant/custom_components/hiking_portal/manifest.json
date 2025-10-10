@@ -7,7 +7,7 @@
   "iot_class": "cloud_polling",
   "issue_tracker": "https://github.com/steyncd/TheNarrowTrail/issues",
   "requirements": ["aiohttp>=3.8.0"],
-  "version": "2.3.3",
+  "version": "2.3.5",
   "homeassistant": "2023.1.0",
   "integration_type": "service",
   "icon": "mdi:hiking"
