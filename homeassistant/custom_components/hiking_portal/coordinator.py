@@ -1,7 +1,7 @@
 """DataUpdateCoordinator for Hiking Portal."""
 import logging
 from datetime import timedelta
-from typing import Any
+from typing import Any, Optional
 
 import aiohttp
 from homeassistant.core import HomeAssistant
@@ -30,6 +30,7 @@ class HikingPortalDataUpdateCoordinator(DataUpdateCoordinator):
             "Authorization": f"Bearer {token}",
             "Content-Type": "application/json",
         }
+        self._websocket_coordinator: Optional["HikingPortalWebSocketCoordinator"] = None
 
         super().__init__(
             hass,
@@ -37,6 +38,20 @@ class HikingPortalDataUpdateCoordinator(DataUpdateCoordinator):
             name=DOMAIN,
             update_interval=DEFAULT_SCAN_INTERVAL,
         )
+
+    def set_websocket_coordinator(self, websocket_coordinator: "HikingPortalWebSocketCoordinator") -> None:
+        """Set the WebSocket coordinator."""
+        self._websocket_coordinator = websocket_coordinator
+
+    @property
+    def websocket_coordinator(self) -> Optional["HikingPortalWebSocketCoordinator"]:
+        """Get the WebSocket coordinator."""
+        return self._websocket_coordinator
+
+    @property
+    def is_websocket_connected(self) -> bool:
+        """Return True if WebSocket is connected."""
+        return self._websocket_coordinator is not None and self._websocket_coordinator.is_connected
 
     async def _async_update_data(self) -> dict[str, Any]:
         """Fetch data from API."""

@@ -140,6 +140,17 @@ class HikingPortalSensor(CoordinatorEntity, SensorEntity):
             condition = weather.get("condition", "Unknown")
             return f"{condition}, {temp}°C"
 
+        # NEW: WebSocket Real-time Status sensors
+        elif self._sensor_type == SENSOR_WEBSOCKET_STATUS:
+            if self.coordinator.is_websocket_connected:
+                return "Connected"
+            return "Disconnected"
+
+        elif self._sensor_type == SENSOR_REALTIME_ACTIVITY:
+            activity = self.coordinator.data.get("realtime_activity", {})
+            events_count = activity.get("events_last_hour", 0)
+            return events_count
+
         return None
 
     @property
@@ -259,6 +270,28 @@ class HikingPortalSensor(CoordinatorEntity, SensorEntity):
                     "condition": weather.get("condition"),
                     "forecast": weather.get("forecast", [])[:3],  # 3-day forecast
                 })
+
+        # NEW: WebSocket status attributes
+        elif self._sensor_type == SENSOR_WEBSOCKET_STATUS:
+            ws_coord = self.coordinator.websocket_coordinator
+            if ws_coord:
+                attributes.update({
+                    "connected": ws_coord.is_connected,
+                    "last_connected": getattr(ws_coord, '_last_connected', None),
+                    "reconnection_attempts": getattr(ws_coord, '_reconnection_attempts', 0),
+                    "connection_url": ws_coord.base_url,
+                })
+
+        elif self._sensor_type == SENSOR_REALTIME_ACTIVITY:
+            activity = self.coordinator.data.get("realtime_activity", {})
+            attributes.update({
+                "last_event_time": activity.get("last_event_time"),
+                "last_event_type": activity.get("last_event_type"),
+                "events_today": activity.get("events_today", 0),
+                "events_last_hour": activity.get("events_last_hour", 0),
+                "most_active_hour": activity.get("most_active_hour"),
+                "event_types": activity.get("event_types", {}),
+            })
 
         return attributes
 

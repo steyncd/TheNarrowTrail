@@ -11,6 +11,7 @@ import homeassistant.helpers.config_validation as cv
 
 from .const import DOMAIN, PLATFORMS, CONF_API_URL, CONF_TOKEN
 from .coordinator import HikingPortalDataUpdateCoordinator
+from .websocket_coordinator import HikingPortalWebSocketCoordinator
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -64,6 +65,25 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     )
 
     await coordinator.async_config_entry_first_refresh()
+
+    # Initialize WebSocket coordinator for real-time updates
+    websocket_coordinator = HikingPortalWebSocketCoordinator(
+        hass,
+        base_url=api_url,
+        token=token,
+        data_coordinator=coordinator,
+    )
+    
+    # Link coordinators
+    coordinator.set_websocket_coordinator(websocket_coordinator)
+    
+    # Start WebSocket connection
+    try:
+        await websocket_coordinator.async_connect()
+        _LOGGER.info("WebSocket coordinator initialized successfully")
+    except Exception as err:
+        _LOGGER.warning("Failed to initialize WebSocket coordinator: %s", err)
+        # Continue without WebSocket - integration will still work with polling
 
     hass.data.setdefault(DOMAIN, {})
     hass.data[DOMAIN][entry.entry_id] = coordinator
@@ -170,6 +190,16 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
 
     if unload_ok:
+        coordinator = hass.data[DOMAIN][entry.entry_id]
+        
+        # Disconnect WebSocket coordinator if it exists
+        if coordinator.websocket_coordinator:
+            try:
+                await coordinator.websocket_coordinator.async_disconnect()
+                _LOGGER.info("WebSocket coordinator disconnected successfully")
+            except Exception as err:
+                _LOGGER.warning("Error disconnecting WebSocket coordinator: %s", err)
+        
         hass.data[DOMAIN].pop(entry.entry_id)
 
     return unload_ok

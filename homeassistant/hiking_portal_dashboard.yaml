@@ -28,6 +28,26 @@ cards:
         name: Next Hike Status
         icon: mdi:check-circle
         state_color: true
+      - type: entity
+        entity: binary_sensor.hiking_portal_websocket_connected
+        name: Real-Time Status
+        icon: mdi:connection
+        state_color: true
+
+  # Real-Time Status and Activity
+  - type: entities
+    title: 📡 Real-Time Connection Status
+    show_header_toggle: false
+    entities:
+      - entity: sensor.hiking_portal_websocket_status
+        name: WebSocket Connection
+        icon: mdi:connection
+      - entity: sensor.hiking_portal_realtime_activity
+        name: Recent Activity
+        icon: mdi:pulse
+      - entity: binary_sensor.hiking_portal_websocket_connected
+        name: Live Updates
+        icon: mdi:broadcast
 
   # Urgent Notifications and Alerts
   - type: conditional

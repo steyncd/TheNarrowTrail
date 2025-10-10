@@ -205,6 +205,9 @@ class HikingPortalBinarySensor(CoordinatorEntity, BinarySensorEntity):
         elif self._sensor_type == BINARY_SENSOR_WEATHER_WARNING:
             return self.coordinator.data.get("weather_warning", False)
 
+        elif self._sensor_type == BINARY_SENSOR_WEBSOCKET_CONNECTED:
+            return self.coordinator.is_websocket_connected
+
         return False
 
     @property
@@ -238,5 +241,15 @@ class HikingPortalBinarySensor(CoordinatorEntity, BinarySensorEntity):
                 }
                 for a in severe_alerts[:3]
             ]
+
+        elif self._sensor_type == BINARY_SENSOR_WEBSOCKET_CONNECTED:
+            ws_coord = self.coordinator.websocket_coordinator
+            if ws_coord:
+                attributes.update({
+                    "connection_status": "Connected" if ws_coord.is_connected else "Disconnected",
+                    "connection_url": ws_coord.base_url,
+                    "last_connected": getattr(ws_coord, '_last_connected', None),
+                    "reconnection_attempts": getattr(ws_coord, '_reconnection_attempts', 0),
+                })
 
         return attributes

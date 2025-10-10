@@ -32,6 +32,11 @@ SENSOR_OUTSTANDING_PAYMENTS = "outstanding_payments"
 SENSOR_PAYMENT_SUMMARY = "payment_summary"
 SENSOR_MY_PAYMENT_STATUS = "my_payment_status"
 
+# NEW: WebSocket Real-time Status
+SENSOR_WEBSOCKET_STATUS = "websocket_status"
+SENSOR_REALTIME_ACTIVITY = "realtime_activity"
+BINARY_SENSOR_WEBSOCKET_CONNECTED = "websocket_connected"
+
 SENSOR_TYPES = {
     SENSOR_NEXT_HIKE: {
         "name": "Next Hike",
@@ -101,6 +106,17 @@ SENSOR_TYPES = {
         "icon": "mdi:credit-card-check",
         "unit": None,
     },
+    # NEW: WebSocket Real-time Status sensors
+    SENSOR_WEBSOCKET_STATUS: {
+        "name": "WebSocket Status",
+        "icon": "mdi:connection",
+        "unit": None,
+    },
+    SENSOR_REALTIME_ACTIVITY: {
+        "name": "Real-time Activity",
+        "icon": "mdi:pulse",
+        "unit": "events",
+    },
 }
 
 # Platforms
@@ -117,5 +133,10 @@ BINARY_SENSOR_TYPES = {
         "name": "Weather Warning",
         "icon": "mdi:weather-lightning-rainy",
         "device_class": "problem",
+    },
+    BINARY_SENSOR_WEBSOCKET_CONNECTED: {
+        "name": "WebSocket Connected",
+        "icon": "mdi:connection",
+        "device_class": "connectivity",
     },
 }
