@@ -30,6 +30,7 @@ async def async_setup_entry(
 ) -> None:
     """Set up Hiking Portal binary sensors from a config entry."""
     coordinators = hass.data[DOMAIN][config_entry.entry_id]
+    coordinators = hass.data[DOMAIN][config_entry.entry_id]
     coordinator: HikingPortalDataUpdateCoordinator = coordinators["coordinator"]
 
     entities = [

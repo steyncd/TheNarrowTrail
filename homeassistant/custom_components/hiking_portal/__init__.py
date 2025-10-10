@@ -12,9 +12,16 @@ import homeassistant.helpers.config_validation as cv
 from .const import DOMAIN, PLATFORMS, CONF_API_URL, CONF_TOKEN
 from .coordinator import HikingPortalDataUpdateCoordinator
 from .websocket_coordinator import HikingPortalWebSocketCoordinator
-from .analytics_coordinator import HikingPortalAnalyticsCoordinator
 
 _LOGGER = logging.getLogger(__name__)
+
+# Import analytics coordinator conditionally to prevent loading issues
+try:
+    from .analytics_coordinator import HikingPortalAnalyticsCoordinator
+    ANALYTICS_AVAILABLE = True
+except ImportError as err:
+    _LOGGER.warning("Analytics coordinator not available: %s", err)
+    ANALYTICS_AVAILABLE = False
 
 # Service schemas
 SERVICE_EXPRESS_INTEREST_SCHEMA = vol.Schema({
@@ -86,27 +93,37 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         _LOGGER.warning("Failed to initialize WebSocket coordinator: %s", err)
         # Continue without WebSocket - integration will still work with polling
 
-    # Initialize Analytics coordinator
-    analytics_coordinator = HikingPortalAnalyticsCoordinator(
-        hass,
-        base_url=api_url,
-        token=token,
-    )
-    
-    # Perform initial analytics data fetch
-    try:
-        await analytics_coordinator.async_config_entry_first_refresh()
-        _LOGGER.info("Analytics coordinator initialized successfully")
-    except Exception as err:
-        _LOGGER.warning("Failed to initialize analytics coordinator: %s", err)
-        # Continue without analytics - main integration will still work
+    # Initialize Analytics coordinator (optional)
+    analytics_coordinator = None
+    if ANALYTICS_AVAILABLE:
+        try:
+            analytics_coordinator = HikingPortalAnalyticsCoordinator(
+                hass,
+                base_url=api_url,
+                token=token,
+            )
+            
+            # Perform initial analytics data fetch
+            await analytics_coordinator.async_config_entry_first_refresh()
+            _LOGGER.info("Analytics coordinator initialized successfully")
+        except Exception as err:
+            _LOGGER.warning("Failed to initialize analytics coordinator: %s", err)
+            _LOGGER.info("Continuing without analytics - main integration will still work")
+            analytics_coordinator = None
+    else:
+        _LOGGER.info("Analytics coordinator not available - continuing with basic integration")
 
     hass.data.setdefault(DOMAIN, {})
-    hass.data[DOMAIN][entry.entry_id] = {
+    coordinators_dict = {
         "coordinator": coordinator,
         "websocket_coordinator": websocket_coordinator,
-        "analytics_coordinator": analytics_coordinator,
     }
+    
+    # Only add analytics coordinator if it was successfully initialized
+    if analytics_coordinator is not None:
+        coordinators_dict["analytics_coordinator"] = analytics_coordinator
+    
+    hass.data[DOMAIN][entry.entry_id] = coordinators_dict
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 

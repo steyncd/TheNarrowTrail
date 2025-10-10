@@ -1,4 +1,5 @@
 """Analytics data coordinator for Hiking Portal."""
+import asyncio
 import logging
 from datetime import timedelta
 from typing import Dict, Any, Optional
@@ -42,7 +43,6 @@ class HikingPortalAnalyticsCoordinator(DataUpdateCoordinator):
             engagement_task = self._fetch_endpoint('/api/analytics/engagement', headers)
 
             # Wait for all requests to complete
-            import asyncio
             overview, users, hikes, engagement = await asyncio.gather(
                 overview_task, users_task, hikes_task, engagement_task,
                 return_exceptions=True

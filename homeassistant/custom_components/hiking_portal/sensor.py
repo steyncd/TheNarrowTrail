@@ -92,9 +92,12 @@ async def async_setup_entry(
             _LOGGER.info(f"Added {len(analytics_entities)} analytics sensors")
             
         except ImportError as err:
-            _LOGGER.error(f"Failed to import analytics sensors: {err}")
+            _LOGGER.warning(f"Failed to import analytics sensors: {err}")
+            _LOGGER.info("Continuing without analytics sensors")
         except Exception as err:
             _LOGGER.error(f"Failed to create analytics sensors: {err}")
+    else:
+        _LOGGER.debug("Analytics coordinator not available - skipping analytics sensors")
 
     async_add_entities(entities)
 
