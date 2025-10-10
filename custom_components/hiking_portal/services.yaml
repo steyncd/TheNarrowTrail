@@ -1,0 +1,75 @@
+express_interest:
+  name: Express Interest in Hike
+  description: Express interest in joining a hike
+  fields:
+    hike_id:
+      name: Hike ID
+      description: The ID of the hike to join
+      required: true
+      example: 123
+      selector:
+        number:
+          min: 1
+          mode: box
+
+remove_interest:
+  name: Remove Interest from Hike
+  description: Remove your interest from a hike
+  fields:
+    hike_id:
+      name: Hike ID
+      description: The ID of the hike to leave
+      required: true
+      example: 123
+      selector:
+        number:
+          min: 1
+          mode: box
+
+mark_attendance:
+  name: Mark Attendance
+  description: Mark your attendance for a hike
+  fields:
+    hike_id:
+      name: Hike ID
+      description: The ID of the hike
+      required: true
+      example: 123
+      selector:
+        number:
+          min: 1
+          mode: box
+    status:
+      name: Status
+      description: Attendance status
+      required: true
+      default: "present"
+      example: "present"
+      selector:
+        select:
+          options:
+            - "present"
+            - "absent"
+            - "maybe"
+
+send_notification:
+  name: Send Notification
+  description: Send a notification to hike participants
+  fields:
+    hike_id:
+      name: Hike ID
+      description: The ID of the hike
+      required: true
+      example: 123
+      selector:
+        number:
+          min: 1
+          mode: box
+    message:
+      name: Message
+      description: The notification message to send
+      required: true
+      example: "Don't forget to bring water!"
+      selector:
+        text:
+          multiline: true

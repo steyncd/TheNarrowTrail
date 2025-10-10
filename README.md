@@ -109,6 +109,34 @@ hiking-portal/
 - Secret Manager
 - Cloud Build
 
+## 🏠 Home Assistant Integration
+
+[![hacs_badge](https://img.shields.io/badge/HACS-Custom-orange.svg)](https://github.com/custom-components/hacs)
+[![Version](https://img.shields.io/badge/version-2.1.0-blue.svg)](https://github.com/steyncd/TheNarrowTrail)
+
+This repository includes a comprehensive Home Assistant integration that provides complete monitoring and management of your hiking portal.
+
+### ✨ Integration Features
+
+- **📊 Comprehensive Sensors**: Next hike, upcoming hikes, notifications, payments, weather alerts
+- **🚨 Smart Binary Sensors**: Urgent notifications, weather warnings, attendance confirmations
+- **📅 Enhanced Calendar**: Rich event details with attendance status and weather integration
+- **⚡ Interactive Services**: Mark notifications read, record payments, get weather data
+- **🎛️ Complete Dashboard**: Professional Lovelace dashboard with conditional cards
+
+### 📦 HACS Installation
+
+1. **Add Custom Repository**:
+   - HACS → Integrations → ⋮ → Custom repositories
+   - Repository: `https://github.com/steyncd/TheNarrowTrail`
+   - Category: Integration
+
+2. **Install**: Search "Hiking Portal Integration" → Download → Restart HA
+
+3. **Configure**: Settings → Devices & Services → Add Integration → "Hiking Portal"
+
+For complete setup instructions, see the [Home Assistant Integration Guide](homeassistant/ENHANCED_INTEGRATION_SETUP.md).
+
 ## 🚀 Quick Start
 
 ### Prerequisites
