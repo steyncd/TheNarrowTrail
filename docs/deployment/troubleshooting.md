@@ -70,14 +70,11 @@ find . -type f -exec touch {} +
 ```powershell
 cd backend
 
-gcloud run deploy hiking-portal-api `
+gcloud run deploy backend `
   --source . `
   --platform managed `
-  --region us-central1 `
-  --allow-unauthenticated `
-  --set-env-vars "NODE_ENV=production,DB_NAME=hiking_portal,DB_USER=postgres,DB_HOST=/cloudsql/helloliam:us-central1:hiking-db,OPENWEATHER_API_KEY=41bb841e9535ad029d1fdf96235aa13a" `
-  --update-secrets "DB_PASSWORD=db-password:latest,JWT_SECRET=jwt-secret:latest,SENDGRID_API_KEY=sendgrid-key:latest,SENDGRID_FROM_EMAIL=sendgrid-from-email:latest,TWILIO_ACCOUNT_SID=twilio-sid:latest,TWILIO_AUTH_TOKEN=twilio-token:latest,TWILIO_WHATSAPP_NUMBER=twilio-whatsapp-number:latest" `
-  --add-cloudsql-instances "helloliam:us-central1:hiking-db" `
+  --region europe-west1 `
+  --allow-unauthenticated
   --memory 512Mi `
   --cpu 1 `
   --min-instances 0 `

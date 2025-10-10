@@ -25,7 +25,6 @@ const CalendarPage = lazy(() => import('./pages/CalendarPage'));
 const ProfilePage = lazy(() => import('./pages/ProfilePage'));
 
 // Admin pages - also lazy loaded for optimal bundle size
-const AdminPage = lazy(() => import('./pages/AdminPage'));
 const UsersPage = lazy(() => import('./pages/UsersPage'));
 const NotificationsPage = lazy(() => import('./pages/NotificationsPage'));
 const AnalyticsPage = lazy(() => import('./pages/AnalyticsPage'));
@@ -34,6 +33,11 @@ const FeedbackPage = lazy(() => import('./pages/FeedbackPage'));
 const PaymentsAdminPage = lazy(() => import('./pages/PaymentsAdminPage'));
 const AboutPage = lazy(() => import('./pages/AboutPage'));
 const ContentManagementPage = lazy(() => import('./pages/ContentManagementPage'));
+const DataRetentionAdminPage = lazy(() => import('./pages/DataRetentionAdminPage'));
+const DataRetentionPage = lazy(() => import('./pages/DataRetentionPage'));
+const NotificationPreferencesPage = lazy(() => import('./pages/NotificationPreferencesPage'));
+const ManageHikesPage = lazy(() => import('./pages/ManageHikesPage'));
+const HikeManagementPage = lazy(() => import('./pages/HikeManagementPage'));
 
 // Legal pages
 const PrivacyPolicy = lazy(() => import('./components/legal/PrivacyPolicy'));
@@ -227,11 +231,27 @@ function App() {
             {/* Admin Routes with Lazy Loading */}
             <Route
               path="/admin"
+              element={<Navigate to="/admin/manage-hikes" replace />}
+            />
+            <Route
+              path="/admin/manage-hikes"
               element={
                 <PrivateRoute requireAdmin>
                   <PrivateRouteWrapper>
                     <Suspense fallback={<LazyLoadFallback />}>
-                      <AdminPage />
+                      <ManageHikesPage />
+                    </Suspense>
+                  </PrivateRouteWrapper>
+                </PrivateRoute>
+              }
+            />
+            <Route
+              path="/manage-hikes/:hikeId"
+              element={
+                <PrivateRoute requireAdmin>
+                  <PrivateRouteWrapper>
+                    <Suspense fallback={<LazyLoadFallback />}>
+                      <HikeManagementPage />
                     </Suspense>
                   </PrivateRouteWrapper>
                 </PrivateRoute>
@@ -316,6 +336,46 @@ function App() {
                   <PrivateRouteWrapper>
                     <Suspense fallback={<LazyLoadFallback />}>
                       <ContentManagementPage />
+                    </Suspense>
+                  </PrivateRouteWrapper>
+                </PrivateRoute>
+              }
+            />
+            <Route
+              path="/admin/data-retention"
+              element={
+                <PrivateRoute requireAdmin>
+                  <PrivateRouteWrapper>
+                    <Suspense fallback={<LazyLoadFallback />}>
+                      <DataRetentionAdminPage />
+                    </Suspense>
+                  </PrivateRouteWrapper>
+                </PrivateRoute>
+              }
+            />
+            
+            {/* User data retention page */}
+            <Route
+              path="/data-retention"
+              element={
+                <PrivateRoute>
+                  <PrivateRouteWrapper>
+                    <Suspense fallback={<LazyLoadFallback />}>
+                      <DataRetentionPage />
+                    </Suspense>
+                  </PrivateRouteWrapper>
+                </PrivateRoute>
+              }
+            />
+
+            {/* User notification preferences page */}
+            <Route
+              path="/notification-preferences"
+              element={
+                <PrivateRoute>
+                  <PrivateRouteWrapper>
+                    <Suspense fallback={<LazyLoadFallback />}>
+                      <NotificationPreferencesPage />
                     </Suspense>
                   </PrivateRouteWrapper>
                 </PrivateRoute>

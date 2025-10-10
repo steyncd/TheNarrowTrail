@@ -38,7 +38,7 @@ router.get('/my-hikes.ics', authenticateToken, async (req, res) => {
         summary: hike.name,
         description: description,
         location: hike.location,
-        url: `${process.env.FRONTEND_URL || 'https://helloliam.web.app'}/hikes/${hike.id}`,
+        url: `${process.env.FRONTEND_URL || 'https://www.thenarrowtrail.co.za'}/hikes/${hike.id}`,
         status: hike.status === 'cancelled' ? 'CANCELLED' : 'CONFIRMED'
       });
     });
@@ -77,7 +77,7 @@ router.get('/all-hikes.ics', async (req, res) => {
         summary: hike.name,
         description: description,
         location: hike.location,
-        url: `${process.env.FRONTEND_URL || 'https://helloliam.web.app'}/hikes/${hike.id}`
+        url: `${process.env.FRONTEND_URL || 'https://www.thenarrowtrail.co.za'}/hikes/${hike.id}`
       });
     });
 

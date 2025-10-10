@@ -1,28 +1,23 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { Clock, Calendar, CheckCircle, Settings, MoreVertical, Edit, Trash2, Eye, Mail } from 'lucide-react';
+import { Clock, Calendar, CheckCircle, Search, Settings } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 import { api } from '../../services/api';
 import AddHikeForm from '../hikes/AddHikeForm';
-import AttendanceModal from '../hikes/AttendanceModal';
-import BulkActions from './BulkActions';
-import PageHeader from '../common/PageHeader';
-import EmergencyContactsModal from './EmergencyContactsModal';
-import PackingListEditorModal from './PackingListEditorModal';
-import EmailAttendeesModal from './EmailAttendeesModal';
 
-function AdminPanel() {
+function AdminPanel({ showAddHikeForm, setShowAddHikeForm }) {
   const { token } = useAuth();
+  const navigate = useNavigate();
   const [hikes, setHikes] = useState([]);
   const [loading, setLoading] = useState(false);
-  const [showAddHikeForm, setShowAddHikeForm] = useState(false);
   const [showEditHikeForm, setShowEditHikeForm] = useState(false);
-  const [showAttendanceModal, setShowAttendanceModal] = useState(false);
-  const [showEmergencyContactsModal, setShowEmergencyContactsModal] = useState(false);
-  const [showPackingListModal, setShowPackingListModal] = useState(false);
-  const [showEmailModal, setShowEmailModal] = useState(false);
   const [selectedHike, setSelectedHike] = useState(null);
-  const [selectedHikes, setSelectedHikes] = useState([]);
   const [openDropdown, setOpenDropdown] = useState(null);
+  
+  // Search and filter states
+  const [searchTerm, setSearchTerm] = useState('');
+  const [statusFilter, setStatusFilter] = useState('all');
+  const [dateFilter, setDateFilter] = useState('all');
 
   const fetchHikes = useCallback(async () => {
     try {
@@ -51,99 +46,62 @@ function AdminPanel() {
     }
   }, [openDropdown]);
 
-  const handleDeleteHike = async (id) => {
-    if (!window.confirm('Delete this hike?')) return;
 
-    setLoading(true);
-    try {
-      const result = await api.deleteHike(id, token);
-      if (result.success) {
-        await fetchHikes();
-      } else {
-        alert(result.error || 'Failed to delete hike');
-      }
-    } catch (err) {
-      console.error('Delete error:', err);
-      alert('Failed to delete hike');
-    } finally {
-      setLoading(false);
+
+  const handleManageHike = (hike) => {
+    navigate(`/manage-hikes/${hike.id}`);
+  };
+
+  // Filter hikes based on search and filter criteria
+  const filteredHikes = hikes.filter(hike => {
+    const matchesSearch = hike.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                         hike.description?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                         hike.location?.toLowerCase().includes(searchTerm.toLowerCase());
+    
+    const matchesStatus = statusFilter === 'all' || hike.status === statusFilter;
+    
+    let matchesDate = true;
+    if (dateFilter === 'upcoming') {
+      matchesDate = new Date(hike.date) >= new Date();
+    } else if (dateFilter === 'past') {
+      matchesDate = new Date(hike.date) < new Date();
+    } else if (dateFilter === 'this-month') {
+      const now = new Date();
+      const hikeDate = new Date(hike.date);
+      matchesDate = hikeDate.getMonth() === now.getMonth() && hikeDate.getFullYear() === now.getFullYear();
     }
-  };
+    
+    return matchesSearch && matchesStatus && matchesDate;
+  });
 
-  const handleOpenEditHike = (hike) => {
-    setSelectedHike(hike);
-    setShowEditHikeForm(true);
-  };
-
-  const handleOpenAttendance = (hike) => {
-    setSelectedHike(hike);
-    setShowAttendanceModal(true);
-  };
-
-  const handleViewEmergencyContacts = async () => {
-    setShowAttendanceModal(false);
-    setShowEmergencyContactsModal(true);
-  };
-
-  const handleEditPackingList = async () => {
-    setShowAttendanceModal(false);
-    setShowPackingListModal(true);
-  };
-
-  const handleSelectAll = () => {
-    setSelectedHikes(hikes.map(h => h.id));
-  };
-
-  const handleDeselectAll = () => {
-    setSelectedHikes([]);
-  };
-
-  const handleToggleHikeSelection = (hikeId) => {
-    if (selectedHikes.includes(hikeId)) {
-      setSelectedHikes(selectedHikes.filter(id => id !== hikeId));
-    } else {
-      setSelectedHikes([...selectedHikes, hikeId]);
-    }
-  };
-
+  // Categorize filtered hikes
   const now = new Date();
   const twoMonthsFromNow = new Date(now.getTime() + 60 * 24 * 60 * 60 * 1000);
 
-  const upcomingSoon = hikes.filter(h => {
+  const upcomingSoon = filteredHikes.filter(h => {
     const hikeDate = new Date(h.date);
     return hikeDate >= now && hikeDate <= twoMonthsFromNow;
   });
 
-  const future = hikes.filter(h => {
+  const future = filteredHikes.filter(h => {
     const hikeDate = new Date(h.date);
     return hikeDate > twoMonthsFromNow;
   });
 
-  const past = hikes.filter(h => {
+  const past = filteredHikes.filter(h => {
     const hikeDate = new Date(h.date);
     return hikeDate < now;
   });
 
   const renderManageHike = (hike, isPast = false) => {
     const displayStatus = isPast ? (hike.status === 'trip_booked' ? 'completed' : 'cancelled') : hike.status;
-    const isSelected = selectedHikes.includes(hike.id);
 
     return (
       <div key={hike.id} className="col-12">
         <div className="card">
           <div className="card-body">
             <div className="d-flex justify-content-between align-items-start">
-              <div className="d-flex align-items-start gap-3 flex-grow-1 me-3" style={{minWidth: 0}}>
-                <div className="form-check">
-                  <input
-                    className="form-check-input"
-                    type="checkbox"
-                    checked={isSelected}
-                    onChange={() => handleToggleHikeSelection(hike.id)}
-                    style={{ marginTop: '4px' }}
-                  />
-                </div>
-                <div className="flex-grow-1" style={{minWidth: 0}}>
+              <div className="flex-grow-1 me-3" style={{minWidth: 0}}>
                 <h5>{hike.name}</h5>
                 <p className="text-muted mb-2" style={{
                   overflow: 'hidden',
@@ -172,126 +130,17 @@ function AdminPanel() {
                     {hike.interested_users ? hike.interested_users.length : 0} interested
                   </span>
                 </div>
-                </div>
               </div>
-              <div style={{flexShrink: 0, position: 'relative'}}>
+              <div style={{flexShrink: 0}}>
                 <button
-                  className="btn btn-sm btn-secondary"
+                  className="btn btn-sm btn-primary"
                   style={{minHeight: '36px', minWidth: '100px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '4px'}}
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    setOpenDropdown(openDropdown === hike.id ? null : hike.id);
-                  }}
+                  onClick={() => handleManageHike(hike)}
                   disabled={loading}
                 >
-                  <MoreVertical size={16} />
-                  Actions
+                  <Settings size={16} />
+                  Manage
                 </button>
-                {openDropdown === hike.id && (
-                  <div
-                    style={{
-                      position: 'absolute',
-                      right: 0,
-                      top: '100%',
-                      marginTop: '4px',
-                      backgroundColor: '#fff',
-                      border: '1px solid #dee2e6',
-                      borderRadius: '4px',
-                      boxShadow: '0 2px 8px rgba(0,0,0,0.15)',
-                      zIndex: 1000,
-                      minWidth: '180px'
-                    }}
-                    onClick={(e) => e.stopPropagation()}
-                  >
-                    <button
-                      className="dropdown-item"
-                      style={{
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: '8px',
-                        padding: '8px 16px',
-                        border: 'none',
-                        background: 'none',
-                        width: '100%',
-                        textAlign: 'left',
-                        cursor: 'pointer'
-                      }}
-                      onClick={() => {
-                        handleOpenAttendance(hike);
-                        setOpenDropdown(null);
-                      }}
-                    >
-                      <Eye size={16} />
-                      View Details
-                    </button>
-                    <button
-                      className="dropdown-item"
-                      style={{
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: '8px',
-                        padding: '8px 16px',
-                        border: 'none',
-                        background: 'none',
-                        width: '100%',
-                        textAlign: 'left',
-                        cursor: 'pointer'
-                      }}
-                      onClick={() => {
-                        handleOpenEditHike(hike);
-                        setOpenDropdown(null);
-                      }}
-                    >
-                      <Edit size={16} />
-                      Edit Hike
-                    </button>
-                    <button
-                      className="dropdown-item"
-                      style={{
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: '8px',
-                        padding: '8px 16px',
-                        border: 'none',
-                        background: 'none',
-                        width: '100%',
-                        textAlign: 'left',
-                        cursor: 'pointer'
-                      }}
-                      onClick={() => {
-                        setSelectedHike(hike);
-                        setShowEmailModal(true);
-                        setOpenDropdown(null);
-                      }}
-                    >
-                      <Mail size={16} />
-                      Email Attendees
-                    </button>
-                    <div style={{borderTop: '1px solid #dee2e6', margin: '4px 0'}}></div>
-                    <button
-                      className="dropdown-item text-danger"
-                      style={{
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: '8px',
-                        padding: '8px 16px',
-                        border: 'none',
-                        background: 'none',
-                        width: '100%',
-                        textAlign: 'left',
-                        cursor: 'pointer',
-                        color: '#dc3545'
-                      }}
-                      onClick={() => {
-                        handleDeleteHike(hike.id);
-                        setOpenDropdown(null);
-                      }}
-                    >
-                      <Trash2 size={16} />
-                      Delete Hike
-                    </button>
-                  </div>
-                )}
               </div>
             </div>
           </div>
@@ -302,29 +151,62 @@ function AdminPanel() {
 
   return (
     <div>
-      <PageHeader
-        icon={Settings}
-        title="Manage Hikes"
-        subtitle="Add, edit, and manage all hiking events"
-        action={
-          <button
-            className="btn btn-primary"
-            onClick={() => setShowAddHikeForm(true)}
-          >
-            Add Hike
-          </button>
-        }
-      />
-
-      {/* Bulk Actions */}
+      {/* Search and Filter Controls */}
       {hikes.length > 0 && (
-        <BulkActions
-          hikes={hikes}
-          selectedHikes={selectedHikes}
-          onSelectAll={handleSelectAll}
-          onDeselectAll={handleDeselectAll}
-          onSelectionChange={setSelectedHikes}
-        />
+        <div className="card mb-4">
+          <div className="card-body py-3">
+            <div className="row g-3 align-items-end">
+              <div className="col-md-4">
+                <label className="form-label small mb-1">Search hikes</label>
+                <div className="input-group">
+                  <span className="input-group-text bg-light">
+                    <Search size={16} />
+                  </span>
+                  <input
+                    type="text"
+                    className="form-control"
+                    placeholder="Search by name, description, or location..."
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                  />
+                </div>
+              </div>
+              <div className="col-md-3">
+                <label className="form-label small mb-1">Status</label>
+                <select
+                  className="form-select"
+                  value={statusFilter}
+                  onChange={(e) => setStatusFilter(e.target.value)}
+                >
+                  <option value="all">All Status</option>
+                  <option value="gathering_interest">Gathering Interest</option>
+                  <option value="pre_planning">Pre Planning</option>
+                  <option value="final_planning">Final Planning</option>
+                  <option value="trip_booked">Trip Booked</option>
+                  <option value="cancelled">Cancelled</option>
+                </select>
+              </div>
+              <div className="col-md-3">
+                <label className="form-label small mb-1">Date Range</label>
+                <select
+                  className="form-select"
+                  value={dateFilter}
+                  onChange={(e) => setDateFilter(e.target.value)}
+                >
+                  <option value="all">All Dates</option>
+                  <option value="upcoming">Upcoming</option>
+                  <option value="past">Past</option>
+                  <option value="this-month">This Month</option>
+                </select>
+              </div>
+              <div className="col-md-2">
+                <div className="text-muted small">
+                  {filteredHikes.length} of {hikes.length} hikes
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
       )}
 
       {upcomingSoon.length > 0 && (
@@ -387,55 +269,7 @@ function AdminPanel() {
         onSuccess={fetchHikes}
       />
 
-      {/* Attendance Modal */}
-      <AttendanceModal
-        show={showAttendanceModal}
-        onClose={() => {
-          setShowAttendanceModal(false);
-          setSelectedHike(null);
-        }}
-        hikeId={selectedHike?.id}
-        hikeName={selectedHike?.name}
-        hikeData={selectedHike}
-        onViewEmergencyContacts={handleViewEmergencyContacts}
-        onEditPackingList={handleEditPackingList}
-      />
 
-      {/* Emergency Contacts Modal */}
-      <EmergencyContactsModal
-        show={showEmergencyContactsModal}
-        onClose={() => {
-          setShowEmergencyContactsModal(false);
-          setShowAttendanceModal(true);
-        }}
-        hikeId={selectedHike?.id}
-        hikeName={selectedHike?.name}
-      />
-
-      {/* Packing List Editor Modal */}
-      <PackingListEditorModal
-        show={showPackingListModal}
-        onClose={() => {
-          setShowPackingListModal(false);
-          setShowAttendanceModal(true);
-        }}
-        hikeId={selectedHike?.id}
-        hikeName={selectedHike?.name}
-      />
-
-      {/* Email Attendees Modal */}
-      {showEmailModal && selectedHike && (
-        <EmailAttendeesModal
-          hike={selectedHike}
-          onClose={() => {
-            setShowEmailModal(false);
-            setSelectedHike(null);
-          }}
-          onSuccess={(message) => {
-            alert(message);
-          }}
-        />
-      )}
     </div>
   );
 }

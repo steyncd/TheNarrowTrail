@@ -36,15 +36,11 @@ Navigate to the backend directory and deploy:
 ```bash
 cd c:\hiking-portal\backend
 
-gcloud run deploy hiking-portal-api `
+gcloud run deploy backend `
   --source . `
   --platform managed `
-  --region us-central1 `
+  --region europe-west1 `
   --allow-unauthenticated `
-  --set-env-vars "PORT=8080,NODE_ENV=production,DB_PORT=5432,DB_NAME=hiking_portal,DB_USER=postgres" `
-  --set-env-vars "DB_HOST=/cloudsql/helloliam:us-central1:hiking-db" `
-  --update-secrets "DB_PASSWORD=db-password:latest,JWT_SECRET=jwt-secret:latest,SENDGRID_API_KEY=sendgrid-key:latest,SENDGRID_FROM_EMAIL=sendgrid-from-email:latest,TWILIO_ACCOUNT_SID=twilio-sid:latest,TWILIO_AUTH_TOKEN=twilio-token:latest,TWILIO_WHATSAPP_NUMBER=twilio-whatsapp-number:latest" `
-  --add-cloudsql-instances "helloliam:us-central1:hiking-db" `
   --memory 512Mi `
   --cpu 1 `
   --min-instances 0 `
@@ -52,7 +48,7 @@ gcloud run deploy hiking-portal-api `
   --timeout 300
 ```
 
-Expected URL: `https://hiking-portal-api-554106646136.us-central1.run.app`
+Expected URL: `https://backend-4kzqyywlqq-ew.a.run.app`
 
 ---
 
@@ -78,7 +74,7 @@ firebase deploy --only hosting
 If your backend URL is different, update `src/App.js` line 4:
 
 ```javascript
-const API_URL = 'https://hiking-portal-api-554106646136.us-central1.run.app';
+const API_URL = 'https://backend-4kzqyywlqq-ew.a.run.app';
 ```
 
 Then rebuild and redeploy:

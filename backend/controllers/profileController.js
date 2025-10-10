@@ -345,5 +345,118 @@ exports.exportUserData = async (req, res) => {
   }
 };
 
+// Get user's data retention status
+exports.getUserRetentionStatus = async (req, res) => {
+  try {
+    const userId = req.user.id;
+    
+    // Get basic user information first
+    let userQuery = `SELECT id, name, email, created_at FROM users WHERE id = $1`;
+    let userResult = await pool.query(userQuery, [userId]);
+
+    if (userResult.rows.length === 0) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+
+    let user = userResult.rows[0];
+    
+    // Try to get retention-specific columns if they exist
+    try {
+      const retentionQuery = `SELECT
+        COALESCE(last_active_at, created_at) as last_active_at,
+        retention_warning_sent_at, scheduled_deletion_at,
+        EXTRACT(DAYS FROM AGE(NOW(), COALESCE(last_active_at, created_at)))::int AS days_since_active,
+        EXTRACT(DAYS FROM AGE(NOW(), created_at))::int AS account_age_days
+      FROM users WHERE id = $1`;
+      
+      const retentionResult = await pool.query(retentionQuery, [userId]);
+      if (retentionResult.rows.length > 0) {
+        user = { ...user, ...retentionResult.rows[0] };
+      }
+    } catch (retentionError) {
+      console.log('Retention columns not available, using defaults:', retentionError.message);
+      // Use defaults if retention columns don't exist
+      user.last_active_at = user.created_at;
+      user.retention_warning_sent_at = null;
+      user.scheduled_deletion_at = null;
+      user.days_since_active = Math.floor((new Date() - new Date(user.created_at)) / (1000 * 60 * 60 * 24));
+      user.account_age_days = user.days_since_active;
+    }
+    
+    // Calculate retention status
+    const accountAgeYears = Math.floor(user.account_age_days / 365);
+    const daysSinceActive = user.days_since_active || 0;
+    const inactiveYears = Math.floor(daysSinceActive / 365);
+    
+    let retentionStatus = 'active';
+    let warningDate = null;
+    let deletionDate = null;
+    let daysUntilWarning = null;
+    let daysUntilDeletion = null;
+    
+    if (user.retention_warning_sent_at) {
+      retentionStatus = 'warning_sent';
+      warningDate = user.retention_warning_sent_at;
+    }
+    
+    if (user.scheduled_deletion_at) {
+      retentionStatus = 'scheduled_for_deletion';
+      deletionDate = user.scheduled_deletion_at;
+      daysUntilDeletion = Math.ceil((new Date(user.scheduled_deletion_at) - new Date()) / (1000 * 60 * 60 * 24));
+    } else if (inactiveYears >= 2) {
+      // Calculate when warning will be sent (3 years of inactivity)
+      const warningThreshold = new Date(user.last_active_at);
+      warningThreshold.setFullYear(warningThreshold.getFullYear() + 3);
+      daysUntilWarning = Math.ceil((warningThreshold - new Date()) / (1000 * 60 * 60 * 24));
+      
+      if (daysUntilWarning <= 0) {
+        retentionStatus = 'warning_due';
+      }
+    }
+    
+    // Get user's retention logs - handle missing table gracefully
+    let recentActivity = [];
+    try {
+      const logsResult = await pool.query(
+        `SELECT action, details, created_at
+        FROM data_retention_logs
+        WHERE user_id = $1
+        ORDER BY created_at DESC
+        LIMIT 10`,
+        [userId]
+      );
+      recentActivity = logsResult.rows;
+    } catch (logError) {
+      console.log('Data retention logs table not available:', logError.message);
+      // Continue without logs - table might not exist yet
+    }
+
+    res.json({
+      status: retentionStatus,
+      user: {
+        id: user.id,
+        name: user.name,
+        email: user.email,
+        created_at: user.created_at,
+        last_active_at: user.last_active_at,
+        account_age_days: user.account_age_days,
+        days_since_active: daysSinceActive
+      },
+      retention: {
+        warning_sent_at: warningDate,
+        scheduled_deletion_at: deletionDate,
+        days_until_warning: daysUntilWarning,
+        days_until_deletion: daysUntilDeletion,
+        inactive_years: inactiveYears
+      },
+      recent_activity: recentActivity
+    });
+
+  } catch (err) {
+    console.error('Get user retention status error:', err);
+    res.status(500).json({ error: 'Failed to get retention status' });
+  }
+};
+
 module.exports = exports;
 

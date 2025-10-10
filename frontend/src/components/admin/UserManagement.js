@@ -258,7 +258,8 @@ function UserManagement() {
   const handleSaveNotificationPreferences = () => {
     setShowNotificationPreferences(false);
     setSelectedUser(null);
-    alert('Notification preferences updated successfully');
+    // Refresh the users list to show updated data
+    fetchUsers();
   };
 
   // Filter and paginate users

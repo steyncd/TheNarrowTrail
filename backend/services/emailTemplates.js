@@ -1,6 +1,13 @@
 // services/emailTemplates.js - Professional email templates for The Narrow Trail
 
 /**
+ * Get frontend URL from environment or default
+ */
+function getFrontendUrl() {
+  return process.env.FRONTEND_URL || 'https://www.thenarrowtrail.co.za';
+}
+
+/**
  * Base email template with branding and styling
  * Uses the portal's gradient color scheme: #2d5a7c (blue) to #4a7c59 (green)
  */
@@ -118,7 +125,7 @@ function welcomeEmail(userName) {
       <li>Manage your profile and preferences</li>
       <li>Connect with other hikers</li>
     </ul>
-    ${createButton('Go to Portal', 'https://helloliam.web.app/')}
+    ${createButton('Go to Portal', getFrontendUrl())}
     <p style="margin: 24px 0 0 0; color: #6c757d; font-size: 14px; line-height: 1.6;">
       See you on the trail! 🥾
     </p>
@@ -240,7 +247,7 @@ function passwordResetConfirmationEmail(userName) {
     <p style="margin: 0 0 24px 0; color: #495057; font-size: 16px; line-height: 1.6;">
       Your password has been successfully reset. You can now log in with your new password.
     </p>
-    ${createButton('Go to Login', 'https://helloliam.web.app/', '#4a7c59')}
+    ${createButton('Go to Login', getFrontendUrl(), '#4a7c59')}
     ${createInfoBox(`
       <p style="margin: 0; color: #721c24; font-size: 14px;">
         <strong>Security Alert:</strong> If you didn't make this change, please contact an administrator immediately.
@@ -275,7 +282,7 @@ function adminPasswordResetEmail(userName, newPassword) {
         </span>
       </p>
     `, 'warning')}
-    ${createButton('Sign In Now', 'https://helloliam.web.app/', '#2d5a7c')}
+    ${createButton('Sign In Now', getFrontendUrl(), '#2d5a7c')}
     ${createInfoBox(`
       <p style="margin: 0; color: #856404; font-size: 14px;">
         <strong>Security Tip:</strong> Please sign in and change your password immediately for security reasons.
@@ -313,7 +320,7 @@ function adminPromotionEmail(userName) {
       <li>Access system logs</li>
       <li>Manage feedback and suggestions</li>
     </ul>
-    ${createButton('Access Admin Panel', 'https://helloliam.web.app/admin', '#4a7c59')}
+    ${createButton('Access Admin Panel', `${getFrontendUrl()}/admin`, '#4a7c59')}
   `;
 
   return getEmailTemplate(
@@ -360,7 +367,7 @@ function newHikeEmail(hikeName, hikeDate, difficulty, distance, description, cos
     <p style="margin: 0 0 24px 0; color: #495057; font-size: 16px; line-height: 1.6;">
       ${description}
     </p>
-    ${createButton('Express Interest', 'https://helloliam.web.app/hikes', '#4a7c59')}
+    ${createButton('Express Interest', `${getFrontendUrl()}/hikes`, '#4a7c59')}
   `;
 
   return getEmailTemplate(
@@ -401,7 +408,7 @@ function newRegistrationAdminEmail(userName, email, phone) {
         </td>
       </tr>
     </table>
-    ${createButton('Review in Admin Panel', 'https://helloliam.web.app/admin/users', '#2d5a7c')}
+    ${createButton('Review in Admin Panel', `${getFrontendUrl()}/admin/users`, '#2d5a7c')}
   `;
 
   return getEmailTemplate(
@@ -429,7 +436,7 @@ function hikeInterestAdminEmail(userName, hikeName, hikeDate) {
         📅 ${hikeDate}
       </p>
     </div>
-    ${createButton('View Hike Details', 'https://helloliam.web.app/admin', '#4a7c59')}
+    ${createButton('View Hike Details', `${getFrontendUrl()}/admin`, '#4a7c59')}
   `;
 
   return getEmailTemplate(
@@ -457,7 +464,7 @@ function attendanceConfirmedAdminEmail(userName, hikeName, hikeDate) {
         📅 ${hikeDate}
       </p>
     </div>
-    ${createButton('View Confirmed Hikers', 'https://helloliam.web.app/admin', '#4a7c59')}
+    ${createButton('View Confirmed Hikers', `${getFrontendUrl()}/admin`, '#4a7c59')}
   `;
 
   return getEmailTemplate(
@@ -502,7 +509,7 @@ function feedbackAdminEmail(userName, userEmail, feedbackType, message) {
         ${message}
       </p>
     </div>
-    ${createButton('View in Admin Panel', 'https://helloliam.web.app/admin/feedback', '#2d5a7c')}
+    ${createButton('View in Admin Panel', `${getFrontendUrl()}/admin/feedback`, '#2d5a7c')}
   `;
 
   return getEmailTemplate(

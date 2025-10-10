@@ -1,0 +1,13 @@
+{
+  "domain": "hiking_portal_test",
+  "name": "Hiking Portal Test",
+  "config_flow": true,
+  "documentation": "https://github.com/steyncd/TheNarrowTrail",
+  "iot_class": "cloud_polling",
+  "issue_tracker": "https://github.com/steyncd/TheNarrowTrail/issues",
+  "requirements": [],
+  "version": "1.0.0",
+  "homeassistant": "2023.1.0",
+  "integration_type": "service",
+  "icon": "mdi:hiking"
+}

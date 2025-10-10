@@ -31,12 +31,11 @@ cd backend
 find . -name "nul" -exec rm -f {} +
 
 # Deploy
-gcloud run deploy hiking-portal-api \
+gcloud run deploy backend \
   --source . \
-  --region us-central1 \
+  --region europe-west1 \
   --platform managed \
-  --allow-unauthenticated \
-  [... environment variables ...]
+  --allow-unauthenticated
 ```
 
 ### Database Migrations
@@ -54,7 +53,7 @@ psql $DATABASE_URL -f migrations/XXX_migration_name.sql
 ## 🔗 Quick Links
 
 - Frontend URL: https://helloliam.web.app
-- Backend API: https://hiking-portal-api-554106646136.us-central1.run.app
+- Backend API: https://backend-4kzqyywlqq-ew.a.run.app
 - Cloud Console: https://console.cloud.google.com/
 - Firebase Console: https://console.firebase.google.com/
 

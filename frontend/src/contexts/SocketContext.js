@@ -42,7 +42,7 @@ export const SocketProvider = ({ children }) => {
     console.log('Initializing Socket.IO connection...');
 
     // Use environment variable or fallback to production URL
-    const SOCKET_URL = process.env.REACT_APP_API_URL || 'https://hiking-backend-554106646136.us-central1.run.app';
+    const SOCKET_URL = process.env.REACT_APP_API_URL || 'https://backend-4kzqyywlqq-ew.a.run.app';
 
     const newSocket = io(SOCKET_URL, {
       auth: {

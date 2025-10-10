@@ -61,7 +61,8 @@ exports.register = async (req, res) => {
     const user = result.rows[0];
 
     // Send verification email
-    const verificationUrl = `https://helloliam.web.app/verify-email?token=${verificationToken}`;
+    const frontendUrl = process.env.FRONTEND_URL || 'https://www.thenarrowtrail.co.za';
+    const verificationUrl = `${frontendUrl}/verify-email?token=${verificationToken}`;
     await sendEmail(
       email,
       'Verify Your Email - The Narrow Trail',

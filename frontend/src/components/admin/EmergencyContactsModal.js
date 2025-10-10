@@ -36,7 +36,7 @@ function EmergencyContactsModal({ show, onClose, hikeId, hikeName }) {
 
   const handleCopyToClipboard = () => {
     const text = contacts.map(c =>
-      `${c.user_name}\nEmergency Contact: ${c.emergency_contact_name}\nPhone: ${c.emergency_contact_phone}\nEmail: ${c.user_email}\n\n`
+      `${c.name}\nEmergency Contact: ${c.emergency_contact_name}\nPhone: ${c.emergency_contact_phone}\nEmail: ${c.email}\n\n`
     ).join('');
 
     navigator.clipboard.writeText(text).then(() => {
@@ -95,7 +95,7 @@ function EmergencyContactsModal({ show, onClose, hikeId, hikeName }) {
                     <tbody>
                       {contacts.map((contact, index) => (
                         <tr key={index}>
-                          <td>{contact.user_name}</td>
+                          <td>{contact.name}</td>
                           <td>{contact.emergency_contact_name || <span className="text-muted">Not provided</span>}</td>
                           <td>
                             {contact.emergency_contact_phone ? (
@@ -107,8 +107,8 @@ function EmergencyContactsModal({ show, onClose, hikeId, hikeName }) {
                             )}
                           </td>
                           <td>
-                            <a href={`mailto:${contact.user_email}`}>
-                              {contact.user_email}
+                            <a href={`mailto:${contact.email}`}>
+                              {contact.email}
                             </a>
                           </td>
                         </tr>

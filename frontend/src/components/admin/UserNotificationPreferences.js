@@ -73,18 +73,22 @@ function UserNotificationPreferences({ user, onClose, onSave }) {
     setError('');
 
     try {
-      const result = await api.updateUser(
-        user.id,
-        {
-          name: user.name,
-          email: user.email,
-          phone: user.phone,
-          notification_preferences: preferences
+      // Prepare the data in the format expected by the API
+      const requestData = {
+        global: {
+          email: true, // Default global email setting
+          whatsapp: true // Default global whatsapp setting
         },
+        preferences: preferences
+      };
+
+      const result = await api.updateUserNotificationPreferences(
+        user.id,
+        requestData,
         token
       );
 
-      if (result.success) {
+      if (result.success && result.data) {
         onSave?.();
         onClose();
       } else {

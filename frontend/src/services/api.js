@@ -1,4 +1,4 @@
-export const API_URL = 'https://backend-554106646136.europe-west1.run.app';
+export const API_URL = 'https://backend-4kzqyywlqq-ew.a.run.app';
 
 class ApiService {
   constructor() {

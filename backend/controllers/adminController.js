@@ -380,3 +380,142 @@ exports.getConsentStatus = async (req, res) => {
   }
 };
 
+// Data Retention Management Functions
+const dataRetentionService = require('../services/dataRetentionService');
+
+// Get retention statistics for admin dashboard
+exports.getRetentionStatistics = async (req, res) => {
+  try {
+    const stats = await dataRetentionService.getRetentionStatistics();
+    res.json(stats);
+  } catch (error) {
+    console.error('Get retention statistics error:', error);
+    res.status(500).json({ error: 'Failed to fetch retention statistics' });
+  }
+};
+
+// Manual run of retention processes (for testing/admin)
+exports.runRetentionCheck = async (req, res) => {
+  try {
+    const stats = await dataRetentionService.runManualCheck();
+    res.json({
+      success: true,
+      message: 'Retention check completed',
+      statistics: stats
+    });
+  } catch (error) {
+    console.error('Manual retention check error:', error);
+    res.status(500).json({ error: 'Failed to run retention check' });
+  }
+};
+
+// Extend retention for specific user (admin override)
+exports.extendUserRetention = async (req, res) => {
+  try {
+    const { userId } = req.params;
+    const { extensionDays, reason } = req.body;
+
+    if (!extensionDays || !reason) {
+      return res.status(400).json({ 
+        error: 'Extension days and reason are required' 
+      });
+    }
+
+    await dataRetentionService.extendUserRetention(
+      userId, 
+      extensionDays, 
+      reason, 
+      req.user.id
+    );
+
+    res.json({
+      success: true,
+      message: `Retention extended for user ${userId} by ${extensionDays} days`
+    });
+  } catch (error) {
+    console.error('Extend user retention error:', error);
+    res.status(500).json({ error: 'Failed to extend user retention' });
+  }
+};
+
+// Get retention logs for audit trail
+exports.getRetentionLogs = async (req, res) => {
+  try {
+    const { page = 1, limit = 50, userId, action } = req.query;
+    const offset = (page - 1) * limit;
+
+    let whereClause = '';
+    let params = [limit, offset];
+    let paramCount = 2;
+
+    if (userId) {
+      whereClause += `WHERE user_id = $${++paramCount}`;
+      params.push(userId);
+    }
+
+    if (action) {
+      whereClause += whereClause ? ` AND action = $${++paramCount}` : `WHERE action = $${++paramCount}`;
+      params.push(action);
+    }
+
+    const result = await pool.query(`
+      SELECT 
+        drl.id,
+        drl.user_id,
+        drl.action,
+        drl.reason,
+        drl.metadata,
+        drl.performed_by,
+        drl.created_at,
+        u.email as user_email,
+        u.name as user_name
+      FROM data_retention_logs drl
+      LEFT JOIN users u ON drl.user_id = u.id
+      ${whereClause}
+      ORDER BY drl.created_at DESC
+      LIMIT $1 OFFSET $2
+    `, params);
+
+    // Get total count for pagination
+    const countParams = params.slice(2); // Remove limit and offset
+    const countResult = await pool.query(`
+      SELECT COUNT(*) as total
+      FROM data_retention_logs drl
+      ${whereClause}
+    `, countParams);
+
+    res.json({
+      logs: result.rows,
+      pagination: {
+        page: parseInt(page),
+        limit: parseInt(limit),
+        total: parseInt(countResult.rows[0].total),
+        pages: Math.ceil(countResult.rows[0].total / limit)
+      }
+    });
+  } catch (error) {
+    console.error('Get retention logs error:', error);
+    res.status(500).json({ error: 'Failed to fetch retention logs' });
+  }
+};
+
+// Start/stop retention service
+exports.toggleRetentionService = async (req, res) => {
+  try {
+    const { action } = req.body; // 'start' or 'stop'
+
+    if (action === 'start') {
+      dataRetentionService.start();
+      res.json({ success: true, message: 'Data retention service started' });
+    } else if (action === 'stop') {
+      dataRetentionService.stop();
+      res.json({ success: true, message: 'Data retention service stopped' });
+    } else {
+      res.status(400).json({ error: 'Invalid action. Use "start" or "stop"' });
+    }
+  } catch (error) {
+    console.error('Toggle retention service error:', error);
+    res.status(500).json({ error: 'Failed to toggle retention service' });
+  }
+};
+

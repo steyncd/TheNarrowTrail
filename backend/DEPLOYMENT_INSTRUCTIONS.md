@@ -84,9 +84,9 @@ psql -h localhost -U postgres -d hiking_portal -f migrations/012_consolidate_att
 
 ```bash
 cd backend
-gcloud run deploy hiking-portal-backend \
+gcloud run deploy backend \
   --source . \
-  --region [YOUR_REGION] \
+  --region europe-west1 \
   --platform managed \
   --allow-unauthenticated
 ```

@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { Menu, Calendar, Heart, Settings, Users, BarChart3, User, DollarSign, Info, FileText, Home } from 'lucide-react';
+import { Menu, Calendar, Heart, Settings, Users, BarChart3, User, Info, FileText, Home } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
 import { useTheme } from '../../contexts/ThemeContext';
 import MobileMenu from './MobileMenu';
@@ -59,8 +59,7 @@ const Header = () => {
   ];
 
   const adminLinks = [
-    { path: '/admin', label: 'Manage', icon: Settings },
-    { path: '/admin/payments', label: 'Payments', icon: DollarSign },
+    { path: '/admin/manage-hikes', label: 'Manage Hikes', icon: Settings },
     { path: '/admin/analytics', label: 'Analytics', icon: BarChart3 },
     { path: '/admin/users', label: 'Users', icon: Users },
     { path: '/admin/content', label: 'Content', icon: FileText },

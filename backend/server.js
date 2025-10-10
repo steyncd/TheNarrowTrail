@@ -40,6 +40,10 @@ app.use(cors({
 }));
 app.use(express.json());
 
+// Activity tracking middleware for POPIA retention compliance
+const { trackUserActivity } = require('./middleware/activityTracker');
+app.use(trackUserActivity);
+
 // Health check routes
 app.get('/health', (req, res) => {
   res.json({ status: 'ok', timestamp: new Date().toISOString() });
@@ -100,9 +104,18 @@ const server = app.listen(PORT, '0.0.0.0', () => {
 // Initialize Socket.IO server
 socketService.initializeSocket(server);
 
+// Initialize and start data retention service for POPIA compliance
+const dataRetentionService = require('./services/dataRetentionService');
+if (process.env.NODE_ENV === 'production') {
+  // Only auto-start in production to avoid development interference
+  dataRetentionService.start();
+  console.log('Data retention service started for POPIA compliance');
+}
+
 // Handle graceful shutdown
 process.on('SIGTERM', () => {
   console.log('SIGTERM signal received: closing HTTP server');
+  dataRetentionService.stop();
   server.close(() => {
     console.log('HTTP server closed');
     pool.end();

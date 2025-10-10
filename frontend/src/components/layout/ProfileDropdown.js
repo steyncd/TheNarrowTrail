@@ -78,6 +78,38 @@ const ProfileDropdown = ({ show, onClose, buttonRef }) => {
           My Profile
         </button>
 
+        <button
+          onClick={() => {
+            onClose();
+            navigate('/notification-preferences');
+          }}
+          className="btn btn-link w-100 text-start p-3 border-0"
+          style={{
+            textDecoration: 'none',
+            color: theme === 'dark' ? '#fff' : '#212529',
+            borderRadius: 0
+          }}
+        >
+          <Bell size={18} className="me-2" style={{ verticalAlign: 'text-bottom' }} />
+          Notifications
+        </button>
+
+        <button
+          onClick={() => {
+            onClose();
+            navigate('/data-retention');
+          }}
+          className="btn btn-link w-100 text-start p-3 border-0"
+          style={{
+            textDecoration: 'none',
+            color: theme === 'dark' ? '#fff' : '#212529',
+            borderRadius: 0
+          }}
+        >
+          <Shield size={18} className="me-2" style={{ verticalAlign: 'text-bottom' }} />
+          Privacy & Data
+        </button>
+
         {isAdmin && (
           <>
             <button
