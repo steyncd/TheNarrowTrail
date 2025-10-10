@@ -54,7 +54,7 @@ This custom integration allows you to monitor and interact with your hiking port
 2. Click **Add Integration**
 3. Search for **"The Narrow Trail Hiking Portal"**
 4. Enter the following:
-   - **API URL**: `https://hiking-portal-api-554106646136.us-central1.run.app` (default)
+   - **API URL**: `https://backend-4kzqyywlqq-ew.a.run.app` (default)
    - **Authentication Token**: Your JWT token from Step 1
 5. Click **Submit**
 

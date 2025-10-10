@@ -70,7 +70,7 @@ eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6MSwibmFtZSI6Ikpv...
 3. Type "hiking" or "narrow trail"
 4. Click **The Narrow Trail Hiking Portal**
 5. Enter:
-   - **API URL**: `https://hiking-portal-api-554106646136.us-central1.run.app`
+   - **API URL**: `https://backend-4kzqyywlqq-ew.a.run.app`
    - **Token**: [Paste your JWT token]
 6. Click **Submit**
 

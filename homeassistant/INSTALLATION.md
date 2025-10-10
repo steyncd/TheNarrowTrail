@@ -54,7 +54,7 @@ The portal will add a "Generate Long-Lived Token" feature in profile settings.
 3. Search for **"hiking"** or **"The Narrow Trail"**
 4. Click on **The Narrow Trail Hiking Portal**
 5. Fill in the configuration:
-   - **API URL**: `https://hiking-portal-api-554106646136.us-central1.run.app`
+   - **API URL**: `https://backend-4kzqyywlqq-ew.a.run.app`
    - **Authentication Token**: Paste your JWT token
 6. Click **Submit**
 

@@ -1,0 +1,326 @@
+# Hiking Portal Dashboard Configuration
+# Copy this configuration to your Home Assistant Lovelace dashboard
+# or save it as a new dashboard in the Home Assistant UI
+
+title: Hiking Portal Dashboard
+path: hiking-portal
+icon: mdi:hiking
+theme: default
+
+badges: []
+
+cards:
+  # Header Section with Key Metrics
+  - type: horizontal-stack
+    cards:
+      - type: entity
+        entity: sensor.hiking_portal_next_hike
+        name: Next Hike
+        icon: mdi:calendar-clock
+        state_color: true
+      - type: entity
+        entity: sensor.hiking_portal_my_hikes
+        name: My Hikes
+        icon: mdi:account-multiple
+        state_color: true
+      - type: entity
+        entity: binary_sensor.hiking_portal_min_participants_reached
+        name: Next Hike Status
+        icon: mdi:check-circle
+        state_color: true
+
+  # Urgent Notifications and Alerts
+  - type: conditional
+    conditions:
+      - entity: binary_sensor.hiking_portal_urgent_notifications
+        state: "on"
+    card:
+      type: markdown
+      content: |
+        ## 🚨 Urgent Notifications
+        {% set urgent = state_attr('binary_sensor.hiking_portal_urgent_notifications', 'urgent_notifications') %}
+        {% if urgent %}
+        {% for notification in urgent %}
+        **{{ notification.title }}**
+        {{ notification.message }}
+        *{{ notification.created_at | as_timestamp | timestamp_custom('%Y-%m-%d %H:%M') }}*
+        
+        ---
+        {% endfor %}
+        {% endif %}
+      card_mod:
+        style: |
+          ha-card {
+            border-left: 4px solid var(--error-color);
+            background: var(--error-color-rgb), 0.1);
+          }
+
+  # Weather Warnings
+  - type: conditional
+    conditions:
+      - entity: binary_sensor.hiking_portal_weather_warning
+        state: "on"
+    card:
+      type: markdown
+      content: |
+        ## ⚠️ Weather Warnings
+        {% set alerts = state_attr('binary_sensor.hiking_portal_weather_warning', 'alerts') %}
+        {% if alerts %}
+        {% for alert in alerts %}
+        **{{ alert.title }}** ({{ alert.severity | upper }})
+        {{ alert.description }}
+        *Valid from: {{ alert.start | as_timestamp | timestamp_custom('%Y-%m-%d %H:%M') }}*
+        
+        ---
+        {% endfor %}
+        {% endif %}
+      card_mod:
+        style: |
+          ha-card {
+            border-left: 4px solid var(--warning-color);
+            background: rgba(var(--warning-color-rgb), 0.1);
+          }
+
+  # Main Dashboard Content
+  - type: vertical-stack
+    cards:
+      # Next Hike Details
+      - type: entities
+        title: 🏔️ Next Hike Details
+        show_header_toggle: false
+        entities:
+          - entity: sensor.hiking_portal_next_hike
+            name: Event
+            secondary_info: last-updated
+          - type: attribute
+            entity: sensor.hiking_portal_next_hike
+            attribute: location
+            name: Location
+            icon: mdi:map-marker
+          - type: attribute
+            entity: sensor.hiking_portal_next_hike
+            attribute: date
+            name: Date & Time
+            icon: mdi:calendar
+          - type: attribute
+            entity: sensor.hiking_portal_next_hike
+            attribute: difficulty
+            name: Difficulty
+            icon: mdi:speedometer
+          - type: attribute
+            entity: sensor.hiking_portal_next_hike
+            attribute: distance
+            name: Distance
+            icon: mdi:map-marker-distance
+          - type: attribute
+            entity: sensor.hiking_portal_next_hike
+            attribute: price
+            name: Price
+            icon: mdi:currency-usd
+
+      # Participation Status
+      - type: glance
+        title: 👥 Participation Status
+        entities:
+          - entity: binary_sensor.hiking_portal_min_participants_reached
+            name: Min Reached
+          - entity: sensor.hiking_portal_next_hike
+            name: Interested
+            attribute: interested_count
+          - entity: sensor.hiking_portal_next_hike
+            name: Required
+            attribute: min_participants
+
+  # Notifications Management
+  - type: vertical-stack
+    cards:
+      - type: entities
+        title: 🔔 Notifications
+        show_header_toggle: false
+        entities:
+          - entity: sensor.hiking_portal_notification_summary
+            name: Total Notifications
+          - type: attribute
+            entity: sensor.hiking_portal_notification_summary
+            attribute: unread_count
+            name: Unread
+            icon: mdi:bell-badge
+          - type: attribute
+            entity: sensor.hiking_portal_notification_summary
+            attribute: urgent_count
+            name: Urgent
+            icon: mdi:bell-alert
+
+      # Quick Actions for Notifications
+      - type: button
+        name: Mark All Notifications Read
+        icon: mdi:check-all
+        tap_action:
+          action: call-service
+          service: hiking_portal.mark_notification_read
+          service_data:
+            notification_id: "all"
+
+  # Weather Integration
+  - type: entities
+    title: 🌤️ Weather Information
+    show_header_toggle: false
+    entities:
+      - entity: sensor.hiking_portal_weather_alerts
+        name: Weather Alerts
+      - type: attribute
+        entity: sensor.hiking_portal_weather_alerts
+        attribute: current_conditions
+        name: Current Conditions
+        icon: mdi:weather-partly-cloudy
+      - type: attribute
+        entity: sensor.hiking_portal_weather_alerts
+        attribute: forecast_summary
+        name: Forecast
+        icon: mdi:weather-sunny
+
+  # Payment Tracking
+  - type: entities
+    title: 💳 Payment Tracking
+    show_header_toggle: false
+    entities:
+      - entity: sensor.hiking_portal_outstanding_payments
+        name: Outstanding Payments
+      - type: attribute
+        entity: sensor.hiking_portal_outstanding_payments
+        attribute: total_amount
+        name: Total Outstanding
+        icon: mdi:currency-usd
+      - type: attribute
+        entity: sensor.hiking_portal_outstanding_payments
+        attribute: overdue_count
+        name: Overdue Payments
+        icon: mdi:alert-circle
+
+  # All Upcoming Hikes
+  - type: entities
+    title: 📅 All Upcoming Hikes
+    show_header_toggle: false
+    entities:
+      - entity: sensor.hiking_portal_upcoming_hikes
+        name: Total Upcoming
+      - type: attribute
+        entity: sensor.hiking_portal_upcoming_hikes
+        attribute: this_week_count
+        name: This Week
+        icon: mdi:calendar-week
+      - type: attribute
+        entity: sensor.hiking_portal_upcoming_hikes
+        attribute: this_month_count
+        name: This Month
+        icon: mdi:calendar-month
+
+  # Calendar Integration
+  - type: calendar
+    title: 🗓️ Hiking Calendar
+    entities:
+      - calendar.hiking_portal_events
+
+  # My Hikes Status
+  - type: entities
+    title: 🥾 My Hiking Activity
+    show_header_toggle: false
+    entities:
+      - entity: sensor.hiking_portal_my_hikes
+        name: My Registered Hikes
+      - type: attribute
+        entity: sensor.hiking_portal_my_hikes
+        attribute: confirmed_count
+        name: Confirmed Hikes
+        icon: mdi:check-circle
+      - type: attribute
+        entity: sensor.hiking_portal_my_hikes
+        attribute: pending_count
+        name: Pending Hikes
+        icon: mdi:clock-outline
+      - type: attribute
+        entity: sensor.hiking_portal_my_hikes
+        attribute: paid_count
+        name: Paid Hikes
+        icon: mdi:credit-card-check
+
+  # Admin Section (if user has admin privileges)
+  - type: conditional
+    conditions:
+      - entity: sensor.hiking_portal_pending_users
+        state_not: "0"
+    card:
+      type: entities
+      title: 👨‍💼 Admin - Pending Users
+      show_header_toggle: false
+      entities:
+        - entity: sensor.hiking_portal_pending_users
+          name: Users Awaiting Approval
+        - type: attribute
+          entity: sensor.hiking_portal_pending_users
+          attribute: newest_request
+          name: Latest Request
+          icon: mdi:account-clock
+
+  # Quick Actions Section
+  - type: horizontal-stack
+    cards:
+      - type: button
+        name: Refresh Data
+        icon: mdi:refresh
+        tap_action:
+          action: call-service
+          service: homeassistant.update_entity
+          service_data:
+            entity_id: sensor.hiking_portal_next_hike
+
+      - type: button
+        name: Record Payment
+        icon: mdi:cash-register
+        tap_action:
+          action: call-service
+          service: hiking_portal.record_payment
+          service_data:
+            user_id: "{{ user }}"
+            amount: 0
+            payment_method: "cash"
+
+      - type: button
+        name: Get Weather
+        icon: mdi:weather-partly-cloudy
+        tap_action:
+          action: call-service
+          service: hiking_portal.get_hike_weather
+          service_data:
+            hike_id: "{{ state_attr('sensor.hiking_portal_next_hike', 'hike_id') }}"
+
+  # Statistics and Insights
+  - type: markdown
+    title: 📊 Portal Statistics
+    content: |
+      {% set next_hike = states('sensor.hiking_portal_next_hike') %}
+      {% set my_hikes = states('sensor.hiking_portal_my_hikes') %}
+      {% set upcoming = states('sensor.hiking_portal_upcoming_hikes') %}
+      {% set notifications = states('sensor.hiking_portal_notification_summary') %}
+      
+      ## Portal Overview
+      
+      **Next Event:** {{ next_hike if next_hike != 'unknown' else 'No upcoming hikes' }}
+      
+      **My Activity:** {{ my_hikes }} registered hikes
+      
+      **Upcoming Events:** {{ upcoming }} total hikes scheduled
+      
+      **Notifications:** {{ notifications }} total ({{ state_attr('sensor.hiking_portal_notification_summary', 'unread_count') or 0 }} unread)
+      
+      **Last Updated:** {{ as_timestamp(states.sensor.hiking_portal_next_hike.last_updated) | timestamp_custom('%Y-%m-%d at %H:%M') }}
+
+      ---
+      
+      {% if state_attr('sensor.hiking_portal_next_hike', 'interested_count') %}
+      ### Next Hike Participation
+      
+      - **Interested:** {{ state_attr('sensor.hiking_portal_next_hike', 'interested_count') }} people
+      - **Required:** {{ state_attr('sensor.hiking_portal_next_hike', 'min_participants') }} minimum
+      - **Status:** {% if state_attr('sensor.hiking_portal_next_hike', 'interested_count') >= state_attr('sensor.hiking_portal_next_hike', 'min_participants') %}✅ Confirmed{% else %}⚠️ Needs more participants{% endif %}
+      {% endif %}

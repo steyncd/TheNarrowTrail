@@ -33,6 +33,22 @@ SERVICE_SEND_NOTIFICATION_SCHEMA = vol.Schema({
     vol.Required("message"): cv.string,
 })
 
+# NEW: Enhanced service schemas
+SERVICE_MARK_NOTIFICATION_READ_SCHEMA = vol.Schema({
+    vol.Required("notification_id"): cv.positive_int,
+})
+
+SERVICE_RECORD_PAYMENT_SCHEMA = vol.Schema({
+    vol.Required("hike_id"): cv.positive_int,
+    vol.Required("user_id"): cv.positive_int,
+    vol.Required("amount"): vol.Coerce(float),
+    vol.Optional("payment_method", default="cash"): cv.string,
+})
+
+SERVICE_GET_WEATHER_SCHEMA = vol.Schema({
+    vol.Required("hike_id"): cv.positive_int,
+})
+
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Hiking Portal from a config entry."""
@@ -92,6 +108,38 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         except Exception as err:
             _LOGGER.error("Error sending notification for hike %s: %s", hike_id, err)
 
+    # NEW: Enhanced service handlers
+    async def handle_mark_notification_read(call: ServiceCall) -> None:
+        """Handle mark notification read service call."""
+        notification_id = call.data["notification_id"]
+        try:
+            await coordinator.mark_notification_read(notification_id)
+            await coordinator.async_request_refresh()
+        except Exception as err:
+            _LOGGER.error("Error marking notification %s as read: %s", notification_id, err)
+
+    async def handle_record_payment(call: ServiceCall) -> None:
+        """Handle record payment service call."""
+        hike_id = call.data["hike_id"]
+        user_id = call.data["user_id"]
+        amount = call.data["amount"]
+        payment_method = call.data.get("payment_method", "cash")
+        try:
+            await coordinator.record_payment(hike_id, user_id, amount, payment_method)
+            await coordinator.async_request_refresh()
+        except Exception as err:
+            _LOGGER.error("Error recording payment for hike %s: %s", hike_id, err)
+
+    async def handle_get_weather(call: ServiceCall) -> None:
+        """Handle get weather service call."""
+        hike_id = call.data["hike_id"]
+        try:
+            weather_data = await coordinator.get_hike_weather(hike_id)
+            _LOGGER.info("Weather for hike %s: %s", hike_id, weather_data)
+        except Exception as err:
+            _LOGGER.error("Error getting weather for hike %s: %s", hike_id, err)
+
+    # Register all services
     hass.services.async_register(
         DOMAIN, "express_interest", handle_express_interest, schema=SERVICE_EXPRESS_INTEREST_SCHEMA
     )
@@ -103,6 +151,15 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     )
     hass.services.async_register(
         DOMAIN, "send_notification", handle_send_notification, schema=SERVICE_SEND_NOTIFICATION_SCHEMA
+    )
+    hass.services.async_register(
+        DOMAIN, "mark_notification_read", handle_mark_notification_read, schema=SERVICE_MARK_NOTIFICATION_READ_SCHEMA
+    )
+    hass.services.async_register(
+        DOMAIN, "record_payment", handle_record_payment, schema=SERVICE_RECORD_PAYMENT_SCHEMA
+    )
+    hass.services.async_register(
+        DOMAIN, "get_weather", handle_get_weather, schema=SERVICE_GET_WEATHER_SCHEMA
     )
 
     return True

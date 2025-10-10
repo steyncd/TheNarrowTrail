@@ -55,6 +55,29 @@ class HikingPortalDataUpdateCoordinator(DataUpdateCoordinator):
             except Exception:
                 data["pending_users"] = []
 
+            # NEW: Fetch notifications (Feature 1)
+            try:
+                data["notifications"] = await self._fetch_endpoint("/api/notifications")
+                data["unread_notifications"] = [n for n in data["notifications"] if not n.get("read", False)]
+                data["urgent_notifications"] = [n for n in data["notifications"] if n.get("priority") == "urgent" and not n.get("read", False)]
+            except Exception:
+                data["notifications"] = []
+                data["unread_notifications"] = []
+                data["urgent_notifications"] = []
+
+            # NEW: Fetch payment data (Feature 3)  
+            try:
+                data["my_payments"] = await self._fetch_endpoint("/api/payments/my-payments")
+                data["payment_summary"] = await self._fetch_endpoint("/api/payments/summary")
+                # Calculate outstanding payments
+                outstanding = sum(p.get("amount_due", 0) - p.get("amount_paid", 0) 
+                                for p in data["my_payments"] if p.get("status") != "paid")
+                data["outstanding_payments"] = outstanding
+            except Exception:
+                data["my_payments"] = []
+                data["payment_summary"] = {}
+                data["outstanding_payments"] = 0
+
             # Calculate upcoming hikes (future hikes only)
             from datetime import datetime, timezone
             now = datetime.now(timezone.utc)
@@ -70,8 +93,28 @@ class HikingPortalDataUpdateCoordinator(DataUpdateCoordinator):
                     key=lambda x: datetime.fromisoformat(x["date"].replace("Z", "+00:00")).replace(tzinfo=timezone.utc)
                 )
                 data["next_hike"] = sorted_hikes[0]
+                
+                # NEW: Fetch weather for next hike (Feature 2)
+                try:
+                    if data["next_hike"].get("gps_coordinates"):
+                        weather_data = await self._fetch_weather_for_hike(data["next_hike"])
+                        data["next_hike_weather"] = weather_data
+                        data["weather_alerts"] = weather_data.get("alerts", [])
+                        data["weather_warning"] = any(alert.get("severity") in ["severe", "extreme"] for alert in data["weather_alerts"])
+                    else:
+                        data["next_hike_weather"] = None
+                        data["weather_alerts"] = []
+                        data["weather_warning"] = False
+                except Exception as e:
+                    _LOGGER.warning("Could not fetch weather data: %s", e)
+                    data["next_hike_weather"] = None
+                    data["weather_alerts"] = []
+                    data["weather_warning"] = False
             else:
                 data["next_hike"] = None
+                data["next_hike_weather"] = None
+                data["weather_alerts"] = []
+                data["weather_warning"] = False
 
             return data
 
@@ -135,3 +178,59 @@ class HikingPortalDataUpdateCoordinator(DataUpdateCoordinator):
         except aiohttp.ClientError as err:
             _LOGGER.error("Error sending notification for hike %s: %s", hike_id, err)
             raise
+
+    async def mark_notification_read(self, notification_id: int) -> None:
+        """Mark a notification as read."""
+        url = f"{self.api_url}/api/notifications/{notification_id}/read"
+        try:
+            async with self.session.put(url, headers=self._headers, timeout=10) as response:
+                response.raise_for_status()
+                _LOGGER.info("Successfully marked notification %s as read", notification_id)
+        except aiohttp.ClientError as err:
+            _LOGGER.error("Error marking notification %s as read: %s", notification_id, err)
+            raise
+
+    async def record_payment(self, hike_id: int, user_id: int, amount: float, payment_method: str = "cash") -> None:
+        """Record a payment for a hike."""
+        url = f"{self.api_url}/api/hikes/{hike_id}/payments"
+        data = {
+            "user_id": user_id,
+            "amount": amount,
+            "payment_method": payment_method,
+            "status": "paid"
+        }
+        try:
+            async with self.session.post(url, headers=self._headers, json=data, timeout=10) as response:
+                response.raise_for_status()
+                _LOGGER.info("Successfully recorded payment for hike %s", hike_id)
+        except aiohttp.ClientError as err:
+            _LOGGER.error("Error recording payment for hike %s: %s", hike_id, err)
+            raise
+
+    async def get_hike_weather(self, hike_id: int) -> dict:
+        """Get weather data for a specific hike."""
+        url = f"{self.api_url}/api/hikes/{hike_id}/weather"
+        try:
+            async with self.session.get(url, headers=self._headers, timeout=10) as response:
+                response.raise_for_status()
+                return await response.json()
+        except aiohttp.ClientError as err:
+            _LOGGER.error("Error getting weather for hike %s: %s", hike_id, err)
+            raise
+
+    async def _fetch_weather_for_hike(self, hike: dict) -> dict:
+        """Fetch weather data for a hike using GPS coordinates."""
+        if not hike.get("gps_coordinates"):
+            return {}
+            
+        # Use OpenWeatherMap API or backend weather endpoint
+        url = f"{self.api_url}/api/weather/coordinates"
+        data = {"coordinates": hike["gps_coordinates"], "date": hike["date"]}
+        try:
+            async with self.session.post(url, headers=self._headers, json=data, timeout=10) as response:
+                if response.status == 200:
+                    return await response.json()
+                else:
+                    return {}
+        except Exception:
+            return {}

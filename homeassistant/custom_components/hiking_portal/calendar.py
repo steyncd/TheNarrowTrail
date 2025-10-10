@@ -90,37 +90,86 @@ class HikingPortalCalendar(CoordinatorEntity, CalendarEntity):
         except ValueError:
             start_dt = datetime.now()
 
-        # Assume 8-hour duration for hikes
-        end_dt = start_dt + timedelta(hours=8)
+        # Use actual duration if available, otherwise assume 8 hours
+        duration_hours = 8
+        if hike.get("duration"):
+            try:
+                duration_hours = float(hike["duration"])
+            except (ValueError, TypeError):
+                duration_hours = 8
 
-        # Build description
+        end_dt = start_dt + timedelta(hours=duration_hours)
+
+        # Build enhanced description with attendance tracking
         description_parts = []
+        
+        # Basic hike info
         if hike.get("description"):
-            description_parts.append(hike["description"])
+            description_parts.append(f"📝 {hike['description']}")
 
         if hike.get("difficulty"):
-            description_parts.append(f"Difficulty: {hike['difficulty']}")
+            difficulty_icons = {"easy": "🟢", "moderate": "🟡", "hard": "🟠", "extreme": "🔴"}
+            icon = difficulty_icons.get(hike.get("difficulty", "").lower(), "⚪")
+            description_parts.append(f"{icon} Difficulty: {hike['difficulty']}")
 
         if hike.get("distance"):
-            description_parts.append(f"Distance: {hike['distance']}km")
+            description_parts.append(f"📏 Distance: {hike['distance']}km")
 
         if hike.get("duration"):
-            description_parts.append(f"Duration: {hike['duration']} hours")
+            description_parts.append(f"⏰ Duration: {hike['duration']} hours")
 
         if hike.get("price"):
-            description_parts.append(f"Price: R{hike['price']}")
+            description_parts.append(f"💰 Price: R{hike['price']}")
 
-        if hike.get("interested_count"):
-            description_parts.append(
-                f"Interested: {hike['interested_count']} people"
-            )
+        # Enhanced attendance information
+        interested_count = hike.get("interested_count", 0)
+        min_participants = hike.get("min_participants", 0)
+        
+        if interested_count > 0:
+            attendance_status = "✅" if interested_count >= min_participants else "⚠️"
+            description_parts.append(f"{attendance_status} Interested: {interested_count}/{min_participants} people")
+        
+        # Show attendance status
+        if min_participants > 0:
+            if interested_count >= min_participants:
+                description_parts.append("🎯 Event confirmed - minimum participants reached!")
+            else:
+                needed = min_participants - interested_count
+                description_parts.append(f"📢 Need {needed} more participants to confirm")
+
+        # Add weather warning if available
+        if hike.get("weather_warning"):
+            description_parts.append("⚠️ Weather warning active - check conditions!")
+
+        # Add payment tracking
+        if hike.get("requires_payment"):
+            paid_count = hike.get("paid_count", 0)
+            description_parts.append(f"💳 Payments: {paid_count}/{interested_count} received")
+
+        # Add organizer information
+        if hike.get("organizer"):
+            description_parts.append(f"👤 Organizer: {hike['organizer']}")
+
+        # Add links if available
+        if hike.get("external_link"):
+            description_parts.append(f"🔗 More info: {hike['external_link']}")
 
         description = "\n".join(description_parts)
+
+        # Enhanced summary with status indicators
+        summary_parts = [hike.get("name", "Hike")]
+        
+        if interested_count >= min_participants and min_participants > 0:
+            summary_parts.append("✅")
+        elif min_participants > 0:
+            summary_parts.append(f"({interested_count}/{min_participants})")
+
+        summary = " ".join(summary_parts)
 
         return CalendarEvent(
             start=start_dt,
             end=end_dt,
-            summary=hike.get("name", "Hike"),
+            summary=summary,
             description=description,
             location=hike.get("location"),
         )
