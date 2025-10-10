@@ -1,4 +1,4 @@
-"""Config flow for Hiking Portal integration."""
+"""Minimal config flow for Hiking Portal integration."""
 import logging
 from typing import Any
 
@@ -6,14 +6,17 @@ import aiohttp
 import voluptuous as vol
 
 from homeassistant import config_entries
-from homeassistant.const import CONF_URL
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
-from .const import DOMAIN, CONF_API_URL, CONF_TOKEN, DEFAULT_API_URL
-
 _LOGGER = logging.getLogger(__name__)
+
+# Inline constants to avoid import issues
+DOMAIN = "hiking_portal"
+CONF_API_URL = "api_url"
+CONF_TOKEN = "token"
+DEFAULT_API_URL = "https://backend-4kzqyywlqq-ew.a.run.app"
 
 STEP_USER_DATA_SCHEMA = vol.Schema(
     {
@@ -42,7 +45,7 @@ async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str,
             if response.status == 401:
                 raise InvalidAuth
             response.raise_for_status()
-            data = await response.json()
+            await response.json()
 
             # Return info that you want to store in the config entry
             return {"title": "The Narrow Trail Hiking Portal"}
