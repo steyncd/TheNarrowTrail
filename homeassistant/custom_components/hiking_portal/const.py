@@ -1,7 +1,7 @@
 """Constants for the Hiking Portal integration."""
 from datetime import timedelta
 
-DOMAIN = "hiking_portal"
+DOMAIN = "hiking_portal_v2"
 CONF_API_URL = "api_url"
 CONF_TOKEN = "token"
 

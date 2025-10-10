@@ -10,7 +10,7 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
 
 # Inline constants to avoid import issues
-DOMAIN = "hiking_portal"
+DOMAIN = "hiking_portal_v2"
 PLATFORMS = ["sensor", "calendar", "binary_sensor"]
 CONF_API_URL = "api_url"
 CONF_TOKEN = "token"
