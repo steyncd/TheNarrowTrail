@@ -12,6 +12,7 @@ import homeassistant.helpers.config_validation as cv
 from .const import DOMAIN, PLATFORMS, CONF_API_URL, CONF_TOKEN
 from .coordinator import HikingPortalDataUpdateCoordinator
 from .websocket_coordinator import HikingPortalWebSocketCoordinator
+from .analytics_coordinator import HikingPortalAnalyticsCoordinator
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -85,8 +86,27 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         _LOGGER.warning("Failed to initialize WebSocket coordinator: %s", err)
         # Continue without WebSocket - integration will still work with polling
 
+    # Initialize Analytics coordinator
+    analytics_coordinator = HikingPortalAnalyticsCoordinator(
+        hass,
+        base_url=api_url,
+        token=token,
+    )
+    
+    # Perform initial analytics data fetch
+    try:
+        await analytics_coordinator.async_config_entry_first_refresh()
+        _LOGGER.info("Analytics coordinator initialized successfully")
+    except Exception as err:
+        _LOGGER.warning("Failed to initialize analytics coordinator: %s", err)
+        # Continue without analytics - main integration will still work
+
     hass.data.setdefault(DOMAIN, {})
-    hass.data[DOMAIN][entry.entry_id] = coordinator
+    hass.data[DOMAIN][entry.entry_id] = {
+        "coordinator": coordinator,
+        "websocket_coordinator": websocket_coordinator,
+        "analytics_coordinator": analytics_coordinator,
+    }
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
@@ -190,12 +210,14 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
 
     if unload_ok:
-        coordinator = hass.data[DOMAIN][entry.entry_id]
+        coordinators = hass.data[DOMAIN][entry.entry_id]
+        coordinator = coordinators["coordinator"]
+        websocket_coordinator = coordinators.get("websocket_coordinator")
         
         # Disconnect WebSocket coordinator if it exists
-        if coordinator.websocket_coordinator:
+        if websocket_coordinator:
             try:
-                await coordinator.websocket_coordinator.async_disconnect()
+                await websocket_coordinator.async_disconnect()
                 _LOGGER.info("WebSocket coordinator disconnected successfully")
             except Exception as err:
                 _LOGGER.warning("Error disconnecting WebSocket coordinator: %s", err)

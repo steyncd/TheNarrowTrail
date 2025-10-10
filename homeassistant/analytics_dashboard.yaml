@@ -1,0 +1,268 @@
+# Hiking Portal Advanced Analytics Dashboard Configuration
+# Add this to your Home Assistant dashboard for comprehensive analytics insights
+
+title: Hiking Portal Analytics
+path: hiking-portal-analytics
+icon: mdi:chart-line
+theme: default
+badges: []
+cards:
+  # Overview Section
+  - type: vertical-stack
+    cards:
+      - type: markdown
+        content: |
+          # 📊 Hiking Portal Analytics Dashboard
+          **Advanced insights and planning for your hiking community**
+          
+          ---
+      
+      # Key Metrics Row
+      - type: horizontal-stack
+        cards:
+          - type: statistic
+            entity: sensor.hiking_portal_total_users
+            name: Total Users
+            icon: mdi:account-group
+          - type: statistic
+            entity: sensor.hiking_portal_total_hikes
+            name: Total Hikes
+            icon: mdi:hiking
+          - type: statistic
+            entity: sensor.hiking_portal_active_users
+            name: Active Users
+            icon: mdi:account-check
+          - type: statistic
+            entity: sensor.hiking_portal_user_growth_rate
+            name: Growth Rate
+            icon: mdi:trending-up
+            unit: "%"
+
+  # User Analytics Section
+  - type: vertical-stack
+    cards:
+      - type: markdown
+        content: |
+          ## 👥 User Analytics & Engagement
+      
+      # User Activity Trends
+      - type: horizontal-stack
+        cards:
+          - type: gauge
+            entity: sensor.hiking_portal_weekly_active_users
+            name: Weekly Active
+            needle: true
+            min: 0
+            max: 100
+            segments:
+              - from: 0
+                color: "#e74c3c"
+              - from: 20
+                color: "#f39c12"
+              - from: 50
+                color: "#2ecc71"
+          
+          - type: gauge
+            entity: sensor.hiking_portal_monthly_active_users
+            name: Monthly Active
+            needle: true
+            min: 0
+            max: 200
+            segments:
+              - from: 0
+                color: "#e74c3c"
+              - from: 50
+                color: "#f39c12"
+              - from: 100
+                color: "#2ecc71"
+          
+          - type: gauge
+            entity: sensor.hiking_portal_quarterly_active_users
+            name: Quarterly Active
+            needle: true
+            min: 0
+            max: 300
+            segments:
+              - from: 0
+                color: "#e74c3c"
+              - from: 100
+                color: "#f39c12"
+              - from: 200
+                color: "#2ecc71"
+
+      # Top Participant Card
+      - type: entities
+        title: 🏆 Top Participants
+        entities:
+          - entity: sensor.hiking_portal_top_participant
+            name: Top Participant
+            secondary_info: attribute
+            attribute: hike_count
+          - type: attribute
+            entity: sensor.hiking_portal_top_participant
+            attribute: rank_1_name
+            name: "#1"
+            suffix: " hikes"
+          - type: attribute
+            entity: sensor.hiking_portal_top_participant
+            attribute: rank_2_name
+            name: "#2"
+          - type: attribute
+            entity: sensor.hiking_portal_top_participant
+            attribute: rank_3_name
+            name: "#3"
+
+  # Hike Analytics Section
+  - type: vertical-stack
+    cards:
+      - type: markdown
+        content: |
+          ## 🥾 Hike Analytics & Trends
+      
+      # Hike Status Overview
+      - type: horizontal-stack
+        cards:
+          - type: statistic
+            entity: sensor.hiking_portal_upcoming_hikes
+            name: Upcoming
+            icon: mdi:calendar-clock
+          - type: statistic
+            entity: sensor.hiking_portal_completed_hikes
+            name: Completed
+            icon: mdi:check-circle
+          - type: statistic
+            entity: sensor.hiking_portal_cancelled_hikes
+            name: Cancelled
+            icon: mdi:cancel
+
+      # Difficulty Distribution
+      - type: horizontal-stack
+        cards:
+          - type: statistic
+            entity: sensor.hiking_portal_easy_hikes
+            name: Easy Hikes
+            icon: mdi:walk
+          - type: statistic
+            entity: sensor.hiking_portal_moderate_hikes
+            name: Moderate Hikes
+            icon: mdi:hiking
+          - type: statistic
+            entity: sensor.hiking_portal_hard_hikes
+            name: Hard Hikes
+            icon: mdi:mountain
+
+      # Attendance Metrics
+      - type: horizontal-stack
+        cards:
+          - type: statistic
+            entity: sensor.hiking_portal_avg_confirmed_attendance
+            name: Avg Confirmed
+            icon: mdi:account-check-outline
+          - type: statistic
+            entity: sensor.hiking_portal_avg_interested_attendance
+            name: Avg Interested
+            icon: mdi:account-question-outline
+          - type: statistic
+            entity: sensor.hiking_portal_conversion_rate
+            name: Conversion Rate
+            icon: mdi:swap-horizontal
+            unit: "%"
+
+  # Engagement Analytics Section
+  - type: vertical-stack
+    cards:
+      - type: markdown
+        content: |
+          ## 💬 Community Engagement
+      
+      - type: horizontal-stack
+        cards:
+          - type: statistic
+            entity: sensor.hiking_portal_total_comments
+            name: Total Comments
+            icon: mdi:comment-multiple
+          - type: statistic
+            entity: sensor.hiking_portal_commenting_users
+            name: Active Commenters
+            icon: mdi:account-voice
+          - type: statistic
+            entity: sensor.hiking_portal_avg_comments_per_hike
+            name: Avg per Hike
+            icon: mdi:comment-processing
+
+  # Monthly Trends Section
+  - type: vertical-stack
+    cards:
+      - type: markdown
+        content: |
+          ## 📈 Monthly Trends & Planning
+      
+      - type: entities
+        title: 📊 Monthly Hike Trends
+        entities:
+          - entity: sensor.hiking_portal_monthly_hike_trend
+            name: Current Month Hikes
+            icon: mdi:trending-up
+          - type: attribute
+            entity: sensor.hiking_portal_monthly_hike_trend
+            attribute: trend
+            name: Trend Direction
+          - type: attribute
+            entity: sensor.hiking_portal_monthly_hike_trend
+            attribute: month_6_count
+            name: "Last Month"
+          - type: attribute
+            entity: sensor.hiking_portal_monthly_hike_trend
+            attribute: month_5_count
+            name: "2 Months Ago"
+          - type: attribute
+            entity: sensor.hiking_portal_monthly_hike_trend
+            attribute: month_4_count
+            name: "3 Months Ago"
+
+  # Connection Status
+  - type: horizontal-stack
+    cards:
+      - type: entity
+        entity: binary_sensor.hiking_portal_websocket_connected
+        name: Real-time Connection
+        icon: mdi:wifi
+      - type: entity
+        entity: sensor.hiking_portal_last_update
+        name: Last Analytics Update
+        icon: mdi:clock-outline
+
+  # Action Cards
+  - type: vertical-stack
+    cards:
+      - type: markdown
+        content: |
+          ## 🛠️ Quick Actions
+      
+      - type: horizontal-stack
+        cards:
+          - type: button
+            name: Refresh Analytics
+            icon: mdi:refresh
+            tap_action:
+              action: call-service
+              service: homeassistant.update_entity
+              service_data:
+                entity_id: sensor.hiking_portal_total_users
+          
+          - type: button
+            name: View Full Dashboard
+            icon: mdi:view-dashboard
+            tap_action:
+              action: navigate
+              navigation_path: /lovelace/hiking-portal
+          
+          - type: button
+            name: Export Data
+            icon: mdi:download
+            tap_action:
+              action: call-service
+              service: system_log.write
+              service_data:
+                message: "Analytics data export requested"
+                level: info

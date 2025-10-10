@@ -30,15 +30,71 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up Hiking Portal sensors from a config entry."""
-    coordinator: HikingPortalDataUpdateCoordinator = hass.data[DOMAIN][
-        config_entry.entry_id
-    ]
+    coordinators = hass.data[DOMAIN][config_entry.entry_id]
+    coordinator: HikingPortalDataUpdateCoordinator = coordinators["coordinator"]
 
     entities = []
 
     # Create sensor for each type
     for sensor_type in SENSOR_TYPES:
         entities.append(HikingPortalSensor(coordinator, sensor_type))
+
+    # Set up analytics sensors if analytics coordinator is available
+    analytics_coordinator = coordinators.get("analytics_coordinator")
+    if analytics_coordinator:
+        try:
+            from .analytics_sensor import (
+                TotalUsersSensor, TotalHikesSensor, ActiveUsersSensor, UserGrowthRateSensor,
+                WeeklyActiveUsersSensor, MonthlyActiveUsersSensor, QuarterlyActiveUsersSensor,
+                TopParticipantSensor, UpcomingHikesSensor, CompletedHikesSensor, CancelledHikesSensor,
+                AvgConfirmedAttendanceSensor, AvgInterestedAttendanceSensor, ConversionRateSensor,
+                TotalCommentsSensor, CommentingUsersSensor, AvgCommentsPerHikeSensor,
+                EasyHikesSensor, ModerateHikesSensor, HardHikesSensor, MonthlyHikeTrendSensor,
+            )
+            
+            # Add analytics sensors
+            analytics_entities = [
+                # Overview sensors
+                TotalUsersSensor(analytics_coordinator),
+                TotalHikesSensor(analytics_coordinator),
+                ActiveUsersSensor(analytics_coordinator),
+                UserGrowthRateSensor(analytics_coordinator),
+                
+                # User activity sensors
+                WeeklyActiveUsersSensor(analytics_coordinator),
+                MonthlyActiveUsersSensor(analytics_coordinator),
+                QuarterlyActiveUsersSensor(analytics_coordinator),
+                TopParticipantSensor(analytics_coordinator),
+                
+                # Hike analytics sensors
+                UpcomingHikesSensor(analytics_coordinator),
+                CompletedHikesSensor(analytics_coordinator),
+                CancelledHikesSensor(analytics_coordinator),
+                AvgConfirmedAttendanceSensor(analytics_coordinator),
+                AvgInterestedAttendanceSensor(analytics_coordinator),
+                
+                # Engagement sensors
+                ConversionRateSensor(analytics_coordinator),
+                TotalCommentsSensor(analytics_coordinator),
+                CommentingUsersSensor(analytics_coordinator),
+                AvgCommentsPerHikeSensor(analytics_coordinator),
+                
+                # Difficulty distribution sensors
+                EasyHikesSensor(analytics_coordinator),
+                ModerateHikesSensor(analytics_coordinator),
+                HardHikesSensor(analytics_coordinator),
+                
+                # Monthly trends sensor
+                MonthlyHikeTrendSensor(analytics_coordinator),
+            ]
+            
+            entities.extend(analytics_entities)
+            _LOGGER.info(f"Added {len(analytics_entities)} analytics sensors")
+            
+        except ImportError as err:
+            _LOGGER.error(f"Failed to import analytics sensors: {err}")
+        except Exception as err:
+            _LOGGER.error(f"Failed to create analytics sensors: {err}")
 
     async_add_entities(entities)
 
