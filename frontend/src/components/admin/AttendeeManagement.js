@@ -48,7 +48,10 @@ function AttendeeManagement({ hikeId, hikeName, hikeCost, onViewEmergencyContact
   const fetchUsers = async () => {
     try {
       const usersData = await api.getUsers(token);
-      setUsers(usersData);
+      // Backend returns { users: [...], pagination: {...} } or just [...]
+      const usersArray = Array.isArray(usersData) ? usersData :
+                        (usersData?.users ? usersData.users : []);
+      setUsers(usersArray);
     } catch (err) {
       console.error('Error fetching users:', err);
     }
