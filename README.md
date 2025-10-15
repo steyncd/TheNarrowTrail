@@ -201,10 +201,6 @@ hiking-portal/
 │   ├── mobile/                   # PWA & mobile docs
 │   └── archive/                  # Archived documentation
 │
-├── 📂 homeassistant/             # Home Assistant integration
-│   └── custom_components/
-│       └── hiking_portal_v2/     # HA component files
-│
 ├── 📂 scripts/                   # Deployment & utility scripts
 │   └── pre-deploy-check.sh       # Pre-deployment validation (future)
 │
@@ -308,31 +304,32 @@ For complete deployment instructions, see [DEPLOYMENT.md](DEPLOYMENT.md).
 ## 🏠 Home Assistant Integration
 
 [![HACS Custom](https://img.shields.io/badge/HACS-Custom-orange.svg)](https://github.com/custom-components/hacs)
-[![Version](https://img.shields.io/badge/version-2.5.0-blue.svg)](https://github.com/steyncd/TheNarrowTrail)
+[![Version](https://img.shields.io/badge/version-2.5.0-blue.svg)](https://github.com/steyncd/hiking-portal-homeassistant)
 
 Monitor and manage your hiking portal directly from Home Assistant!
 
-### Features
+**The Home Assistant integration has been moved to a dedicated repository for easier installation and maintenance.**
 
-- 📊 **Sensors**: Next hike, upcoming events, notifications, weather
-- 🚨 **Binary Sensors**: Urgent notifications, weather warnings
-- 📅 **Calendar**: Enhanced calendar with attendance status
-- ⚡ **Services**: Mark notifications read, record payments
-- 🎛️ **Dashboard**: Ready-to-use Lovelace configuration
+👉 **[hiking-portal-homeassistant](https://github.com/steyncd/hiking-portal-homeassistant)**
 
-### Installation
+### Quick Install via HACS
 
 ```bash
-# Via HACS (Recommended)
 1. HACS → Integrations → ⋮ → Custom repositories
-2. Add: https://github.com/steyncd/TheNarrowTrail
+2. Add: https://github.com/steyncd/hiking-portal-homeassistant
 3. Category: Integration
-4. Install "Hiking Portal Integration v2"
+4. Install "The Narrow Trail Hiking Portal"
 5. Restart Home Assistant
-6. Configuration → Integrations → Add → "Hiking Portal"
+6. Configuration → Integrations → Add → "The Narrow Trail"
 ```
 
-For complete setup, see [homeassistant/OVERVIEW.md](homeassistant/OVERVIEW.md).
+### Features
+
+- 📊 **24 Sensors** - Hikes, notifications, weather, payments, WebSocket
+- 🚨 **3 Binary Sensors** - Urgent notifications, weather warnings, connection status
+- 📅 **Calendar** - All hikes as calendar events
+- ⚡ **7 Services** - Express interest, mark attendance, notifications, payments, weather
+- 🔄 **Real-time Updates** - WebSocket support for instant notifications
 
 ---
 
