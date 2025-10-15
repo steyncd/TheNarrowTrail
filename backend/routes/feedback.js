@@ -2,21 +2,22 @@
 const express = require('express');
 const router = express.Router();
 const feedbackController = require('../controllers/feedbackController');
-const { authenticateToken, requireAdmin } = require('../middleware/auth');
+const { authenticateToken } = require('../middleware/auth');
+const { requirePermission } = require('../middleware/permissions');
 
 // Submit feedback (authenticated users)
 router.post('/', authenticateToken, feedbackController.submitFeedback);
 
-// Get all feedback (admin only)
-router.get('/', authenticateToken, requireAdmin, feedbackController.getAllFeedback);
+// Get all feedback (requires feedback.view permission)
+router.get('/', authenticateToken, requirePermission('feedback.view'), feedbackController.getAllFeedback);
 
-// Get feedback statistics (admin only)
-router.get('/stats', authenticateToken, requireAdmin, feedbackController.getFeedbackStats);
+// Get feedback statistics (requires feedback.view permission)
+router.get('/stats', authenticateToken, requirePermission('feedback.view'), feedbackController.getFeedbackStats);
 
-// Update feedback status (admin only)
-router.put('/:id', authenticateToken, requireAdmin, feedbackController.updateFeedbackStatus);
+// Update feedback status (requires feedback.respond permission)
+router.put('/:id', authenticateToken, requirePermission('feedback.respond'), feedbackController.updateFeedbackStatus);
 
-// Delete feedback (admin only)
-router.delete('/:id', authenticateToken, requireAdmin, feedbackController.deleteFeedback);
+// Delete feedback (requires feedback.delete permission)
+router.delete('/:id', authenticateToken, requirePermission('feedback.delete'), feedbackController.deleteFeedback);
 
 module.exports = router;

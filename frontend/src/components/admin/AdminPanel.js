@@ -9,7 +9,6 @@ function AdminPanel({ showAddHikeForm, setShowAddHikeForm }) {
   const { token } = useAuth();
   const navigate = useNavigate();
   const [hikes, setHikes] = useState([]);
-  const [loading, setLoading] = useState(false);
   const [showEditHikeForm, setShowEditHikeForm] = useState(false);
   const [selectedHike, setSelectedHike] = useState(null);
   const [openDropdown, setOpenDropdown] = useState(null);
@@ -136,7 +135,6 @@ function AdminPanel({ showAddHikeForm, setShowAddHikeForm }) {
                   className="btn btn-sm btn-primary"
                   style={{minHeight: '36px', minWidth: '100px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '4px'}}
                   onClick={() => handleManageHike(hike)}
-                  disabled={loading}
                 >
                   <Settings size={16} />
                   Manage

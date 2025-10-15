@@ -1,0 +1,59 @@
+.role-management-container {
+  padding: 20px;
+  max-width: 1400px;
+  margin: 0 auto;
+}
+
+.role-management-container .card {
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  border-radius: 8px;
+  border: none;
+}
+
+.role-management-container .card-header {
+  border-bottom: 2px solid rgba(0, 0, 0, 0.05);
+  border-radius: 8px 8px 0 0 !important;
+}
+
+.role-management-container .list-group-item {
+  border-left: none;
+  border-right: none;
+  transition: all 0.2s ease;
+}
+
+.role-management-container .list-group-item:hover {
+  background-color: rgba(0, 123, 255, 0.05);
+  transform: translateX(5px);
+}
+
+.role-management-container .list-group-item.active {
+  background-color: #007bff;
+  border-color: #007bff;
+}
+
+.permissions-grid {
+  display: grid;
+  gap: 20px;
+}
+
+.permission-category {
+  background: #f8f9fa;
+  padding: 15px;
+  border-radius: 8px;
+}
+
+.permission-category h6 {
+  font-weight: 600;
+  margin-bottom: 10px;
+}
+
+@media (max-width: 768px) {
+  .role-management-container .row {
+    flex-direction: column;
+  }
+  
+  .role-management-container .col-md-4,
+  .role-management-container .col-md-8 {
+    max-width: 100%;
+  }
+}

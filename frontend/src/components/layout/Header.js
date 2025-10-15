@@ -1,8 +1,9 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { Menu, Calendar, Heart, Settings, Users, BarChart3, User, Info, FileText, Home } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
 import { useTheme } from '../../contexts/ThemeContext';
+import usePermission from '../../hooks/usePermission';
 import MobileMenu from './MobileMenu';
 import ProfileDropdown from './ProfileDropdown';
 import api from '../../services/api';
@@ -10,6 +11,7 @@ import api from '../../services/api';
 const Header = () => {
   const { currentUser, token } = useAuth();
   const { theme } = useTheme();
+  const { can, isAdmin: hasAdminRole } = usePermission();
   const location = useLocation();
   const [showMobileMenu, setShowMobileMenu] = useState(false);
   const [showProfileDropdown, setShowProfileDropdown] = useState(false);
@@ -18,7 +20,23 @@ const Header = () => {
   const [newSuggestionsCount, setNewSuggestionsCount] = useState(0);
   const profileButtonRef = useRef(null);
 
-  const isAdmin = currentUser?.role === 'admin';
+  // Keep backward compatibility with old isAdmin check - recalculate when permissions change
+  const isAdmin = useMemo(() => {
+    return currentUser?.role === 'admin' || hasAdminRole();
+  }, [currentUser, hasAdminRole]);
+
+  // Debug logging
+  useEffect(() => {
+    console.log('🎯 Header: State check', {
+      hasCurrentUser: !!currentUser,
+      userRole: currentUser?.role,
+      hasAdminRole: hasAdminRole(),
+      isAdmin,
+      hasToken: !!token,
+      filteredAdminLinksCount: filteredAdminLinks.length
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [currentUser, isAdmin, token]);
 
   // Fetch unread counts for admins
   const fetchUnreadCounts = async () => {
@@ -58,12 +76,17 @@ const Header = () => {
     { path: '/calendar', label: 'Calendar', icon: Calendar },
   ];
 
-  const adminLinks = [
-    { path: '/admin/manage-hikes', label: 'Manage Hikes', icon: Settings },
-    { path: '/admin/analytics', label: 'Analytics', icon: BarChart3 },
-    { path: '/admin/users', label: 'Users', icon: Users },
-    { path: '/admin/content', label: 'Content', icon: FileText },
-  ];
+  // Admin links with permission requirements
+  // Filter admin links based on permissions - recalculate when permissions change
+  const filteredAdminLinks = useMemo(() => {
+    const links = [
+      { path: '/admin/manage-hikes', label: 'Manage Hikes', icon: Settings, permission: 'hikes.edit' },
+      { path: '/admin/analytics', label: 'Analytics', icon: BarChart3, permission: 'analytics.view' },
+      { path: '/admin/users', label: 'Users & Roles', icon: Users, permission: 'users.view' },
+      { path: '/admin/content', label: 'Content', icon: FileText, permission: 'feedback.view' },
+    ];
+    return links.filter(link => !link.permission || can(link.permission));
+  }, [can]); // Recalculate when permissions change
 
   const isActive = (path) => location.pathname === path;
 
@@ -141,11 +164,12 @@ const Header = () => {
                 );
               })}
 
-              {isAdmin && adminLinks.map(link => {
+              {console.log('🔍 Rendering check:', { isAdmin, filteredAdminLinksCount: filteredAdminLinks.length, filteredAdminLinks })}
+              {filteredAdminLinks.map(link => {
                 const Icon = link.icon;
                 let badgeCount = 0;
-                if (link.path === '/users') badgeCount = pendingUsersCount;
-                if (link.path === '/feedback') badgeCount = newFeedbackCount + newSuggestionsCount;
+                if (link.path === '/admin/users') badgeCount = pendingUsersCount;
+                if (link.path === '/admin/feedback') badgeCount = newFeedbackCount + newSuggestionsCount;
 
                 return (
                   <Link
@@ -235,7 +259,7 @@ const Header = () => {
         show={showMobileMenu}
         onClose={() => setShowMobileMenu(false)}
         navLinks={navLinks}
-        adminLinks={adminLinks}
+        adminLinks={filteredAdminLinks}
         isAdmin={isAdmin}
       />
     </>

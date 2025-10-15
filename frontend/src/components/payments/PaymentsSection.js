@@ -12,6 +12,7 @@ function PaymentsSection({ hikeId, hikeCost, isAdmin }) {
   const [payments, setPayments] = useState([]);
   const [stats, setStats] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
   const [showAddModal, setShowAddModal] = useState(false);
   const [editingPayment, setEditingPayment] = useState(null);
   const [users, setUsers] = useState([]);
@@ -37,19 +38,27 @@ function PaymentsSection({ hikeId, hikeCost, isAdmin }) {
 
   const fetchPayments = async () => {
     try {
+      console.log('Fetching payments for hike ID:', hikeId);
       const data = await api.getHikePayments(hikeId, token);
+      console.log('Payments data received:', data);
       setPayments(data);
+      setError(null);
     } catch (error) {
       console.error('Error fetching payments:', error);
+      setError('Failed to load payment data. Please check your connection and try again.');
     }
   };
 
   const fetchStats = async () => {
     try {
+      console.log('Fetching payment stats for hike ID:', hikeId);
       const data = await api.getHikePaymentStats(hikeId, token);
+      console.log('Payment stats data received:', data);
       setStats(data);
+      setError(null);
     } catch (error) {
       console.error('Error fetching payment stats:', error);
+      setError('Failed to load payment statistics. Please check your connection and try again.');
     } finally {
       setLoading(false);
     }
@@ -157,6 +166,52 @@ function PaymentsSection({ hikeId, hikeCost, isAdmin }) {
         <div className="card-body text-center py-4">
           <div className="spinner-border text-primary" role="status">
             <span className="visually-hidden">Loading payments...</span>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="card" style={{ background: isDark ? 'var(--card-bg)' : 'white' }}>
+        <div className="card-body">
+          <h5 className="mb-0">
+            <DollarSign size={20} className="me-2" />
+            Payment Tracking
+          </h5>
+          <div className="alert alert-danger mt-3">
+            <strong>Error:</strong> {error}
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="card" style={{ background: isDark ? 'var(--card-bg)' : 'white' }}>
+        <div className="card-body">
+          <div className="d-flex justify-content-between align-items-center mb-3">
+            <h5 className="mb-0">
+              <DollarSign size={20} className="me-2" />
+              Payment Tracking
+            </h5>
+          </div>
+          <div className="alert alert-danger">
+            <h6>Error Loading Payment Data</h6>
+            <p className="mb-2">{error}</p>
+            <button 
+              className="btn btn-sm btn-outline-danger"
+              onClick={() => {
+                setError(null);
+                setLoading(true);
+                fetchPayments();
+                fetchStats();
+              }}
+            >
+              Retry
+            </button>
           </div>
         </div>
       </div>

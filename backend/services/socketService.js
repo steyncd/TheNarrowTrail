@@ -8,7 +8,13 @@ let io;
 function initializeSocket(server) {
   io = socketIO(server, {
     cors: {
-      origin: process.env.FRONTEND_URL || '*',
+      origin: [
+        'https://www.thenarrowtrail.co.za',
+        'https://thenarrowtrail.co.za', 
+        'https://helloliam.web.app',
+        ...(process.env.FRONTEND_URL ? [process.env.FRONTEND_URL] : []),
+        ...(process.env.NODE_ENV === 'development' ? ['http://localhost:3000'] : [])
+      ].filter(Boolean),
       methods: ['GET', 'POST'],
       credentials: true
     },

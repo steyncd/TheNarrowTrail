@@ -1,15 +1,16 @@
 import React, { useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { User, LogOut, Sun, Moon, Bell, Activity, MessageSquare, Shield, FileText } from 'lucide-react';
+import { User, LogOut, Sun, Moon, Bell, Activity, Shield, FileText } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
 import { useTheme } from '../../contexts/ThemeContext';
+import usePermission from '../../hooks/usePermission';
 
 const ProfileDropdown = ({ show, onClose, buttonRef }) => {
   const navigate = useNavigate();
   const { currentUser, logout } = useAuth();
   const { theme, toggleTheme } = useTheme();
+  const { can } = usePermission();
   const dropdownRef = useRef(null);
-  const isAdmin = currentUser?.role === 'admin';
 
   useEffect(() => {
     if (!show || !buttonRef.current || !dropdownRef.current) return;
@@ -110,8 +111,10 @@ const ProfileDropdown = ({ show, onClose, buttonRef }) => {
           Privacy & Data
         </button>
 
-        {isAdmin && (
+        {/* Admin-only links - moved from header */}
+        {can('notifications.send') && (
           <>
+            <div className="border-top" style={{ borderColor: theme === 'dark' ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)' }} />
             <button
               onClick={() => {
                 onClose();
@@ -125,44 +128,30 @@ const ProfileDropdown = ({ show, onClose, buttonRef }) => {
               }}
             >
               <Bell size={18} className="me-2" style={{ verticalAlign: 'text-bottom' }} />
-              Notifications
+              Send Notifications
             </button>
-
-            <button
-              onClick={() => {
-                onClose();
-                navigate('/admin/feedback');
-              }}
-              className="btn btn-link w-100 text-start p-3 border-0"
-              style={{
-                textDecoration: 'none',
-                color: theme === 'dark' ? '#fff' : '#212529',
-                borderRadius: 0
-              }}
-            >
-              <MessageSquare size={18} className="me-2" style={{ verticalAlign: 'text-bottom' }} />
-              Feedback
-            </button>
-
-            <button
-              onClick={() => {
-                onClose();
-                navigate('/admin/logs');
-              }}
-              className="btn btn-link w-100 text-start p-3 border-0"
-              style={{
-                textDecoration: 'none',
-                color: theme === 'dark' ? '#fff' : '#212529',
-                borderRadius: 0
-              }}
-            >
-              <Activity size={18} className="me-2" style={{ verticalAlign: 'text-bottom' }} />
-              Activity Logs
-            </button>
-
-            <div className="border-top" style={{ borderColor: theme === 'dark' ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)' }} />
           </>
         )}
+
+        {can('audit.view') && (
+          <button
+            onClick={() => {
+              onClose();
+              navigate('/admin/logs');
+            }}
+            className="btn btn-link w-100 text-start p-3 border-0"
+            style={{
+              textDecoration: 'none',
+              color: theme === 'dark' ? '#fff' : '#212529',
+              borderRadius: 0
+            }}
+          >
+            <Activity size={18} className="me-2" style={{ verticalAlign: 'text-bottom' }} />
+            Activity Logs
+          </button>
+        )}
+
+        <div className="border-top" style={{ borderColor: theme === 'dark' ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)' }} />
 
         <button
           onClick={toggleTheme}

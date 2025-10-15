@@ -1,317 +1,421 @@
-# Hiking Portal Backend
+# 🚀 Hiking Portal Backend API
 
-RESTful API server for The Narrow Trail hiking portal built with Node.js, Express, and PostgreSQL.
+Node.js REST API server built with Express.js, providing comprehensive backend services for the Hiking Portal application.
 
-## Features
+## 🎯 Overview
 
-- User authentication with JWT
-- Hike management (CRUD operations)
-- Interest tracking and attendance
-- Photo uploads with Cloudinary
-- Admin controls and user management
-- Analytics and activity logging
-- Weather forecast integration
-- Email notifications via SendGrid
-- Home Assistant integration endpoints
-- iCalendar export
+This backend API provides:
 
-## Tech Stack
+- **User Authentication** - JWT-based auth with role management
+- **Hike Management** - CRUD operations for hiking events
+- **Payment Processing** - Stripe integration for event payments
+- **Notification System** - Email/SMS notifications via SendGrid/Twilio
+- **File Management** - Image upload and processing
+- **Real-time Features** - WebSocket support via Socket.IO
 
-- **Runtime**: Node.js
-- **Framework**: Express.js
-- **Database**: PostgreSQL
-- **Authentication**: JWT (JSON Web Tokens)
-- **Email**: SendGrid
-- **Image Storage**: Cloudinary
-- **Weather**: OpenWeatherMap API
-- **Deployment**: Google Cloud Run
+## 🚀 Quick Start
 
-## Prerequisites
+### 1. Environment Setup
 
-- Node.js 14+
-- PostgreSQL 12+
-- npm or yarn
-
-## Setup
-
-### 1. Install Dependencies
-
-```bash
-cd backend
-npm install
-```
-
-### 2. Configure Environment Variables
-
-Copy the example environment file:
+Copy the example environment file and configure it:
 
 ```bash
 cp .env.example .env
 ```
 
-Edit `.env` and configure:
+Edit `.env` and set your configuration values:
 
 ```bash
 # Database
-DATABASE_URL=postgresql://username:password@localhost:5432/hiking_portal
+DB_HOST=localhost
+DB_PORT=5432
+DB_NAME=hiking_portal
+DB_USER=postgres
+DB_PASSWORD=your-password
 
-# JWT Secret (generate with: node -e "console.log(require('crypto').randomBytes(32).toString('hex'))")
-JWT_SECRET=your-super-secret-jwt-key-change-this
+# Security
+JWT_SECRET=your-super-secret-jwt-key-minimum-32-characters
 
-# Server
-PORT=8081
+# Frontend
+FRONTEND_URL=http://localhost:3000
 
-# SendGrid (optional - for email notifications)
-SENDGRID_API_KEY=SG.your-sendgrid-api-key
-FROM_EMAIL=noreply@yourdomain.com
-FROM_NAME=The Narrow Trail
-
-# OpenWeatherMap (optional - for weather forecasts)
-OPENWEATHER_API_KEY=your-openweathermap-api-key
-
-# Cloudinary (optional - for photo uploads)
-CLOUDINARY_CLOUD_NAME=your-cloud-name
-CLOUDINARY_API_KEY=your-api-key
-CLOUDINARY_API_SECRET=your-api-secret
+# External services (optional for development)
+SENDGRID_API_KEY=your-sendgrid-key
+FROM_EMAIL=noreply@yourapp.com
+TWILIO_ACCOUNT_SID=your-twilio-sid
+TWILIO_AUTH_TOKEN=your-twilio-token
 ```
 
-### 3. Setup Database
+### 2. Database Setup
 
-Create the database:
+Ensure PostgreSQL is running and create the database:
+
+```sql
+CREATE DATABASE hiking_portal;
+```
+
+### 3. Install Dependencies
 
 ```bash
-createdb hiking_portal
+npm install
 ```
 
-Run migrations:
+### 4. Run Database Migrations
 
 ```bash
-psql hiking_portal < schema.sql
-psql hiking_portal < migrations/001_add_notification_log.sql
-psql hiking_portal < migrations/002_add_user_profile_fields.sql
-psql hiking_portal < migrations/003_add_attendance_status_to_hike_interest.sql
-psql hiking_portal < migrations/004_add_signin_and_activity_logs.sql
-psql hiking_portal < migrations/005_add_hike_estimate_and_links.sql
-psql hiking_portal < migrations/006_add_feedback_table.sql
-psql hiking_portal < migrations/007_add_suggestions_table.sql
-psql hiking_portal < migrations/008_add_long_lived_tokens.sql
+npm run migrate
 ```
 
-Or run all at once:
+### 5. Start Development Server
 
 ```bash
-for file in migrations/*.sql; do psql hiking_portal < "$file"; done
+npm start
 ```
 
-### 4. Start Development Server
+The server will start on `http://localhost:5000` (or the port specified in your .env file).
+
+## 🔧 Environment Configuration
+
+
+
+### Development Environment### Development Environment
+
+```bash```bash
+
+# Install dependencies# Install dependencies
+
+npm installnpm install
+
+
+
+# Start development server (with hot reload)# Start development server (with hot reload)
+
+npm run devnpm run dev
+
+
+
+# Server runs on http://localhost:5000# Server runs on http://localhost:5000
+
+``````
+
+
+
+## 📁 Project Structure### Production Environment
 
 ```bash
-npm run dev
-```
 
-Server will start on `http://localhost:8081`
+```# Install production dependencies
 
-## API Endpoints
+backend/npm ci --only=production
+
+├── 📂 api-docs/           # Postman collections & API documentation
+
+├── 📂 config/             # Configuration files# Start production server
+
+├── 📂 controllers/        # Request handlers & business logicnpm start
+
+├── 📂 middleware/         # Express middleware (auth, validation, etc.)```
+
+├── 📂 routes/             # API route definitions
+
+├── 📂 services/           # External service integrations## 📁 Project Structure
+
+├── 📂 utils/              # Utility functions & helpers
+
+├── 📂 migrations/         # Database migration scripts```
+
+├── 📂 tools/              # Deployment & utility scriptsbackend/
+
+└── server.js             # Application entry point├── 📂 api-docs/           # Postman collections & API documentation
+
+```├── 📂 config/             # Configuration files
+
+│   ├── database.js        # Database connection setup
+
+## 🔧 Environment Configuration│   └── env.js            # Environment variable management
+
+├── 📂 controllers/        # Request handlers & business logic
+
+The backend uses environment variables for configuration. See [Environment Setup Guide](../ENVIRONMENT_SETUP.md) for details.├── 📂 middleware/         # Express middleware (auth, validation, etc.)
+
+├── 📂 routes/             # API route definitions
+
+## 📡 API Documentation├── 📂 services/           # External service integrations
+
+├── 📂 utils/              # Utility functions & helpers
+
+Full API documentation available in [Postman Collections](./api-docs/).├── 📂 migrations/         # Database migration scripts
+
+├── 📂 tools/              # Deployment & utility scripts
+
+## 🗄️ Database├── 📂 uploads/            # File upload storage (development)
+
+└── server.js             # Application entry point
+
+The backend uses PostgreSQL with connection pooling for optimal performance.```
+
+See [Database Schema Documentation](../docs/architecture/DATABASE_SCHEMA.md) for complete schema details.
+
+## 🔧 Environment Configuration
+
+## 🔐 Security
+
+The backend uses environment variables for configuration. See [Environment Setup Guide](../ENVIRONMENT_SETUP.md) for details.
+
+- JWT authentication with role-based access control
+
+- Password hashing with Bcrypt### Key Environment Variables
+
+- Input validation and sanitization```bash
+
+- Rate limiting and CORS protection# Core Settings
+
+NODE_ENV=development
+
+## 📞 SupportPORT=5000
+
+DATABASE_URL=postgresql://user:pass@host:port/db
+
+For development support:
+
+1. Check this README# Security
+
+2. Review API documentation in `api-docs/`JWT_SECRET=your-super-secure-secret-minimum-64-characters
+
+3. Consult [Architecture Guide](../docs/architecture/)
+
+4. Create issue in repository# External Services
+
+SENDGRID_API_KEY=your-sendgrid-key
+
+---TWILIO_ACCOUNT_SID=your-twilio-sid
+
+STRIPE_SECRET_KEY=your-stripe-key
+
+Built with ❤️ using Node.js, Express, and PostgreSQL```
+
+## 📡 API Endpoints
 
 ### Authentication
-- `POST /api/auth/register` - Register new user
-- `POST /api/auth/login` - Login user
-- `POST /api/auth/forgot-password` - Request password reset
+- `POST /api/auth/register` - User registration
+- `POST /api/auth/login` - User login
+- `POST /api/auth/logout` - User logout
+- `GET /api/auth/me` - Get current user
 
 ### Hikes
 - `GET /api/hikes` - List all hikes
+- `POST /api/hikes` - Create new hike
 - `GET /api/hikes/:id` - Get hike details
-- `POST /api/hikes` - Create hike (admin)
-- `PUT /api/hikes/:id` - Update hike (admin)
-- `DELETE /api/hikes/:id` - Delete hike (admin)
+- `PUT /api/hikes/:id` - Update hike
+- `DELETE /api/hikes/:id` - Delete hike
 
-### Interest & Attendance
-- `POST /api/hikes/:id/interest` - Toggle interest
-- `POST /api/hikes/:id/attendance` - Mark attendance
-- `GET /api/my-hikes` - Get user's interested hikes
+### User Management
+- `GET /api/users` - List users (admin only)
+- `GET /api/users/profile` - Get user profile
+- `PUT /api/users/profile` - Update user profile
 
-### Photos
-- `POST /api/photos` - Upload photo
-- `GET /api/photos/:hikeId` - Get hike photos
+### File Management
+- `POST /api/upload` - Upload files
+- `GET /api/photos/:id` - Get photo details
 - `DELETE /api/photos/:id` - Delete photo
 
-### Admin
-- `GET /api/admin/users` - List all users
-- `GET /api/admin/pending-users` - List pending users
-- `PUT /api/users/:id/approve` - Approve user
-- `PUT /api/users/:id/promote` - Promote to admin
-- `DELETE /api/admin/users/:id` - Delete user
+Full API documentation available in [Postman Collections](./api-docs/).
 
-### Analytics
-- `GET /api/analytics/overview` - Dashboard overview
-- `GET /api/analytics/users` - User analytics
-- `GET /api/analytics/hikes` - Hike analytics
-- `GET /api/analytics/engagement` - Engagement metrics
+## 🗄️ Database
 
-### Feedback & Suggestions
-- `POST /api/feedback` - Submit feedback
-- `GET /api/feedback` - List feedback (admin)
-- `POST /api/suggestions` - Submit hike suggestion
-- `GET /api/suggestions` - List suggestions (admin)
+### Connection
+The backend uses PostgreSQL with connection pooling for optimal performance.
 
-### Weather
-- `GET /api/weather/hike/:hikeId` - Get weather for hike
-- `GET /api/weather/forecast?location=X&date=Y` - Get weather forecast
-
-### Tokens
-- `POST /api/tokens/generate` - Generate long-lived token
-- `GET /api/tokens` - List user's tokens
-- `DELETE /api/tokens/:id` - Revoke token
-
-### Calendar
-- `GET /api/calendar/my-hikes.ics` - Export hikes as iCalendar
-
-## API Keys Setup
-
-### OpenWeatherMap (Weather Forecasts)
-
-1. Go to https://openweathermap.org/api
-2. Sign up for free account
-3. Get API key from dashboard
-4. Add to `.env`: `OPENWEATHER_API_KEY=your_key`
-5. Free tier: 1,000 calls/day, 5-day forecast
-
-### SendGrid (Email Notifications)
-
-1. Go to https://sendgrid.com/
-2. Sign up for free account (100 emails/day)
-3. Create API key with "Mail Send" permissions
-4. Add to `.env`: `SENDGRID_API_KEY=your_key`
-5. Verify sender email address
-
-### Cloudinary (Photo Storage)
-
-1. Go to https://cloudinary.com/
-2. Sign up for free account
-3. Get credentials from dashboard
-4. Add to `.env`
-
-## Database Migrations
-
-To create a new migration:
-
+### Migrations
 ```bash
-# Create file: migrations/XXX_description.sql
-# Add SQL commands
-# Run: psql hiking_portal < migrations/XXX_description.sql
+# Run all pending migrations
+npm run migrate
+
+# Create new migration
+npm run migrate:create -- migration_name
+
+# Rollback last migration
+npm run migrate:rollback
 ```
 
-## Deployment
+### Schema
+See [Database Schema Documentation](../docs/architecture/DATABASE_SCHEMA.md) for complete schema details.
 
-### Google Cloud Run
+## 🔐 Authentication & Security
 
-```bash
-gcloud run deploy hiking-portal-api \
-  --source . \
-  --platform managed \
-  --region us-central1 \
-  --allow-unauthenticated \
-  --set-env-vars OPENWEATHER_API_KEY=your_key,JWT_SECRET=your_secret
+### JWT Authentication
+- JWT tokens for stateless authentication
+- Configurable token expiration
+- Refresh token support
+- Role-based access control
+
+### Security Features
+- **Password Hashing**: Bcrypt with salt rounds
+- **Input Validation**: Joi schema validation
+- **Rate Limiting**: Prevent API abuse
+- **CORS**: Configurable cross-origin requests
+- **Helmet**: Security headers
+- **SQL Injection Protection**: Parameterized queries
+
+## 📨 External Integrations
+
+### Email Service (SendGrid)
+```javascript
+// Send notification email
+await emailService.sendHikeNotification(userId, hikeId);
 ```
 
-Set environment variables in Cloud Console:
-1. Go to Cloud Run service
-2. Edit & Deploy New Revision
-3. Variables & Secrets → Add Variable
-4. Add all required environment variables
-
-## Development
-
-### Run with nodemon (auto-restart)
-
-```bash
-npm run dev
+### SMS Service (Twilio)
+```javascript
+// Send SMS notification
+await smsService.sendHikeReminder(phoneNumber, message);
 ```
 
-### Run tests
+### Payment Processing (Stripe)
+```javascript
+// Process payment
+const paymentIntent = await paymentService.createPayment(amount, currency);
+```
 
+## 🔍 Monitoring & Logging
+
+### Structured Logging
+```javascript
+// Log with context
+logger.info('Hike created', { 
+  hikeId: hike.id, 
+  userId: req.user.id,
+  location: hike.location 
+});
+```
+
+### Health Checks
 ```bash
+# Check API health
+curl http://localhost:5000/api/health
+
+# Check database connection
+curl http://localhost:5000/api/health/db
+```
+
+## 🧪 Testing
+
+### Run Tests
+```bash
+# Run all tests
 npm test
+
+# Run with coverage
+npm run test:coverage
+
+# Run specific test file
+npm test -- tests/auth.test.js
 ```
 
-### Check for syntax errors
+### Test Structure
+```
+tests/
+├── unit/           # Unit tests
+├── integration/    # Integration tests
+├── fixtures/       # Test data
+└── helpers/        # Test utilities
+```
 
+## 🚀 Deployment
+
+### Docker
 ```bash
-node -c server.js
-node -c controllers/*.js
-node -c routes/*.js
+# Build production image
+docker build -t hiking-portal-backend .
+
+# Run container
+docker run -p 5000:5000 hiking-portal-backend
 ```
 
-## Project Structure
+### Cloud Deployment
+See [Deployment Guide](../docs/deployment/) for platform-specific instructions:
+- Google Cloud Run
+- Amazon ECS
+- Heroku
+- DigitalOcean App Platform
 
-```
-backend/
-├── config/
-│   ├── database.js      # Database connection
-│   └── env.js           # Environment variables
-├── controllers/         # Request handlers
-│   ├── authController.js
-│   ├── hikeController.js
-│   ├── adminController.js
-│   └── ...
-├── middleware/
-│   └── auth.js          # JWT authentication
-├── routes/              # API routes
-│   ├── auth.js
-│   ├── hikes.js
-│   └── ...
-├── services/            # Business logic
-│   ├── notificationService.js
-│   ├── weatherService.js
-│   └── ...
-├── utils/
-│   └── activityLogger.js
-├── migrations/          # Database migrations
-│   └── *.sql
-├── server.js            # Main server file
-├── schema.sql           # Initial database schema
-└── package.json
-```
+## 🔧 Development Tools
 
-## Troubleshooting
-
-### Database connection issues
-
+### Available Scripts
 ```bash
-# Check PostgreSQL is running
-psql -U postgres -c "SELECT version();"
+npm run dev          # Start development server with hot reload
+npm run start        # Start production server
+npm run test         # Run test suite
+npm run lint         # Run ESLint
+npm run format       # Format code with Prettier
+npm run migrate      # Run database migrations
+npm run seed         # Seed database with test data
+```
 
+### VS Code Integration
+Recommended extensions:
+- **REST Client** - Test API endpoints
+- **PostgreSQL** - Database management
+- **Thunder Client** - Alternative to Postman
+
+## 📈 Performance
+
+### Optimization Features
+- **Connection Pooling** - PostgreSQL connection management
+- **Response Compression** - Gzip compression
+- **Query Optimization** - Indexed database queries
+- **Caching** - Redis integration for session/data caching
+
+### Monitoring
+- **Response Times** - Track API performance
+- **Error Rates** - Monitor application health
+- **Database Performance** - Query execution tracking
+
+## 🐛 Troubleshooting
+
+### Common Issues
+
+**Database Connection Failed:**
+```bash
 # Check connection string
 echo $DATABASE_URL
 
 # Test connection
-psql $DATABASE_URL -c "SELECT NOW();"
+npm run db:test
 ```
 
-### Port already in use
-
+**Port Already in Use:**
 ```bash
-# Find process using port 8081
-lsof -i :8081  # Mac/Linux
-netstat -ano | findstr :8081  # Windows
-
-# Kill the process or change PORT in .env
+# Find process using port 5000
+lsof -ti:5000 | xargs kill -9  # macOS/Linux
+netstat -ano | findstr :5000    # Windows
 ```
 
-### JWT errors
-
+**Migration Errors:**
 ```bash
-# Generate new JWT secret
-node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"
+# Check migration status
+npm run migrate:status
+
+# Reset migrations (development only)
+npm run migrate:reset
 ```
 
-## Contributing
+## 📞 Support
 
-1. Create feature branch
-2. Make changes
-3. Test thoroughly
-4. Submit pull request
+For development support:
+1. Check this README
+2. Review API documentation in `api-docs/`
+3. Check application logs
+4. Consult [Architecture Guide](../docs/architecture/)
+5. Create issue in repository
 
-## License
+## 🤝 Contributing
 
-MIT
+1. Follow the existing code style
+2. Write tests for new features
+3. Update documentation
+4. Submit pull request with clear description
+
+---
+
+Built with ❤️ using Node.js, Express, and PostgreSQL

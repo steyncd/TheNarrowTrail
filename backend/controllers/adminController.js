@@ -19,14 +19,112 @@ exports.getPendingUsers = async (req, res) => {
   }
 };
 
-// Get all approved users
+// Get all approved users with pagination, search, filter, and sort
 exports.getUsers = async (req, res) => {
   try {
-    const result = await pool.query(
-      'SELECT id, name, email, phone, role, notifications_email, notifications_whatsapp, created_at FROM users WHERE status = $1 ORDER BY name',
-      ['approved']
+    const { 
+      page = 1, 
+      limit = 10, 
+      search = '', 
+      role = 'all',
+      sortField = 'name',
+      sortOrder = 'asc',
+      // Advanced search filters
+      dateFrom = '',
+      dateTo = '',
+      consentStatus = 'all', // all, consented, missing
+      emailVerified = 'all' // all, verified, unverified
+    } = req.query;
+    
+    const offset = (parseInt(page) - 1) * parseInt(limit);
+    
+    // Build WHERE clause
+    let whereConditions = ["status = 'approved'"];
+    let params = [];
+    let paramCounter = 1;
+    
+    // Add search filter
+    if (search && search.trim()) {
+      whereConditions.push(
+        `(name ILIKE $${paramCounter} OR email ILIKE $${paramCounter} OR phone ILIKE $${paramCounter})`
+      );
+      params.push(`%${search.trim()}%`);
+      paramCounter++;
+    }
+    
+    // Add role filter
+    if (role !== 'all') {
+      whereConditions.push(`role = $${paramCounter}`);
+      params.push(role);
+      paramCounter++;
+    }
+    
+    // Add date range filter
+    if (dateFrom) {
+      whereConditions.push(`created_at >= $${paramCounter}`);
+      params.push(dateFrom);
+      paramCounter++;
+    }
+    
+    if (dateTo) {
+      whereConditions.push(`created_at <= $${paramCounter}`);
+      params.push(dateTo);
+      paramCounter++;
+    }
+    
+    // Add consent status filter
+    if (consentStatus === 'consented') {
+      whereConditions.push(
+        'privacy_consent_accepted = true AND terms_accepted = true AND data_processing_consent = true'
+      );
+    } else if (consentStatus === 'missing') {
+      whereConditions.push(
+        '(privacy_consent_accepted = false OR privacy_consent_accepted IS NULL OR terms_accepted = false OR terms_accepted IS NULL OR data_processing_consent = false OR data_processing_consent IS NULL)'
+      );
+    }
+    
+    // Add email verification filter
+    if (emailVerified === 'verified') {
+      whereConditions.push('email_verified = true');
+    } else if (emailVerified === 'unverified') {
+      whereConditions.push('(email_verified = false OR email_verified IS NULL)');
+    }
+    
+    const whereClause = whereConditions.join(' AND ');
+    
+    // Validate sort field to prevent SQL injection
+    const allowedSortFields = ['name', 'email', 'role', 'created_at'];
+    const validSortField = allowedSortFields.includes(sortField) ? sortField : 'name';
+    const validSortOrder = sortOrder.toLowerCase() === 'desc' ? 'DESC' : 'ASC';
+    
+    // Get total count for pagination
+    const countResult = await pool.query(
+      `SELECT COUNT(*) FROM users WHERE ${whereClause}`,
+      params
     );
-    res.json(result.rows);
+    const totalUsers = parseInt(countResult.rows[0].count);
+    
+    // Get paginated users
+    const usersResult = await pool.query(
+      `SELECT id, name, email, phone, role, 
+              notifications_email, notifications_whatsapp, created_at
+       FROM users
+       WHERE ${whereClause}
+       ORDER BY ${validSortField} ${validSortOrder}
+       LIMIT $${paramCounter} OFFSET $${paramCounter + 1}`,
+      [...params, parseInt(limit), offset]
+    );
+    
+    res.json({
+      users: usersResult.rows,
+      pagination: {
+        page: parseInt(page),
+        limit: parseInt(limit),
+        totalUsers,
+        totalPages: Math.ceil(totalUsers / parseInt(limit)),
+        hasMore: offset + usersResult.rows.length < totalUsers
+      }
+    });
   } catch (error) {
     console.error('Get users error:', error);
     res.status(500).json({ error: 'Failed to fetch users' });

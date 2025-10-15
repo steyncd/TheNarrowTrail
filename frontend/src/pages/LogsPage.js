@@ -3,13 +3,16 @@ import React, { useState, useEffect } from 'react';
 import { Activity, LogIn } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { useTheme } from '../contexts/ThemeContext';
+import { useNavigate } from 'react-router-dom';
 import api from '../services/api';
 import PageHeader from '../components/common/PageHeader';
 import LoadingSpinner from '../components/common/LoadingSpinner';
+import PermissionGate from '../components/PermissionGate';
 
 const LogsPage = () => {
   const { token } = useAuth();
   const { theme } = useTheme();
+  const navigate = useNavigate();
   const isDark = theme === 'dark';
 
   const [activeTab, setActiveTab] = useState('signin'); // 'signin' or 'activity'
@@ -93,12 +96,26 @@ const LogsPage = () => {
   };
 
   return (
-    <div>
-      <PageHeader
-        icon={Activity}
-        title="Activity & Sign-in Logs"
-        subtitle="Monitor user activity and authentication attempts"
-      />
+    <PermissionGate 
+      permission="audit.view"
+      fallback={
+        <div className="container mt-4">
+          <div className="alert alert-warning" role="alert">
+            <h5>Access Denied</h5>
+            <p>You don't have permission to view system logs.</p>
+            <button className="btn btn-primary" onClick={() => navigate('/hikes')}>
+              Return to Hikes
+            </button>
+          </div>
+        </div>
+      }
+    >
+      <div>
+        <PageHeader
+          icon={Activity}
+          title="Activity & Sign-in Logs"
+          subtitle="Monitor user activity and authentication attempts"
+        />
 
       {/* Stats Cards */}
       {stats && (
@@ -250,7 +267,8 @@ const LogsPage = () => {
           </div>
         </div>
       )}
-    </div>
+      </div>
+    </PermissionGate>
   );
 };
 

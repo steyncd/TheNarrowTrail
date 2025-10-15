@@ -1,7 +1,8 @@
 // routes/hikes.js - Hike routes
 const express = require('express');
 const router = express.Router();
-const { authenticateToken, requireAdmin } = require('../middleware/auth');
+const { authenticateToken } = require('../middleware/auth');
+const { requirePermission } = require('../middleware/permissions');
 const hikeController = require('../controllers/hikeController');
 
 // Public routes (no authentication required)
@@ -54,40 +55,40 @@ router.put('/:id/packing-list', authenticateToken, hikeController.updatePackingL
 
 // Admin-only hike management routes
 // POST /api/hikes - Create hike
-router.post('/', authenticateToken, requireAdmin, hikeController.createHike);
+router.post('/', authenticateToken, requirePermission('hikes.create'), hikeController.createHike);
 
 // PUT /api/hikes/:id - Update hike
-router.put('/:id', authenticateToken, requireAdmin, hikeController.updateHike);
+router.put('/:id', authenticateToken, requirePermission('hikes.edit'), hikeController.updateHike);
 
 // DELETE /api/hikes/:id - Delete hike
-router.delete('/:id', authenticateToken, requireAdmin, hikeController.deleteHike);
+router.delete('/:id', authenticateToken, requirePermission('hikes.delete'), hikeController.deleteHike);
 
-// GET /api/hikes/:id/interested - Get interested users (Admin only)
-router.get('/:id/interested', authenticateToken, requireAdmin, hikeController.getInterestedUsers);
+// GET /api/hikes/:id/interested - Get interested users (requires view all interests permission)
+router.get('/:id/interested', authenticateToken, requirePermission('hikes.view_all_interests'), hikeController.getInterestedUsers);
 
-// GET /api/hikes/:id/attendees - Get attendees (Admin only)
-router.get('/:id/attendees', authenticateToken, requireAdmin, hikeController.getAttendees);
+// GET /api/hikes/:id/attendees - Get attendees (requires attendance management)
+router.get('/:id/attendees', authenticateToken, requirePermission('hikes.manage_attendance'), hikeController.getAttendees);
 
-// POST /api/hikes/:id/attendees - Add attendee (Admin only)
-router.post('/:id/attendees', authenticateToken, requireAdmin, hikeController.addAttendee);
+// POST /api/hikes/:id/attendees - Add attendee (requires attendance management)
+router.post('/:id/attendees', authenticateToken, requirePermission('hikes.manage_attendance'), hikeController.addAttendee);
 
-// PUT /api/hikes/:hikeId/attendees/:userId - Update attendee (Admin only)
-router.put('/:hikeId/attendees/:userId', authenticateToken, requireAdmin, hikeController.updateAttendee);
+// PUT /api/hikes/:hikeId/attendees/:userId - Update attendee (requires attendance management)
+router.put('/:hikeId/attendees/:userId', authenticateToken, requirePermission('hikes.manage_attendance'), hikeController.updateAttendee);
 
-// DELETE /api/hikes/:hikeId/attendees/:userId - Remove attendee (Admin only)
-router.delete('/:hikeId/attendees/:userId', authenticateToken, requireAdmin, hikeController.removeAttendee);
+// DELETE /api/hikes/:hikeId/attendees/:userId - Remove attendee (requires attendance management)
+router.delete('/:hikeId/attendees/:userId', authenticateToken, requirePermission('hikes.manage_attendance'), hikeController.removeAttendee);
 
-// GET /api/hikes/:id/default-packing-list - Get default packing list (Admin only)
-router.get('/:id/default-packing-list', authenticateToken, requireAdmin, hikeController.getDefaultPackingList);
+// GET /api/hikes/:id/default-packing-list - Get default packing list (requires edit permission)
+router.get('/:id/default-packing-list', authenticateToken, requirePermission('hikes.edit'), hikeController.getDefaultPackingList);
 
-// PUT /api/hikes/:id/default-packing-list - Update default packing list (Admin only)
-router.put('/:id/default-packing-list', authenticateToken, requireAdmin, hikeController.updateDefaultPackingList);
+// PUT /api/hikes/:id/default-packing-list - Update default packing list (requires edit permission)
+router.put('/:id/default-packing-list', authenticateToken, requirePermission('hikes.edit'), hikeController.updateDefaultPackingList);
 
-// GET /api/hikes/:id/emergency-contacts - Get emergency contacts for hike (Admin only)
-router.get('/:id/emergency-contacts', authenticateToken, requireAdmin, hikeController.getHikeEmergencyContacts);
+// GET /api/hikes/:id/emergency-contacts - Get emergency contacts for hike (requires view all interests)
+router.get('/:id/emergency-contacts', authenticateToken, requirePermission('hikes.view_all_interests'), hikeController.getHikeEmergencyContacts);
 
-// POST /api/hikes/:id/email-attendees - Email hike attendees (Admin only)
-router.post('/:id/email-attendees', authenticateToken, requireAdmin, hikeController.emailHikeAttendees);
+// POST /api/hikes/:id/email-attendees - Email hike attendees (requires attendance management)
+router.post('/:id/email-attendees', authenticateToken, requirePermission('hikes.manage_attendance'), hikeController.emailHikeAttendees);
 
 // GET /api/hikes/:id - Get single hike details (public for sharing)
 // IMPORTANT: This must be LAST to avoid catching other /:id/* routes

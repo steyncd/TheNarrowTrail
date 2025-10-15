@@ -1,12 +1,15 @@
 import React, { useState, useEffect } from 'react';
 import { FileText, Save, Eye } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
+import { useNavigate } from 'react-router-dom';
 import { getAllContent, updateContent } from '../services/contentApi';
 import PageHeader from '../components/common/PageHeader';
 import ReactMarkdown from 'react-markdown';
+import PermissionGate from '../components/PermissionGate';
 
 function ContentManagementPage() {
   const { token } = useAuth();
+  const navigate = useNavigate();
   const [contents, setContents] = useState([]);
   const [selectedContent, setSelectedContent] = useState(null);
   const [editMode, setEditMode] = useState(false);
@@ -80,12 +83,26 @@ function ContentManagementPage() {
   };
 
   return (
-    <div>
-      <PageHeader
-        icon={FileText}
-        title="Content Management"
-        subtitle="Edit site content, mission, vision, About Us, Privacy Policy, and Terms & Conditions"
-      />
+    <PermissionGate 
+      permission="feedback.view"
+      fallback={
+        <div className="container mt-4">
+          <div className="alert alert-warning" role="alert">
+            <h5>Access Denied</h5>
+            <p>You don't have permission to manage content.</p>
+            <button className="btn btn-primary" onClick={() => navigate('/hikes')}>
+              Return to Hikes
+            </button>
+          </div>
+        </div>
+      }
+    >
+      <div>
+        <PageHeader
+          icon={FileText}
+          title="Content Management"
+          subtitle="Edit site content, mission, vision, About Us, Privacy Policy, and Terms & Conditions"
+        />
 
       <div className="container-fluid py-4">
         {error && (
@@ -270,7 +287,8 @@ function ContentManagementPage() {
           </div>
         </div>
       </div>
-    </div>
+      </div>
+    </PermissionGate>
   );
 }
 

@@ -15,11 +15,7 @@ const CalendarPage = () => {
   const [selectedHike, setSelectedHike] = useState(null);
   const [showDetailsModal, setShowDetailsModal] = useState(false);
 
-  useEffect(() => {
-    fetchHikes();
-  }, []);
-
-  const fetchHikes = async () => {
+  const fetchHikes = useCallback(async () => {
     setLoading(true);
     try {
       const data = await api.getHikes(token);
@@ -29,7 +25,11 @@ const CalendarPage = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [token]);
+
+  useEffect(() => {
+    fetchHikes();
+  }, [fetchHikes]);
 
   const handleHikeClick = (hike) => {
     setSelectedHike(hike);
@@ -55,7 +55,7 @@ const CalendarPage = () => {
     if (dataModified) {
       fetchHikes();
     }
-  }, []);
+  }, [fetchHikes]);
 
   if (loading) {
     return <LoadingSpinner size="large" message="Loading calendar..." />;

@@ -3,13 +3,16 @@ import React, { useState, useEffect } from 'react';
 import { MessageSquare, Lightbulb, CheckCircle, Clock, XCircle, Trash2, Calendar, MapPin } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { useTheme } from '../contexts/ThemeContext';
+import { useNavigate } from 'react-router-dom';
 import api from '../services/api';
 import PageHeader from '../components/common/PageHeader';
 import LoadingSpinner from '../components/common/LoadingSpinner';
+import PermissionGate from '../components/PermissionGate';
 
 const FeedbackPage = () => {
   const { token } = useAuth();
   const { theme } = useTheme();
+  const navigate = useNavigate();
   const isDark = theme === 'dark';
 
   const [activeTab, setActiveTab] = useState('feedback');
@@ -171,12 +174,26 @@ const FeedbackPage = () => {
   };
 
   return (
-    <div>
-      <PageHeader
-        icon={MessageSquare}
-        title="Feedback & Suggestions"
-        subtitle="View and manage user feedback and hike suggestions"
-      />
+    <PermissionGate 
+      permission="feedback.view"
+      fallback={
+        <div className="container mt-4">
+          <div className="alert alert-warning" role="alert">
+            <h5>Access Denied</h5>
+            <p>You don't have permission to view feedback and suggestions.</p>
+            <button className="btn btn-primary" onClick={() => navigate('/hikes')}>
+              Return to Hikes
+            </button>
+          </div>
+        </div>
+      }
+    >
+      <div>
+        <PageHeader
+          icon={MessageSquare}
+          title="Feedback & Suggestions"
+          subtitle="View and manage user feedback and hike suggestions"
+        />
 
       {/* Tabs */}
       <ul className="nav nav-tabs mb-4">
@@ -571,7 +588,8 @@ const FeedbackPage = () => {
           </div>
         </>
       )}
-    </div>
+      </div>
+    </PermissionGate>
   );
 };
 

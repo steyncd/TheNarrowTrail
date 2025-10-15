@@ -4,6 +4,7 @@ import { AlertCircle, Package, Users, Plus, Eye, Trash2, UserCheck } from 'lucid
 import { useAuth } from '../../contexts/AuthContext';
 import { api } from '../../services/api';
 import PaymentsSection from '../payments/PaymentsSection';
+import ExpensesSection from '../payments/ExpensesSection';
 
 function AttendeeManagement({ hikeId, hikeName, hikeCost, onViewEmergencyContacts, onEditPackingList }) {
   const { token } = useAuth();
@@ -370,6 +371,12 @@ function AttendeeManagement({ hikeId, hikeName, hikeCost, onViewEmergencyContact
           isAdmin={true}
         />
       )}
+
+      {/* Expenses Section */}
+      <ExpensesSection
+        hikeId={hikeId}
+        isAdmin={true}
+      />
     </div>
   );
 }

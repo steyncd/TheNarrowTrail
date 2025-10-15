@@ -4,8 +4,11 @@ import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-d
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 import { ThemeProvider, useTheme } from './contexts/ThemeContext';
 import { SocketProvider } from './contexts/SocketContext';
+import { PermissionProvider } from './contexts/PermissionContext';
 import PrivateRoute from './components/auth/PrivateRoute';
 import LoadingSpinner from './components/common/LoadingSpinner';
+import ErrorBoundary from './components/common/ErrorBoundary';
+import { initMobileDiagnostics } from './utils/mobileDiagnostics';
 
 // PERFORMANCE OPTIMIZATION: Eager load critical components for first paint
 import LandingPage from './components/landing/LandingPage';
@@ -13,6 +16,9 @@ import LoginForm from './components/auth/LoginForm';
 import Header from './components/layout/Header';
 import FeedbackButton from './components/common/FeedbackButton';
 import SuggestHikeButton from './components/common/SuggestHikeButton';
+import OfflineIndicator from './components/common/OfflineIndicator';
+import PWAInstallPrompt from './components/common/PWAInstallPrompt';
+import PWAUtilities from './components/common/PWAUtilities';
 
 // PERFORMANCE OPTIMIZATION: Lazy load all pages to reduce initial bundle size
 // Pages are only loaded when user navigates to them
@@ -25,12 +31,13 @@ const CalendarPage = lazy(() => import('./pages/CalendarPage'));
 const ProfilePage = lazy(() => import('./pages/ProfilePage'));
 
 // Admin pages - also lazy loaded for optimal bundle size
-const UsersPage = lazy(() => import('./pages/UsersPage'));
+const UserRoleManagementPage = lazy(() => import('./pages/UserRoleManagementPage'));
 const NotificationsPage = lazy(() => import('./pages/NotificationsPage'));
 const AnalyticsPage = lazy(() => import('./pages/AnalyticsPage'));
 const LogsPage = lazy(() => import('./pages/LogsPage'));
 const FeedbackPage = lazy(() => import('./pages/FeedbackPage'));
 const PaymentsAdminPage = lazy(() => import('./pages/PaymentsAdminPage'));
+const PaymentDetailsPage = lazy(() => import('./pages/PaymentDetailsPage'));
 const AboutPage = lazy(() => import('./pages/AboutPage'));
 const ContentManagementPage = lazy(() => import('./pages/ContentManagementPage'));
 const DataRetentionAdminPage = lazy(() => import('./pages/DataRetentionAdminPage'));
@@ -72,6 +79,11 @@ function PublicRouteWrapper({ children }) {
           <SuggestHikeButton />
         </>
       )}
+
+      {/* PWA enhancements - show for all users */}
+      <OfflineIndicator />
+      <PWAInstallPrompt />
+      <PWAUtilities />
     </div>
   );
 }
@@ -98,6 +110,11 @@ function PrivateRouteWrapper({ children }) {
 
       <FeedbackButton />
       <SuggestHikeButton />
+      
+      {/* PWA enhancements - show for all users */}
+      <OfflineIndicator />
+      <PWAInstallPrompt />
+      <PWAUtilities />
     </div>
   );
 }
@@ -112,11 +129,18 @@ function LazyLoadFallback() {
 }
 
 function App() {
+  // Initialize mobile diagnostics on app start
+  React.useEffect(() => {
+    initMobileDiagnostics();
+  }, []);
+
   return (
-    <Router>
-      <ThemeProvider>
-        <AuthProvider>
-          <SocketProvider>
+    <ErrorBoundary>
+      <Router>
+        <ThemeProvider>
+          <AuthProvider>
+            <PermissionProvider>
+              <SocketProvider>
           <Routes>
             {/* Public Routes */}
             <Route
@@ -227,6 +251,18 @@ function App() {
                 </PrivateRoute>
               }
             />
+            <Route
+              path="/profile/:userId"
+              element={
+                <PrivateRoute>
+                  <PrivateRouteWrapper>
+                    <Suspense fallback={<LazyLoadFallback />}>
+                      <ProfilePage />
+                    </Suspense>
+                  </PrivateRouteWrapper>
+                </PrivateRoute>
+              }
+            />
 
             {/* Admin Routes with Lazy Loading */}
             <Route
@@ -263,12 +299,14 @@ function App() {
                 <PrivateRoute requireAdmin>
                   <PrivateRouteWrapper>
                     <Suspense fallback={<LazyLoadFallback />}>
-                      <UsersPage />
+                      <UserRoleManagementPage />
                     </Suspense>
                   </PrivateRouteWrapper>
                 </PrivateRoute>
               }
             />
+            {/* Redirect /admin/roles to /admin/users (consolidated page) */}
+            <Route path="/admin/roles" element={<Navigate to="/admin/users" replace />} />
             <Route
               path="/admin/notifications"
               element={
@@ -308,10 +346,22 @@ function App() {
             <Route
               path="/admin/feedback"
               element={
-                <PrivateRoute requireAdmin>
+                <PrivateRoute>
                   <PrivateRouteWrapper>
                     <Suspense fallback={<LazyLoadFallback />}>
                       <FeedbackPage />
+                    </Suspense>
+                  </PrivateRouteWrapper>
+                </PrivateRoute>
+              }
+            />
+            <Route
+              path="/admin/payments/:hikeId"
+              element={
+                <PrivateRoute requireAdmin>
+                  <PrivateRouteWrapper>
+                    <Suspense fallback={<LazyLoadFallback />}>
+                      <PaymentDetailsPage />
                     </Suspense>
                   </PrivateRouteWrapper>
                 </PrivateRoute>
@@ -332,7 +382,7 @@ function App() {
             <Route
               path="/admin/content"
               element={
-                <PrivateRoute requireAdmin>
+                <PrivateRoute>
                   <PrivateRouteWrapper>
                     <Suspense fallback={<LazyLoadFallback />}>
                       <ContentManagementPage />
@@ -419,10 +469,12 @@ function App() {
             {/* Catch all - redirect to landing */}
             <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>
-        </SocketProvider>
-        </AuthProvider>
-      </ThemeProvider>
-    </Router>
+          </SocketProvider>
+          </PermissionProvider>
+          </AuthProvider>
+        </ThemeProvider>
+      </Router>
+    </ErrorBoundary>
   );
 }
 

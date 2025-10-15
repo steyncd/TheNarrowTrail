@@ -1,0 +1,115 @@
+# ============================================================================
+# HIKING PORTAL - PRODUCTION DOCKER COMPOSE
+# ============================================================================
+# This file is a TEMPLATE for production deployment
+# DO NOT use this directly - it's for reference only
+# Production should use managed services (Cloud SQL, Cloud Run, etc.)
+# ============================================================================
+
+version: '3.8'
+
+services:
+  # ============================================================================
+  # PRODUCTION BACKEND (Use Cloud Run instead)
+  # ============================================================================
+  hiking_backend:
+    build:
+      context: ../backend
+      dockerfile: Dockerfile
+    container_name: hiking_portal_backend_prod
+    restart: unless-stopped
+    environment:
+      # Core Application Settings
+      NODE_ENV: production
+      PORT: 8080
+      
+      # Database Connection (Use Cloud SQL in production)
+      DATABASE_URL: ${DATABASE_URL}
+      # OR for Cloud SQL socket connection:
+      # DB_HOST: /cloudsql/${GOOGLE_CLOUD_PROJECT}:${REGION}:${INSTANCE_NAME}
+      # DB_USER: ${DB_USER}
+      # DB_PASSWORD: ${DB_PASSWORD}
+      # DB_NAME: ${DB_NAME}
+      
+      # Security & Integration
+      JWT_SECRET: ${JWT_SECRET}
+      FRONTEND_URL: ${FRONTEND_URL}
+      
+      # Email Service
+      SENDGRID_API_KEY: ${SENDGRID_API_KEY}
+      FROM_EMAIL: ${FROM_EMAIL}
+      
+      # Production Features
+      DEBUG: false
+      LOG_LEVEL: info
+      ENABLE_CORS: false
+      
+      # External Services
+      REDIS_URL: ${REDIS_URL}
+      
+      # API Keys
+      WEATHER_API_KEY: ${WEATHER_API_KEY}
+      MAPS_API_KEY: ${MAPS_API_KEY}
+      STRIPE_SECRET_KEY: ${STRIPE_SECRET_KEY}
+      TWILIO_ACCOUNT_SID: ${TWILIO_ACCOUNT_SID}
+      TWILIO_AUTH_TOKEN: ${TWILIO_AUTH_TOKEN}
+      TWILIO_PHONE_NUMBER: ${TWILIO_PHONE_NUMBER}
+    ports:
+      - "8080:8080"
+    volumes:
+      - hiking_uploads_prod:/app/uploads
+    networks:
+      - hiking_network_prod
+
+  # ============================================================================
+  # NGINX REVERSE PROXY (Production)
+  # ============================================================================
+  hiking_nginx:
+    image: nginx:alpine
+    container_name: hiking_portal_nginx_prod
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx/prod.conf:/etc/nginx/nginx.conf:ro
+      - ./ssl:/etc/nginx/ssl:ro
+      - hiking_uploads_prod:/var/www/uploads:ro
+    depends_on:
+      - hiking_backend
+    networks:
+      - hiking_network_prod
+
+networks:
+  hiking_network_prod:
+    driver: bridge
+
+volumes:
+  hiking_uploads_prod:
+    driver: local
+
+# ============================================================================
+# PRODUCTION DEPLOYMENT NOTES
+# ============================================================================
+# 
+# RECOMMENDED PRODUCTION ARCHITECTURE:
+# 
+# 1. Frontend: Firebase Hosting or Netlify
+# 2. Backend: Google Cloud Run or AWS ECS
+# 3. Database: Google Cloud SQL or AWS RDS
+# 4. File Storage: Google Cloud Storage or AWS S3
+# 5. Cache: Google Cloud Memorystore or AWS ElastiCache
+# 6. Load Balancer: Google Cloud Load Balancer or AWS ALB
+# 
+# SECURITY CHECKLIST:
+# 
+# □ Use managed database service (Cloud SQL)
+# □ Enable SSL/TLS certificates
+# □ Set up proper firewall rules
+# □ Use secrets management (Google Secret Manager)
+# □ Enable monitoring and logging
+# □ Set up automated backups
+# □ Configure health checks
+# □ Use production-grade environment variables
+# 
+# ============================================================================

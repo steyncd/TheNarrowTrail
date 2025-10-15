@@ -1,12 +1,13 @@
 // routes/analytics.js - Analytics Dashboard Routes
 const express = require('express');
 const router = express.Router();
-const { authenticateToken, requireAdmin } = require('../middleware/auth');
+const { authenticateToken } = require('../middleware/auth');
+const { requirePermission } = require('../middleware/permissions');
 const analyticsController = require('../controllers/analyticsController');
 
-// All analytics routes require admin access
+// All analytics routes require analytics.view permission
 router.use(authenticateToken);
-router.use(requireAdmin);
+router.use(requirePermission('analytics.view'));
 
 // Get analytics overview
 router.get('/overview', analyticsController.getOverview);

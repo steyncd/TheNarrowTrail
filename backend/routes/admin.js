@@ -1,7 +1,8 @@
 // routes/admin.js - Admin routes
 const express = require('express');
 const router = express.Router();
-const { authenticateToken, requireAdmin } = require('../middleware/auth');
+const { authenticateToken } = require('../middleware/auth');
+const { requirePermission, requireAnyPermission } = require('../middleware/permissions');
 const adminController = require('../controllers/adminController');
 const pool = require('../config/database');
 const fs = require('fs');
@@ -55,67 +56,64 @@ router.post('/setup-admin', async (req, res) => {
   }
 });
 
-// All other admin routes require authentication and admin role
-router.use(authenticateToken, requireAdmin);
-
-// User management routes
+// User management routes - require appropriate permissions
 // GET /api/admin/pending-users - Get all pending users
-router.get('/pending-users', adminController.getPendingUsers);
+router.get('/pending-users', authenticateToken, requirePermission('users.approve'), adminController.getPendingUsers);
 
 // GET /api/admin/users - Get all approved users
-router.get('/users', adminController.getUsers);
+router.get('/users', authenticateToken, requirePermission('users.view'), adminController.getUsers);
 
 // PUT /api/admin/users/:id/approve - Approve user
-router.put('/users/:id/approve', adminController.approveUser);
+router.put('/users/:id/approve', authenticateToken, requirePermission('users.approve'), adminController.approveUser);
 
 // DELETE /api/admin/reject-user/:id - Reject user (legacy route)
-router.delete('/reject-user/:id', adminController.rejectUser);
+router.delete('/reject-user/:id', authenticateToken, requirePermission('users.approve'), adminController.rejectUser);
 
 // DELETE /api/admin/users/:id - Delete user
-router.delete('/users/:id', adminController.deleteUser);
+router.delete('/users/:id', authenticateToken, requirePermission('users.delete'), adminController.deleteUser);
 
 // POST /api/admin/users - Create user
-router.post('/users', adminController.createUser);
+router.post('/users', authenticateToken, requirePermission('users.create'), adminController.createUser);
 
 // PUT /api/admin/users/:id - Update user
-router.put('/users/:id', adminController.updateUser);
+router.put('/users/:id', authenticateToken, requirePermission('users.edit'), adminController.updateUser);
 
 // POST /api/admin/users/:id/reset-password - Reset user password
-router.post('/users/:id/reset-password', adminController.resetUserPassword);
+router.post('/users/:id/reset-password', authenticateToken, requirePermission('users.manage'), adminController.resetUserPassword);
 
 // PUT /api/admin/users/:id/promote - Promote user to admin
-router.put('/users/:id/promote', adminController.promoteUser);
+router.put('/users/:id/promote', authenticateToken, requirePermission('users.manage'), adminController.promoteUser);
 
 // Notification routes
 // GET /api/admin/notifications - Get notification log
-router.get('/notifications', adminController.getNotifications);
+router.get('/notifications', authenticateToken, requirePermission('notifications.view'), adminController.getNotifications);
 
 // POST /api/admin/test-notification - Test notification
-router.post('/test-notification', adminController.testNotification);
+router.post('/test-notification', authenticateToken, requirePermission('notifications.test'), adminController.testNotification);
 
 // POPIA Compliance routes
 // GET /api/admin/consent-status - Get consent status for all users
-router.get('/consent-status', adminController.getConsentStatus);
+router.get('/consent-status', authenticateToken, requirePermission('compliance.view'), adminController.getConsentStatus);
 
 // Data Retention routes (POPIA compliance)
 // GET /api/admin/retention/statistics - Get retention statistics
-router.get('/retention/statistics', adminController.getRetentionStatistics);
+router.get('/retention/statistics', authenticateToken, requirePermission('compliance.view'), adminController.getRetentionStatistics);
 
 // POST /api/admin/retention/run-check - Manual retention check
-router.post('/retention/run-check', adminController.runRetentionCheck);
+router.post('/retention/run-check', authenticateToken, requirePermission('compliance.manage'), adminController.runRetentionCheck);
 
 // POST /api/admin/retention/extend/:userId - Extend retention for user
-router.post('/retention/extend/:userId', adminController.extendUserRetention);
+router.post('/retention/extend/:userId', authenticateToken, requirePermission('compliance.manage'), adminController.extendUserRetention);
 
 // GET /api/admin/retention/logs - Get retention audit logs
-router.get('/retention/logs', adminController.getRetentionLogs);
+router.get('/retention/logs', authenticateToken, requirePermission('audit.view'), adminController.getRetentionLogs);
 
 // POST /api/admin/retention/service - Start/stop retention service
-router.post('/retention/service', adminController.toggleRetentionService);
+router.post('/retention/service', authenticateToken, requirePermission('settings.manage'), adminController.toggleRetentionService);
 
-// Migration routes
+// Migration routes - require settings management permission
 // POST /api/admin/run-migration/:filename - Run database migration
-router.post('/run-migration/:filename', async (req, res) => {
+router.post('/run-migration/:filename', authenticateToken, requirePermission('settings.manage'), async (req, res) => {
   try {
     const filename = req.params.filename;
     const migrationPath = path.join(__dirname, '..', 'migrations', filename);

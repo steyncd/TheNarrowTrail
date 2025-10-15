@@ -9,7 +9,6 @@ README.md
 *.log
 .gcloudignore
 cloudbuild.yaml
-Dockerfile
 .dockerignore
 *.md
 docs/

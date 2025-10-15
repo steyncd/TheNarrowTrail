@@ -1,10 +1,11 @@
 const express = require('express');
 const router = express.Router();
 const pool = require('../config/database');
-const { authenticateToken, requireAdmin } = require('../middleware/auth');
+const { authenticateToken } = require('../middleware/auth');
+const { requirePermission } = require('../middleware/permissions');
 
 // Admin route - Get all content (use specific path /admin/list)
-router.get('/admin/list', authenticateToken, requireAdmin, async (req, res) => {
+router.get('/admin/list', authenticateToken, requirePermission('feedback.view'), async (req, res) => {
   try {
     const result = await pool.query(
       `SELECT c.*, u.name as updated_by_name
@@ -21,7 +22,7 @@ router.get('/admin/list', authenticateToken, requireAdmin, async (req, res) => {
 });
 
 // Admin route - Get content history
-router.get('/:key/history', authenticateToken, requireAdmin, async (req, res) => {
+router.get('/:key/history', authenticateToken, requirePermission('feedback.view'), async (req, res) => {
   try {
     const { key } = req.params;
 
@@ -71,7 +72,7 @@ router.get('/:key', async (req, res) => {
 });
 
 // Update content (admin only)
-router.put('/:key', authenticateToken, requireAdmin, async (req, res) => {
+router.put('/:key', authenticateToken, requirePermission('feedback.respond'), async (req, res) => {
   try {
     const { key } = req.params;
     const { title, content, is_published } = req.body;

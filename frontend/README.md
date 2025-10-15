@@ -1,6 +1,24 @@
-# Getting Started with Create React App
+# Hiking Portal - Frontend
 
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+React frontend for the Hiking Portal application.
+
+## Environment Setup
+
+### 1. Environment Variables
+
+Copy the example environment file and update it with your values:
+
+```bash
+cp .env.example .env.local
+```
+
+Edit `.env.local` and set:
+- `REACT_APP_API_URL`: Backend API URL (default: http://localhost:5000)
+- Other optional configuration values
+
+### 2. Required Environment Variables
+
+- **REACT_APP_API_URL**: Backend API endpoint (required)
 
 ## Available Scripts
 

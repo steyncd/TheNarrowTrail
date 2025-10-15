@@ -1,0 +1,40 @@
+version: '3.8'
+
+services:
+  homeassistant:
+    container_name: homeassistant-dev
+    image: homeassistant/home-assistant:latest
+    volumes:
+      - ./ha-config:/config
+      - ./homeassistant/custom_components:/config/custom_components
+      - /etc/localtime:/etc/localtime:ro
+    restart: unless-stopped
+    privileged: true
+    network_mode: host
+    environment:
+      - TZ=Europe/London
+    ports:
+      - "8123:8123"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8123"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 60s
+
+  # Optional: Add a database for persistence
+  postgresql:
+    container_name: homeassistant-db
+    image: postgres:15
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: homeassistant
+      POSTGRES_USER: homeassistant
+      POSTGRES_PASSWORD: homeassistant_dev_password
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+
+volumes:
+  postgres_data:

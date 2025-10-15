@@ -23,9 +23,21 @@ const PaymentsOverview = () => {
     setError(null);
 
     try {
+      console.log('Fetching payments overview...');
       const result = await api.getPaymentsOverview(token);
+      console.log('Payments overview result:', result);
+      console.log('Summary data:', result?.summary);
+      console.log('Hikes data length:', result?.hikes?.length);
+      
+      // Debug: Log the first hike to check field names
+      if (result?.hikes && result.hikes.length > 0) {
+        console.log('First hike object structure:', result.hikes[0]);
+        console.log('Field names available:', Object.keys(result.hikes[0]));
+      }
+      
       setData(result);
     } catch (err) {
+      console.error('Payments overview fetch error:', err);
       setError(err.message || 'Failed to load payments data');
     } finally {
       setLoading(false);
@@ -109,7 +121,7 @@ const PaymentsOverview = () => {
               <div className="d-flex justify-content-between align-items-start">
                 <div>
                   <small className="text-muted d-block mb-1">Active Hikes</small>
-                  <h4 className="mb-0">{summary.active_hikes || 0}</h4>
+                  <h4 className="mb-0">{summary.total_hikes || 0}</h4>
                 </div>
                 <Users size={24} className="text-info" />
               </div>
@@ -140,22 +152,22 @@ const PaymentsOverview = () => {
                   </tr>
                 </thead>
                 <tbody>
-                  {hikes.map((hike) => {
-                    const collectionRate = hike.expected_amount > 0 
-                      ? ((hike.collected_amount / hike.expected_amount) * 100) 
+                  {hikes.map((hike, index) => {
+                    const collectionRate = hike.expected_total > 0 
+                      ? ((hike.total_paid / hike.expected_total) * 100) 
                       : 0;
                     
                     return (
-                      <tr key={hike.id}>
+                      <tr key={hike.hike_id || `hike-${index}`}>
                         <td>
                           <div>
-                            <strong>{hike.title}</strong>
+                            <strong>{hike.hike_name}</strong>
                             <br />
-                            <small className="text-muted">{hike.location}</small>
+                            <small className="text-muted">Hike #{hike.hike_id}</small>
                           </div>
                         </td>
                         <td>
-                          {new Date(hike.date).toLocaleDateString('en-ZA')}
+                          {new Date(hike.hike_date).toLocaleDateString('en-ZA')}
                         </td>
                         <td className="text-center">
                           <span className="badge bg-info">
@@ -163,13 +175,13 @@ const PaymentsOverview = () => {
                           </span>
                         </td>
                         <td className="text-end">
-                          R {parseFloat(hike.expected_amount || 0).toLocaleString()}
+                          R {parseFloat(hike.expected_total || 0).toLocaleString()}
                         </td>
                         <td className="text-end text-success">
-                          R {parseFloat(hike.collected_amount || 0).toLocaleString()}
+                          R {parseFloat(hike.total_paid || 0).toLocaleString()}
                         </td>
                         <td className="text-end text-warning">
-                          R {parseFloat(hike.outstanding_amount || 0).toLocaleString()}
+                          R {parseFloat(hike.outstanding || 0).toLocaleString()}
                         </td>
                         <td className="text-center">
                           <div className="progress" style={{ height: '20px', minWidth: '80px' }}>
@@ -190,7 +202,7 @@ const PaymentsOverview = () => {
                         </td>
                         <td className="text-center">
                           <Link
-                            to={`/admin/payments/${hike.id}`}
+                            to={`/admin/payments/${hike.hike_id}`}
                             className="btn btn-sm btn-outline-primary"
                           >
                             Details

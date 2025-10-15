@@ -17,6 +17,46 @@ export const AuthProvider = ({ children }) => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    const verifyToken = async () => {
+      try {
+        const response = await fetch(`${API_URL}/api/hikes`, {
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+        if (response.ok) {
+          const userData = JSON.parse(atob(token.split('.')[1]));
+          setCurrentUser(userData);
+        } else {
+          localStorage.removeItem('token');
+          setToken(null);
+          setCurrentUser(null);
+        }
+      } catch (err) {
+        console.error('Token verification error:', err);
+        localStorage.removeItem('token');
+        setToken(null);
+        setCurrentUser(null);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    const handleEmailVerification = async (verificationToken) => {
+      try {
+        const response = await fetch(`${API_URL}/api/auth/verify-email/${verificationToken}`);
+        const data = await response.json();
+
+        if (response.ok) {
+          window.history.replaceState({}, document.title, '/');
+          return { success: true, message: data.message || 'Email verified successfully!' };
+        } else {
+          return { success: false, error: data.error || 'Email verification failed' };
+        }
+      } catch (err) {
+        console.error('Email verification error:', err);
+        return { success: false, error: 'Connection error during email verification' };
+      }
+    };
+
     if (token) {
       verifyToken();
     } else {
@@ -30,46 +70,6 @@ export const AuthProvider = ({ children }) => {
       handleEmailVerification(verificationToken);
     }
   }, [token]);
-
-  const verifyToken = async () => {
-    try {
-      const response = await fetch(`${API_URL}/api/hikes`, {
-        headers: { 'Authorization': `Bearer ${token}` }
-      });
-      if (response.ok) {
-        const userData = JSON.parse(atob(token.split('.')[1]));
-        setCurrentUser(userData);
-      } else {
-        localStorage.removeItem('token');
-        setToken(null);
-        setCurrentUser(null);
-      }
-    } catch (err) {
-      console.error('Token verification error:', err);
-      localStorage.removeItem('token');
-      setToken(null);
-      setCurrentUser(null);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleEmailVerification = async (verificationToken) => {
-    try {
-      const response = await fetch(`${API_URL}/api/auth/verify-email/${verificationToken}`);
-      const data = await response.json();
-
-      if (response.ok) {
-        window.history.replaceState({}, document.title, '/');
-        return { success: true, message: data.message || 'Email verified successfully!' };
-      } else {
-        return { success: false, error: data.error || 'Email verification failed' };
-      }
-    } catch (err) {
-      console.error('Email verification error:', err);
-      return { success: false, error: 'Connection error during email verification' };
-    }
-  };
 
   const login = async (email, password) => {
     try {

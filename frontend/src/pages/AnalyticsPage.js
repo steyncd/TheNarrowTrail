@@ -2,16 +2,19 @@ import React, { useState, useEffect } from 'react';
 import { BarChart3, Users, Calendar, TrendingUp, Target } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { useTheme } from '../contexts/ThemeContext';
+import { useNavigate } from 'react-router-dom';
 import api from '../services/api';
 import MetricCard from '../components/analytics/MetricCard';
 import UserGrowthChart from '../components/analytics/UserGrowthChart';
 import HikeDistributionCharts from '../components/analytics/HikeDistributionCharts';
 import EngagementMetrics from '../components/analytics/EngagementMetrics';
 import PageHeader from '../components/common/PageHeader';
+import PermissionGate from '../components/PermissionGate';
 
 const AnalyticsPage = () => {
   const { token } = useAuth();
   const { theme } = useTheme();
+  const navigate = useNavigate();
 
   const [overview, setOverview] = useState(null);
   const [userAnalytics, setUserAnalytics] = useState(null);
@@ -77,12 +80,26 @@ const AnalyticsPage = () => {
   }
 
   return (
-    <div className="container-fluid mt-4">
-      <PageHeader
-        icon={BarChart3}
-        title="Analytics Dashboard"
-        subtitle="Overview of platform performance and user engagement"
-      />
+    <PermissionGate 
+      permission="analytics.view"
+      fallback={
+        <div className="container mt-4">
+          <div className="alert alert-warning" role="alert">
+            <h5>Access Denied</h5>
+            <p>You don't have permission to view analytics.</p>
+            <button className="btn btn-primary" onClick={() => navigate('/hikes')}>
+              Return to Hikes
+            </button>
+          </div>
+        </div>
+      }
+    >
+      <div className="container-fluid mt-4">
+        <PageHeader
+          icon={BarChart3}
+          title="Analytics Dashboard"
+          subtitle="Overview of platform performance and user engagement"
+        />
 
       {/* Overview Metrics */}
       {overview && (
@@ -206,7 +223,8 @@ const AnalyticsPage = () => {
           </div>
         </div>
       )}
-    </div>
+      </div>
+    </PermissionGate>
   );
 };
 

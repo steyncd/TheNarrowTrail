@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Link } from 'react-router-dom';
 import { Calendar, CheckCircle, AlertCircle, MapPin, Heart } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
@@ -17,28 +17,35 @@ function MyHikesPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
-  useEffect(() => {
-    fetchMyHikes();
-    fetchEmergencyContact();
-  }, []);
-
-  const fetchMyHikes = async () => {
+  const fetchMyHikes = useCallback(async () => {
     try {
       const data = await api.getMyHikes(token);
       setMyHikes(data);
     } catch (err) {
       console.error('Error fetching my hikes:', err);
+      setError('Failed to load hikes');
     }
-  };
+  }, [token]);
 
-  const fetchEmergencyContact = async () => {
+  const fetchEmergencyContact = useCallback(async () => {
     try {
       const data = await api.getEmergencyContact(token);
-      setEmergencyContact(data);
+      if (data) {
+        setEmergencyContact({
+          emergency_contact_name: data.emergency_contact_name || '',
+          emergency_contact_phone: data.emergency_contact_phone || '',
+          medical_info: data.medical_info || ''
+        });
+      }
     } catch (err) {
       console.error('Error fetching emergency contact:', err);
     }
-  };
+  }, [token]);
+
+  useEffect(() => {
+    fetchMyHikes();
+    fetchEmergencyContact();
+  }, [fetchMyHikes, fetchEmergencyContact]);
 
   const handleUpdateEmergencyContact = async () => {
     setLoading(true);

@@ -90,9 +90,11 @@ function AboutPage() {
                       </div>
 
                       {/* Mission & Vision Content */}
-                      <ReactMarkdown className="about-content">
-                        {missionVision.content}
-                      </ReactMarkdown>
+                      <div className="about-content">
+                        <ReactMarkdown>
+                          {missionVision.content}
+                        </ReactMarkdown>
+                      </div>
                     </div>
                   </div>
                 </div>
@@ -109,9 +111,11 @@ function AboutPage() {
                 }}>
                   <div className="card-body p-4 p-md-5">
                     {content && (
-                      <ReactMarkdown className="about-content">
-                        {content.content}
-                      </ReactMarkdown>
+                      <div className="about-content">
+                        <ReactMarkdown>
+                          {content.content}
+                        </ReactMarkdown>
+                      </div>
                     )}
                   </div>
                 </div>

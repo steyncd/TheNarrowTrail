@@ -1,4 +1,7 @@
 // server.js - Main Express server
+// Load environment variables first
+require('dotenv').config();
+
 const express = require('express');
 const cors = require('cors');
 const pool = require('./config/database');
@@ -21,9 +24,11 @@ const calendarRoutes = require('./routes/calendar');
 const tokenRoutes = require('./routes/tokens');
 const weatherRoutes = require('./routes/weather');
 const paymentRoutes = require('./routes/payments');
+const expenseRoutes = require('./routes/expenses');
 const contentRoutes = require('./routes/content');
 const publicContentRoutes = require('./routes/publicContent');
 const notificationPreferencesRoutes = require('./routes/notificationPreferences');
+const permissionRoutes = require('./routes/permissions');
 
 // Import controllers for special routes
 const hikeController = require('./controllers/hikeController');
@@ -35,10 +40,17 @@ const app = express();
 
 // Middleware
 app.use(cors({
-  origin: '*', // Allow all origins for now (change in production)
+  origin: [
+    'https://www.thenarrowtrail.co.za',
+    'https://thenarrowtrail.co.za',
+    'https://helloliam.web.app', 
+    ...(process.env.FRONTEND_URL ? [process.env.FRONTEND_URL] : []),
+    ...(process.env.NODE_ENV === 'development' ? ['http://localhost:3000', 'http://localhost:3001'] : [])
+  ].filter(Boolean),
   credentials: true
 }));
-app.use(express.json());
+app.use(express.json({ limit: '10mb' })); // Increased limit for photo uploads
+app.use(express.urlencoded({ limit: '10mb', extended: true }));
 
 // Activity tracking middleware for POPIA retention compliance
 const { trackUserActivity } = require('./middleware/activityTracker');
@@ -69,6 +81,7 @@ app.get('/', (req, res) => {
 // Mount route modules
 app.use('/api/auth', authRoutes);
 app.use('/api/admin', adminRoutes);
+app.use('/api/permissions', permissionRoutes);
 app.use('/api/hikes', hikeRoutes);
 app.use('/api/photos', photoRoutes);
 app.use('/api/logs', logsRoutes);
@@ -88,6 +101,7 @@ app.use('/api/weather', weatherRoutes);
 app.use('/api/notification-preferences', notificationPreferencesRoutes);
 app.use('/api/public-content', publicContentRoutes); // Public content API - NO AUTH (must be before /api)
 app.use('/api/content', contentRoutes);
+app.use('/api', expenseRoutes); // Expenses routes
 app.use('/api', paymentRoutes); // Catch-all for payments - must be LAST
 app.use('/api/hikes', interestRoutes);
 
@@ -123,3 +137,4 @@ process.on('SIGTERM', () => {
 });
 
 module.exports = app;
+

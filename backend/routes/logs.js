@@ -1,12 +1,13 @@
-// routes/logs.js - Logs routes (Admin only)
+// routes/logs.js - Activity and signin logs routes
 const express = require('express');
 const router = express.Router();
 const logsController = require('../controllers/logsController');
-const { authenticateToken, requireAdmin } = require('../middleware/auth');
+const { authenticateToken } = require('../middleware/auth');
+const { requirePermission } = require('../middleware/permissions');
 
-// All logs routes require authentication and admin role
+// All logs routes require authentication and audit.view permission
 router.use(authenticateToken);
-router.use(requireAdmin);
+router.use(requirePermission('audit.view'));
 
 // GET /api/logs/signin - Get signin logs
 router.get('/signin', logsController.getSigninLogs);

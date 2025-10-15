@@ -41,8 +41,23 @@ export const SocketProvider = ({ children }) => {
 
     console.log('Initializing Socket.IO connection...');
 
-    // Use environment variable or fallback to production URL
-    const SOCKET_URL = process.env.REACT_APP_API_URL || 'https://backend-4kzqyywlqq-ew.a.run.app';
+    // Get Socket URL from environment variables with fallback
+    const getSocketUrl = () => {
+      // In production, require environment variable to be set
+      if (process.env.NODE_ENV === 'production') {
+        const apiUrl = process.env.REACT_APP_API_URL;
+        if (!apiUrl) {
+          throw new Error('REACT_APP_API_URL environment variable must be set in production');
+        }
+        return apiUrl;
+      }
+      
+      // Development fallback only
+      return process.env.REACT_APP_API_URL || 'http://localhost:5000';
+    };
+
+    const SOCKET_URL = getSocketUrl();
+    console.log('Socket.IO connecting to:', SOCKET_URL);
 
     const newSocket = io(SOCKET_URL, {
       auth: {

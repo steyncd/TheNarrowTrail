@@ -1,0 +1,145 @@
+version: '3.8'
+
+services:
+  # PostgreSQL Database for Hiking Portal (LOCAL DEVELOPMENT ONLY)
+  # NOTE: Using external database 'hiking_portal_db' which contains production data
+  # The database container should already be running via root docker-compose.yml
+  # This service definition is commented out to use the external database
+  # hiking_postgres:
+  #   image: postgres:15-alpine
+  #   container_name: hiking_portal_db
+  #   restart: unless-stopped
+  #   environment:
+  #     POSTGRES_DB: ${HIKING_POSTGRES_DB:-hiking_portal_dev}
+  #     POSTGRES_USER: ${HIKING_POSTGRES_USER:-hiking_user}
+  #     POSTGRES_PASSWORD: ${HIKING_POSTGRES_PASSWORD:-hiking_pass_dev_123}
+  #     POSTGRES_INITDB_ARGS: "--encoding=UTF-8 --lc-collate=C --lc-ctype=C"
+  #   ports:
+  #     - "5433:5432"  # Different port to avoid conflict with HA postgres
+  #   volumes:
+  #     - hiking_postgres_data:/var/lib/postgresql/data
+  #     - ./database/init.sql:/docker-entrypoint-initdb.d/01-init.sql:ro
+  #     - ../backend/migrations:/docker-entrypoint-initdb.d/migrations:ro
+  #   networks:
+  #     - hiking_network
+  #   healthcheck:
+  #     test: ["CMD-SHELL", "pg_isready -U ${HIKING_POSTGRES_USER:-hiking_user} -d ${HIKING_POSTGRES_DB:-hiking_portal_dev}"]
+  #     interval: 10s
+  #     timeout: 5s
+  #     retries: 5
+
+  # Hiking Portal Backend API
+  hiking_backend:
+    build:
+      context: ../backend
+      dockerfile: Dockerfile.dev
+    container_name: hiking_portal_backend
+    restart: unless-stopped
+    environment:
+      # Core Application Settings
+      NODE_ENV: development
+      PORT: 5000
+      
+      # Database Connection (Docker internal networking)
+      # Updated to connect to standalone database with production data
+      # Using hardcoded values to ensure proper connection to imported database
+      DATABASE_URL: postgresql://postgres:hiking_password@hiking_portal_db:5432/hiking_portal
+      
+      # Security & Integration
+      JWT_SECRET: ${JWT_SECRET:-dev-jwt-secret-change-in-production-minimum-64-chars}
+      FRONTEND_URL: ${FRONTEND_URL:-http://localhost:3000}
+      
+      # Email Service (Optional for development)
+      SENDGRID_API_KEY: ${SENDGRID_API_KEY:-}
+      FROM_EMAIL: ${FROM_EMAIL:-noreply@localhost}
+      
+      # Development Features
+      DEBUG: true
+      LOG_LEVEL: debug
+      ENABLE_CORS: true
+    ports:
+      - "5000:5000"
+    volumes:
+      - ../backend:/app
+      - /app/node_modules
+      - hiking_uploads:/app/uploads
+    # depends_on removed since using external database
+    # depends_on:
+    #   hiking_postgres:
+    #     condition: service_healthy
+    external_links:
+      - hiking_portal_db
+    networks:
+      - hiking_network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:5000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    command: npm run dev
+
+  # Hiking Portal Frontend
+  hiking_frontend:
+    build:
+      context: ../frontend
+      dockerfile: Dockerfile.dev
+    container_name: hiking_portal_frontend
+    restart: unless-stopped
+    environment:
+      REACT_APP_API_URL: ${REACT_APP_API_URL:-http://localhost:5000}
+      REACT_APP_ENV: ${REACT_APP_ENV:-development}
+      CHOKIDAR_USEPOLLING: true
+      WATCHPACK_POLLING: true
+    ports:
+      - "3000:3000"
+    volumes:
+      - ../frontend:/app
+      - /app/node_modules
+    depends_on:
+      - hiking_backend
+    networks:
+      - hiking_network
+    command: npm start
+
+
+
+  # Redis for caching and sessions
+  redis:
+    image: redis:7-alpine
+    container_name: hiking_portal_redis
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    networks:
+      - hiking_network
+    command: redis-server --appendonly yes
+
+  # Nginx Reverse Proxy
+  nginx:
+    image: nginx:alpine
+    container_name: hiking_portal_nginx
+    restart: unless-stopped
+    ports:
+      - "8080:80"
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+    depends_on:
+      - hiking_frontend
+      - hiking_backend
+    networks:
+      - hiking_network
+
+volumes:
+  hiking_postgres_data:
+    driver: local
+  redis_data:
+    driver: local
+  hiking_uploads:
+    driver: local
+
+networks:
+  hiking_network:
+    driver: bridge
+    name: hiking_portal_network
