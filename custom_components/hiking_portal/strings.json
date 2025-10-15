@@ -1,0 +1,22 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Connect to Hiking Portal",
+        "description": "Enter your Hiking Portal API details. You can find your token by logging into the portal and going to your profile settings.",
+        "data": {
+          "api_url": "API URL",
+          "token": "Authentication Token (JWT)"
+        }
+      }
+    },
+    "error": {
+      "cannot_connect": "Failed to connect to the API. Please check the URL.",
+      "invalid_auth": "Invalid authentication token. Please check your token.",
+      "unknown": "Unexpected error occurred"
+    },
+    "abort": {
+      "already_configured": "This Hiking Portal is already configured"
+    }
+  }
+}
