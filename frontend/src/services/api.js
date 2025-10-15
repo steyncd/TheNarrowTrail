@@ -1,8 +1,24 @@
-export const API_URL = 'https://backend-4kzqyywlqq-ew.a.run.app';
+// Get API URL from environment variables
+const getApiUrl = () => {
+  // In production, require environment variable to be set
+  if (process.env.NODE_ENV === 'production') {
+    const apiUrl = process.env.REACT_APP_API_URL;
+    if (!apiUrl) {
+      throw new Error('REACT_APP_API_URL environment variable must be set in production');
+    }
+    return apiUrl;
+  }
+  
+  // Development fallback only
+  return process.env.REACT_APP_API_URL || 'http://localhost:5000';
+};
+
+export const API_URL = getApiUrl();
 
 class ApiService {
   constructor() {
     this.baseURL = API_URL;
+    console.log('API Service initialized with URL:', this.baseURL);
   }
 
   getAuthHeaders(token) {
@@ -325,10 +341,13 @@ class ApiService {
   }
 
   async getUsers(token) {
-    const response = await fetch(`${this.baseURL}/api/admin/users`, {
+    // Request all users by setting a high limit (backend defaults to 10)
+    const response = await fetch(`${this.baseURL}/api/admin/users?limit=1000`, {
       headers: this.getAuthHeaders(token)
     });
-    return response.json();
+    const data = await response.json();
+    // Backend returns { users: [...], pagination: {...} } or just [...]
+    return data;
   }
 
   async getConsentStatus(token) {
@@ -710,6 +729,67 @@ class ApiService {
     }
     console.error('Get payments overview error:', response.status, response.statusText);
     return { summary: {}, hikes: [] };
+  }
+
+  // Expenses
+  async getHikeExpenses(hikeId, token) {
+    const response = await fetch(`${this.baseURL}/api/hike/${hikeId}`, {
+      headers: this.getAuthHeaders(token)
+    });
+    if (response.ok) {
+      return response.json();
+    }
+    console.error('Get hike expenses error:', response.status, response.statusText);
+    return [];
+  }
+
+  async getHikeExpenseSummary(hikeId, token) {
+    const response = await fetch(`${this.baseURL}/api/hike/${hikeId}/summary`, {
+      headers: this.getAuthHeaders(token)
+    });
+    if (response.ok) {
+      return response.json();
+    }
+    console.error('Get expense summary error:', response.status, response.statusText);
+    return null;
+  }
+
+  async addHikeExpense(hikeId, expenseData, token) {
+    const response = await fetch(`${this.baseURL}/api/expenses`, {
+      method: 'POST',
+      headers: this.getAuthHeaders(token),
+      body: JSON.stringify({...expenseData, hikeId})
+    });
+    if (response.ok) {
+      return { success: true, data: await response.json() };
+    }
+    const errorData = await response.json().catch(() => ({}));
+    return { success: false, error: errorData.error || 'Failed to add expense' };
+  }
+
+  async updateHikeExpense(hikeId, expenseId, expenseData, token) {
+    const response = await fetch(`${this.baseURL}/api/expenses/${expenseId}`, {
+      method: 'PUT',
+      headers: this.getAuthHeaders(token),
+      body: JSON.stringify(expenseData)
+    });
+    if (response.ok) {
+      return { success: true, data: await response.json() };
+    }
+    const errorData = await response.json().catch(() => ({}));
+    return { success: false, error: errorData.error || 'Failed to update expense' };
+  }
+
+  async deleteHikeExpense(hikeId, expenseId, token) {
+    const response = await fetch(`${this.baseURL}/api/expenses/${expenseId}`, {
+      method: 'DELETE',
+      headers: this.getAuthHeaders(token)
+    });
+    if (response.ok) {
+      return { success: true };
+    }
+    const errorData = await response.json().catch(() => ({}));
+    return { success: false, error: errorData.error || 'Failed to delete expense' };
   }
 
   // Public Content (no auth required)

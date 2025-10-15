@@ -1,206 +1,500 @@
-# The Narrow Trail - Hiking Portal
+# 🌲 The Narrow Trail - Hiking Portal
 
-Full-stack hiking club management application with React frontend and Node.js backend.
+A comprehensive full-stack web application for managing hiking groups, events, and community features. Built with modern technologies for scalability, security, and user experience.
 
-## 🚀 Quick Links
+---
 
-- **📱 Live Application**: https://helloliam.web.app
-- **🔧 API Endpoint**: https://backend-554106646136.europe-west1.run.app
-- **📚 Documentation**: [docs/README.md](docs/README.md)
+## 🚀 Live Application
 
-## 📖 Documentation
+- **🌐 Frontend**: https://helloliam.web.app
+- **🔧 Backend API**: https://backend-4kzqyywlqq-ew.a.run.app
+- **🏠 Custom Domain** (Planned): https://www.thenarrowtrail.co.za
+- **📚 Documentation**: [Complete Documentation](docs/README.md)
 
-All documentation is organized in the [`docs/`](docs/) directory by topic:
+**Status:** ✅ Production Ready - Last Deployed: October 15, 2025
 
-- **[Compliance](docs/compliance/)** - POPIA compliance and data protection
-- **[Features](docs/features/)** - Feature documentation and user guides
-- **[Mobile](docs/mobile/)** - Mobile responsiveness documentation
-- **[Notifications](docs/notifications/)** - Notification system guides
-- **[Performance](docs/performance/)** - Performance optimization
-- **[Development](docs/development/)** - Architecture and development guides
-- **[Deployment](docs/deployment/)** - Deployment procedures
+---
 
-## 🏗️ Project Structure
+## 📋 Quick Links
 
-```
-hiking-portal/
-├── docs/                    # Documentation (organized by topic)
-│   ├── compliance/          # POPIA and data protection
-│   ├── features/            # Feature docs
-│   ├── mobile/              # Mobile responsiveness
-│   ├── notifications/       # Notification system
-│   ├── performance/         # Performance docs
-│   ├── development/         # Dev guides
-│   ├── deployment/          # Deployment guides
-│   └── archive/             # Historical docs
-├── frontend/                # React application
-│   ├── src/
-│   │   ├── components/      # React components
-│   │   ├── pages/           # Page components
-│   │   ├── services/        # API services
-│   │   └── contexts/        # React contexts
-│   └── build/               # Production build
-├── backend/                 # Node.js API
-│   ├── controllers/         # Business logic
-│   ├── routes/              # API routes
-│   ├── middleware/          # Auth, validation
-│   ├── config/              # Configuration
-│   ├── migrations/          # SQL migrations
-│   └── docs/                # Backend-specific docs
-└── README.md                # This file
-```
+### For Developers
+- **[⚡ Quick Start Guide](docs/setup-guides/QUICK_START.md)** - Get started in 5 minutes
+- **[🚀 Deployment Guide](DEPLOYMENT.md)** - Complete deployment instructions
+- **[⚙️ Configuration Reference](CONFIGURATION.md)** - All environment variables explained
+- **[✅ Pre-Deployment Checklist](PRE_DEPLOYMENT_CHECKLIST.md)** - Use before every deployment
+
+### Documentation
+- **[Architecture Overview](docs/architecture/SYSTEM_ARCHITECTURE.md)**
+- **[Database Schema](docs/architecture/DATABASE_SCHEMA.md)**
+- **[Feature Documentation](docs/features/)**
+- **[Development Guides](docs/development/)**
+
+---
 
 ## ✨ Key Features
 
-### User Management
-- 🔐 Authentication and authorization (JWT)
-- 👥 User profiles with emergency contacts
-- ✅ Intelligent auto-approval system
-- 📊 Admin dashboard
+### 👥 User Management
+- **Authentication** - Secure JWT-based login with role-based access control
+- **User Profiles** - Comprehensive profiles with emergency contacts
+- **Permission System** - Granular role and permission management
+- **Auto-Approval** - Intelligent user registration approval
+- **Privacy** - Full POPIA compliance (South African data protection)
 
-### Hike Management
-- 🥾 Hike creation and management
-- 📝 Interest expression and attendance tracking
-- 💰 Payment tracking for hike costs
-- 📸 Photo galleries
-- 📦 Packing list management
-- 🌤️ Weather integration
+### 🥾 Hike Management
+- **Event Planning** - Create and manage hiking events
+- **Registration** - Interest tracking and attendance management
+- **Payment Tracking** - Integrated payment processing
+- **Photo Galleries** - Image upload and sharing
+- **Packing Lists** - Customizable gear lists
+- **Weather Integration** - Real-time weather data
 
-### Communication
-- 💬 Comments and discussions
-- 🚗 Carpool coordination
-- 🔔 Customizable notifications (Email/SMS/WhatsApp)
-- 📧 Automated email notifications
+### 📱 Communication
+- **Email Notifications** - SendGrid-powered email system
+- **SMS Alerts** - Twilio SMS and WhatsApp integration
+- **Real-time Updates** - WebSocket-based live notifications
+- **Comment System** - Discussions on hikes and events
+- **Carpool Coordination** - Organize shared transportation
 
-### Compliance & Security
-- 🔒 POPIA compliance (South African data protection)
-- 📄 Editable Privacy Policy and Terms
-- 🗑️ Automated data retention
-- 📊 Data export capabilities
-- ❌ Account deletion
+### 📊 Analytics & Admin
+- **Usage Analytics** - Comprehensive usage tracking
+- **Activity Logs** - Detailed audit trail
+- **Payment Reporting** - Financial tracking and reporting
+- **Admin Dashboard** - Complete system administration
 
-### Analytics & Monitoring
-- 📊 Usage analytics
-- 📝 Activity logging
-- 💾 Payment reporting
+### 🔒 Compliance & Security
+- **POPIA Compliance** - Full South African data protection compliance
+- **Data Retention** - Automated data cleanup policies
+- **Editable Legal Docs** - Privacy Policy and Terms in admin panel
+- **Data Export** - User data export capabilities
+- **Account Deletion** - Complete data removal
 
-## 🛠️ Tech Stack
+### 📱 Progressive Web App (PWA)
+- **Offline Support** - Work without internet connection
+- **Mobile Optimized** - Responsive design for all devices
+- **Install Prompt** - Add to home screen on mobile
+- **Push Notifications** - Real-time alerts on mobile
 
-### Frontend
-- React 18
+---
+
+## 🏗️ Architecture
+
+```
+┌─────────────────────┐      ┌───────────────────────┐      ┌────────────────────┐
+│   React Frontend    │      │   Node.js Backend     │      │   PostgreSQL DB    │
+│  Firebase Hosting   │◄────►│     Cloud Run         │◄────►│     Cloud SQL      │
+│  (Port 3000 dev)    │      │   (Port 8080 prod)    │      │   (Unix Socket)    │
+└─────────────────────┘      └───────────────────────┘      └────────────────────┘
+         │                              │                             │
+         └──────────────────────────────┼─────────────────────────────┘
+                                        │
+                    ┌───────────────────┴────────────────────┐
+                    │                                        │
+          ┌─────────▼─────────┐                  ┌──────────▼─────────┐
+          │  Secret Manager   │                  │   File Storage     │
+          │  (API Keys, etc)  │                  │   (Future: GCS)    │
+          └───────────────────┘                  └────────────────────┘
+```
+
+### Technology Stack
+
+**Frontend:**
+- React 18 with Hooks
+- React Router v6
 - Bootstrap 5
-- React Router
-- Socket.IO (real-time)
-- Firebase Hosting
+- Socket.IO Client
+- Service Workers (PWA)
 
-### Backend
-- Node.js 18
-- Express
-- PostgreSQL (Cloud SQL)
-- Cloud Run
+**Backend:**
+- Node.js 18 (LTS)
+- Express.js
+- Socket.IO Server
 - JWT Authentication
-- Socket.IO
+- Node-cron (Scheduled tasks)
 
-### Infrastructure
-- Google Cloud Platform
-- Cloud SQL (PostgreSQL)
-- Cloud Run (Backend)
-- Firebase Hosting (Frontend)
-- Secret Manager
-- Cloud Build
+**Database:**
+- PostgreSQL 14
+- pg (Node PostgreSQL client)
+- Connection pooling
+- Automated backups
 
-## 🏠 Home Assistant Integration
+**Cloud Infrastructure:**
+- **Google Cloud Platform** (Project: `helloliam`)
+  - Cloud Run (Backend hosting)
+  - Cloud SQL (Database)
+  - Secret Manager (Credentials)
+  - Cloud Build (CI/CD)
+- **Firebase**
+  - Hosting (Frontend)
+  - Analytics
 
-[![hacs_badge](https://img.shields.io/badge/HACS-Custom-orange.svg)](https://github.com/custom-components/hacs)
-[![Version](https://img.shields.io/badge/version-2.1.0-blue.svg)](https://github.com/steyncd/TheNarrowTrail)
+**Integrations:**
+- SendGrid (Email)
+- Twilio (SMS & WhatsApp)
+- OpenWeather API (Weather data)
+- Stripe (Payment processing - Future)
 
-This repository includes a comprehensive Home Assistant integration that provides complete monitoring and management of your hiking portal.
+---
 
-### ✨ Integration Features
+## 📁 Project Structure
 
-- **📊 Comprehensive Sensors**: Next hike, upcoming hikes, notifications, payments, weather alerts
-- **🚨 Smart Binary Sensors**: Urgent notifications, weather warnings, attendance confirmations
-- **📅 Enhanced Calendar**: Rich event details with attendance status and weather integration
-- **⚡ Interactive Services**: Mark notifications read, record payments, get weather data
-- **🎛️ Complete Dashboard**: Professional Lovelace dashboard with conditional cards
+```
+hiking-portal/
+├── 📄 DEPLOYMENT.md              # Complete deployment guide
+├── 📄 CONFIGURATION.md           # Environment variables reference
+├── 📄 PRE_DEPLOYMENT_CHECKLIST.md # Pre-deployment verification
+├── 📄 README.md                  # This file
+│
+├── 📂 frontend/                  # React application
+│   ├── src/
+│   │   ├── components/           # Reusable UI components
+│   │   │   ├── admin/            # Admin-specific components
+│   │   │   ├── hikes/            # Hike-related components
+│   │   │   ├── payments/         # Payment components
+│   │   │   └── common/           # Shared components
+│   │   ├── pages/                # Page-level components
+│   │   ├── contexts/             # React Context (state management)
+│   │   ├── services/             # API integration layer
+│   │   ├── hooks/                # Custom React hooks
+│   │   └── utils/                # Utility functions
+│   ├── public/
+│   │   ├── service-worker.js     # PWA service worker
+│   │   └── manifest.json         # PWA manifest
+│   ├── .env.production           # Production environment config ⚠️
+│   ├── .env.local.example        # Local dev config template
+│   └── package.json
+│
+├── 📂 backend/                   # Node.js API server
+│   ├── controllers/              # Request handlers
+│   │   ├── adminController.js
+│   │   ├── hikeController.js
+│   │   ├── paymentController.js
+│   │   └── ...
+│   ├── routes/                   # API route definitions
+│   │   ├── admin.js
+│   │   ├── hikes.js
+│   │   ├── auth.js
+│   │   └── ...
+│   ├── middleware/               # Express middleware
+│   │   ├── auth.js               # JWT authentication
+│   │   ├── permissions.js        # Permission checks
+│   │   └── rateLimit.js          # Rate limiting
+│   ├── services/                 # Business logic
+│   │   ├── emailService.js       # SendGrid integration
+│   │   ├── smsService.js         # Twilio integration
+│   │   └── socketService.js      # WebSocket handling
+│   ├── config/                   # Configuration
+│   │   ├── database.js           # DB connection
+│   │   └── env.js                # Environment variables
+│   ├── migrations/               # Database migrations (future)
+│   ├── tools/                    # Utility scripts
+│   ├── .env.example              # Backend config template
+│   └── server.js                 # Application entry point
+│
+├── 📂 docs/                      # Documentation
+│   ├── setup-guides/             # Getting started guides
+│   ├── deployment/               # Deployment documentation
+│   ├── architecture/             # System design
+│   ├── features/                 # Feature documentation
+│   ├── development/              # Developer guides
+│   ├── configuration/            # Config guides
+│   ├── compliance/               # POPIA & security
+│   ├── mobile/                   # PWA & mobile docs
+│   └── archive/                  # Archived documentation
+│
+├── 📂 homeassistant/             # Home Assistant integration
+│   └── custom_components/
+│       └── hiking_portal_v2/     # HA component files
+│
+├── 📂 scripts/                   # Deployment & utility scripts
+│   └── pre-deploy-check.sh       # Pre-deployment validation (future)
+│
+├── 📂 docker/                    # Docker configuration (local dev)
+│   └── docker-compose.yml        # Local dev environment
+│
+└── 📂 .git/                      # Git repository
+```
 
-### 📦 HACS Installation
-
-1. **Add Custom Repository**:
-   - HACS → Integrations → ⋮ → Custom repositories
-   - Repository: `https://github.com/steyncd/TheNarrowTrail`
-   - Category: Integration
-
-2. **Install**: Search "Hiking Portal Integration" → Download → Restart HA
-
-3. **Configure**: Settings → Devices & Services → Add Integration → "Hiking Portal"
-
-For complete setup instructions, see the [Home Assistant Integration Guide](homeassistant/ENHANCED_INTEGRATION_SETUP.md).
+---
 
 ## 🚀 Quick Start
 
 ### Prerequisites
-- Node.js 18+
-- Google Cloud SDK (`gcloud`)
-- Firebase CLI (`firebase`)
-- PostgreSQL client (`psql`)
 
-### Local Development
+- **Node.js** 18+ ([Download](https://nodejs.org/))
+- **Google Cloud SDK** ([Install](https://cloud.google.com/sdk/docs/install))
+- **Firebase CLI** - `npm install -g firebase-tools`
+- **Git** - For version control
+
+### Local Development Setup
 
 ```bash
-# Backend
+# 1. Clone the repository
+git clone https://github.com/yourusername/hiking-portal.git
+cd hiking-portal
+
+# 2. Install backend dependencies
 cd backend
 npm install
-npm start
 
-# Frontend
+# 3. Configure backend (create .env file)
+cp .env.example .env
+# Edit .env with your local database credentials
+
+# 4. Start backend
+npm start
+# Backend runs on http://localhost:5000
+
+# 5. In a new terminal, install frontend dependencies
 cd frontend
 npm install
+
+# 6. Configure frontend (for local development)
+cp .env.local.example .env.local
+# Edit .env.local to point to http://localhost:5000
+
+# 7. Start frontend
 npm start
+# Frontend runs on http://localhost:3000
 ```
 
-### Deployment
-
-See [docs/deployment/deployment-guide.md](docs/deployment/deployment-guide.md) for complete deployment instructions.
-
-**Quick Deploy:**
+### Using Docker (Alternative)
 
 ```bash
-# Frontend
-cd frontend
-npm run build
-firebase deploy --only hosting
+# Start all services with Docker Compose
+cd docker
+docker-compose up -d
 
-# Backend
+# Services will be available at:
+# - Frontend: http://localhost:3000
+# - Backend: http://localhost:5000
+# - Database: localhost:5433
+```
+
+---
+
+## 🚀 Deployment
+
+### ⚠️ IMPORTANT: Always Use the Checklist
+
+**Before deploying to production:**
+1. Read [PRE_DEPLOYMENT_CHECKLIST.md](PRE_DEPLOYMENT_CHECKLIST.md)
+2. Complete ALL checklist items
+3. Follow [DEPLOYMENT.md](DEPLOYMENT.md) step-by-step
+
+### Quick Deploy (If Checklist Complete)
+
+```bash
+# 1. Deploy Backend
 cd backend
 gcloud run deploy backend \
   --source . \
   --region europe-west1 \
+  --project helloliam \
   --allow-unauthenticated \
-  --set-env-vars NODE_ENV=production
+  --set-env-vars="NODE_ENV=production,DB_USER=postgres,DB_NAME=hiking_portal,DB_HOST=/cloudsql/helloliam:us-central1:hiking-db,DB_PORT=5432,FRONTEND_URL=https://www.thenarrowtrail.co.za" \
+  --add-cloudsql-instances=helloliam:us-central1:hiking-db \
+  --set-secrets="DB_PASSWORD=db-password:latest,JWT_SECRET=jwt-secret:latest,SENDGRID_API_KEY=sendgrid-key:latest,SENDGRID_FROM_EMAIL=sendgrid-from-email:latest,OPENWEATHER_API_KEY=openweather-api-key:latest,TWILIO_ACCOUNT_SID=twilio-sid:latest,TWILIO_AUTH_TOKEN=twilio-token:latest,TWILIO_WHATSAPP_NUMBER=twilio-whatsapp-number:latest"
+
+# 2. Deploy Frontend
+cd frontend
+npm run build
+firebase deploy --only hosting
 ```
 
-## 📝 Recent Updates (2025-10-09)
-
-- ✅ **Editable Legal Documents**: Privacy Policy and Terms & Conditions now editable through admin panel
-- ✅ **POPIA Compliance**: Full compliance with South African data protection laws
-- ✅ **Data Retention**: Automated cleanup of old logs and data
-- ✅ **Mobile Optimization**: Enhanced mobile responsiveness across all pages
-- ✅ **Notification System**: User-customizable notification preferences
-- ✅ **Auto Approval**: Intelligent user registration approval system
-- ✅ **Performance**: Lazy loading and code splitting implemented
-
-## 🆘 Getting Help
-
-1. **Deployment Issues**: See [docs/deployment/troubleshooting.md](docs/deployment/troubleshooting.md)
-2. **Development Guides**: See [docs/development/](docs/development/)
-3. **Feature Documentation**: See [docs/features/](docs/features/)
-4. **POPIA Compliance**: See [docs/compliance/](docs/compliance/)
-
-## 📧 Support
-
-Contact: steyncd@gmail.com
+For complete deployment instructions, see [DEPLOYMENT.md](DEPLOYMENT.md).
 
 ---
 
-**Last Updated:** 2025-10-09
+## 🏠 Home Assistant Integration
+
+[![HACS Custom](https://img.shields.io/badge/HACS-Custom-orange.svg)](https://github.com/custom-components/hacs)
+[![Version](https://img.shields.io/badge/version-2.5.0-blue.svg)](https://github.com/steyncd/TheNarrowTrail)
+
+Monitor and manage your hiking portal directly from Home Assistant!
+
+### Features
+
+- 📊 **Sensors**: Next hike, upcoming events, notifications, weather
+- 🚨 **Binary Sensors**: Urgent notifications, weather warnings
+- 📅 **Calendar**: Enhanced calendar with attendance status
+- ⚡ **Services**: Mark notifications read, record payments
+- 🎛️ **Dashboard**: Ready-to-use Lovelace configuration
+
+### Installation
+
+```bash
+# Via HACS (Recommended)
+1. HACS → Integrations → ⋮ → Custom repositories
+2. Add: https://github.com/steyncd/TheNarrowTrail
+3. Category: Integration
+4. Install "Hiking Portal Integration v2"
+5. Restart Home Assistant
+6. Configuration → Integrations → Add → "Hiking Portal"
+```
+
+For complete setup, see [homeassistant/OVERVIEW.md](homeassistant/OVERVIEW.md).
+
+---
+
+## 📊 Recent Updates
+
+### October 15, 2025 - Production Fixes
+- ✅ Fixed: Backend database connection using Unix socket
+- ✅ Fixed: All 12 users now display (pagination issue resolved)
+- ✅ Fixed: Correct backend URL in frontend configuration
+- ✅ Added: Smart pagination with per-page selector
+- ✅ Added: Comprehensive deployment documentation
+
+### October 14, 2025 - Production Deployment
+- ✅ Backend deployed to Cloud Run
+- ✅ Frontend deployed to Firebase Hosting
+- ✅ Database migrated to Cloud SQL
+- ✅ Secret Manager configured
+- ✅ SSL certificates configured
+
+### October 13, 2025 - Major Updates
+- ✅ Permission system audit complete
+- ✅ User role management enhanced
+- ✅ Mobile responsiveness improved
+- ✅ Performance optimizations
+- ✅ Code cleanup and organization
+
+---
+
+## 🔧 Configuration
+
+### Critical Configuration Files
+
+1. **`frontend/.env.production`** - Frontend production config
+   - Contains backend API URL
+   - **MUST** be verified before every deployment
+   - See [CONFIGURATION.md](CONFIGURATION.md)
+
+2. **Backend Environment** - Set via Cloud Run deployment
+   - Environment variables set via `gcloud run deploy`
+   - Secrets stored in Secret Manager
+   - Database connection via Unix socket
+
+3. **Database** - Cloud SQL PostgreSQL
+   - Instance: `helloliam:us-central1:hiking-db`
+   - Connection: Unix socket for Cloud Run
+   - Backups: Automated daily
+
+For complete configuration reference, see [CONFIGURATION.md](CONFIGURATION.md).
+
+---
+
+## 🆘 Troubleshooting
+
+### Common Issues
+
+**Issue: Frontend shows "Failed to fetch"**
+- **Cause**: Wrong backend URL in `.env.production`
+- **Solution**: Verify URL and rebuild frontend
+- **See**: [DEPLOYMENT.md Troubleshooting](DEPLOYMENT.md#troubleshooting)
+
+**Issue: Backend database connection errors**
+- **Cause**: Using TCP IP instead of Unix socket
+- **Solution**: Redeploy with correct `DB_HOST`
+- **See**: [CONFIGURATION.md](CONFIGURATION.md#database-configuration)
+
+**Issue: Users not all displaying**
+- **Status**: ✅ Fixed in latest deployment
+- **Solution**: Frontend now requests all users with `?limit=1000`
+
+For more troubleshooting, see:
+- [DEPLOYMENT.md - Troubleshooting Section](DEPLOYMENT.md#troubleshooting)
+- [docs/deployment/troubleshooting.md](docs/deployment/troubleshooting.md)
+
+---
+
+## 🛠️ Development
+
+### API Documentation
+
+API endpoints are documented in [backend/api-docs/](backend/api-docs/).
+
+**Base URL (Production):** `https://backend-4kzqyywlqq-ew.a.run.app`
+
+**Authentication:** JWT Bearer token in `Authorization` header
+
+Example API calls:
+```bash
+# Public endpoints (no auth)
+GET /api/hikes/public
+GET /api/public-content/mission_vision
+
+# Authenticated endpoints
+GET /api/hikes (requires login)
+POST /api/hikes (requires admin)
+GET /api/admin/users (requires admin)
+```
+
+### Database Schema
+
+See [docs/architecture/DATABASE_SCHEMA.md](docs/architecture/DATABASE_SCHEMA.md) for complete schema documentation.
+
+**Tables:**
+- `users` - User accounts and profiles
+- `hikes` - Hiking events
+- `hike_interest` - User registrations
+- `payments` - Payment tracking
+- `roles` & `permissions` - Access control
+- And 20+ more tables
+
+---
+
+## 📚 Documentation
+
+### Essential Reading
+
+1. **[Quick Start Guide](docs/setup-guides/QUICK_START.md)** - Get up and running
+2. **[Deployment Guide](DEPLOYMENT.md)** - Production deployment
+3. **[Configuration Reference](CONFIGURATION.md)** - All settings explained
+4. **[Pre-Deployment Checklist](PRE_DEPLOYMENT_CHECKLIST.md)** - Before every deploy
+
+### Additional Documentation
+
+- **Architecture**: [docs/architecture/](docs/architecture/)
+- **Features**: [docs/features/](docs/features/)
+- **Development**: [docs/development/](docs/development/)
+- **Compliance**: [docs/compliance/](docs/compliance/)
+- **Mobile/PWA**: [docs/mobile/](docs/mobile/)
+
+---
+
+## 🤝 Contributing
+
+1. Fork the repository
+2. Create a feature branch (`git checkout -b feature/amazing-feature`)
+3. Commit your changes (`git commit -m 'Add amazing feature'`)
+4. Push to the branch (`git push origin feature/amazing-feature`)
+5. Open a Pull Request
+
+### Code Standards
+
+- **Backend**: ESLint with Airbnb config
+- **Frontend**: ESLint with React config
+- **Commits**: Conventional commit messages
+- **Testing**: Write tests for new features
+
+---
+
+## 📧 Support
+
+**Developer:** Christiaan Steyn
+**Email:** steyncd@gmail.com
+**Project:** The Narrow Trail Hiking Portal
+**Status:** ✅ Production Ready
+
+---
+
+## 📄 License
+
+This project is private and proprietary.
+
+---
+
+**Last Updated:** October 15, 2025
+**Version:** 2.0.0
+**Status:** ✅ Production - Fully Operational
