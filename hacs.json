@@ -2,6 +2,7 @@
   "name": "The Narrow Trail Hiking Portal",
   "content_in_root": true,
   "render_readme": true,
+  "filename": "hiking_portal_v2",
   "domains": [
     "sensor",
     "binary_sensor",
