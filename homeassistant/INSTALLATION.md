@@ -1,10 +1,16 @@
 # Installation Guide - The Narrow Trail Home Assistant Integration
 
+**Production Environment**
+- **API URL:** https://backend-4kzqyywlqq-ew.a.run.app
+- **Web Portal:** https://helloliam.web.app
+- **Integration Version:** v2.5.0
+- **Domain:** hiking_portal_v2
+
 ## Prerequisites
 
 - Home Assistant 2023.1 or newer
-- Access to your Hiking Portal account
-- JWT authentication token from the portal
+- Access to your Hiking Portal account at https://helloliam.web.app
+- JWT authentication token from the portal (see Step 3 below)
 
 ## Quick Start (5 Minutes)
 
