@@ -8,10 +8,32 @@ const emailTemplates = require('../services/emailTemplates');
 exports.getPublicHikes = async (req, res) => {
   try {
     const result = await pool.query(
-      `SELECT id, name, date, difficulty, distance, description, type, cost, group_type, status, image_url, gps_coordinates, price_is_estimate, date_is_estimate
-       FROM hikes
-       WHERE date >= CURRENT_DATE
-       ORDER BY date ASC
+      `SELECT
+        h.id, h.name, h.date, h.difficulty, h.distance, h.description, h.type, h.cost,
+        h.group_type, h.status, h.image_url, h.gps_coordinates, h.price_is_estimate,
+        h.date_is_estimate, h.event_type, h.event_type_data, h.created_at,
+        COALESCE(
+          json_agg(
+            DISTINCT jsonb_build_object(
+              'id', t.id,
+              'name', t.name,
+              'slug', t.slug,
+              'category', t.category,
+              'color', t.color,
+              'icon', t.icon
+            )
+          ) FILTER (WHERE t.id IS NOT NULL),
+          '[]'
+        ) as tags,
+        COUNT(DISTINCT CASE WHEN hi.attendance_status IN ('interested', 'confirmed') THEN hi.user_id END) as interested_count,
+        COUNT(DISTINCT CASE WHEN hi.attendance_status = 'confirmed' THEN hi.user_id END) as confirmed_count
+       FROM hikes h
+       LEFT JOIN event_tags et ON h.id = et.event_id
+       LEFT JOIN tags t ON et.tag_id = t.id
+       LEFT JOIN hike_interest hi ON h.id = hi.hike_id
+       WHERE h.date >= CURRENT_DATE
+       GROUP BY h.id
+       ORDER BY h.date ASC
        LIMIT 12`
     );
     res.json(result.rows);
@@ -27,9 +49,24 @@ exports.getHikeById = async (req, res) => {
     const { id } = req.params;
     const result = await pool.query(
       `SELECT h.*,
+       COALESCE(
+         json_agg(
+           DISTINCT jsonb_build_object(
+             'id', t.id,
+             'name', t.name,
+             'slug', t.slug,
+             'category', t.category,
+             'color', t.color,
+             'icon', t.icon
+           )
+         ) FILTER (WHERE t.id IS NOT NULL),
+         '[]'
+       ) as tags,
        COUNT(DISTINCT CASE WHEN hi.attendance_status = 'interested' THEN hi.user_id END) as interested_count,
        COUNT(DISTINCT CASE WHEN hi.attendance_status = 'confirmed' THEN hi.user_id END) as confirmed_count
        FROM hikes h
+       LEFT JOIN event_tags et ON h.id = et.event_id
+       LEFT JOIN tags t ON et.tag_id = t.id
        LEFT JOIN hike_interest hi ON h.id = hi.hike_id
        WHERE h.id = $1
        GROUP BY h.id`,
@@ -54,9 +91,24 @@ exports.getHikes = async (req, res) => {
   try {
     const result = await pool.query(
       `SELECT h.*,
+       COALESCE(
+         json_agg(
+           DISTINCT jsonb_build_object(
+             'id', t.id,
+             'name', t.name,
+             'slug', t.slug,
+             'category', t.category,
+             'color', t.color,
+             'icon', t.icon
+           )
+         ) FILTER (WHERE t.id IS NOT NULL),
+         '[]'
+       ) as tags,
        COALESCE(json_agg(DISTINCT hi.user_id) FILTER (WHERE hi.attendance_status IN ('interested', 'confirmed')), '[]') as interested_users,
        COALESCE(json_agg(DISTINCT hi.user_id) FILTER (WHERE hi.attendance_status = 'confirmed'), '[]') as confirmed_users
        FROM hikes h
+       LEFT JOIN event_tags et ON h.id = et.event_id
+       LEFT JOIN tags t ON et.tag_id = t.id
        LEFT JOIN hike_interest hi ON h.id = hi.hike_id
        GROUP BY h.id
        ORDER BY h.date ASC`
@@ -71,31 +123,65 @@ exports.getHikes = async (req, res) => {
 // Create hike (Admin only)
 exports.createHike = async (req, res) => {
   try {
-    const { name, date, difficulty, distance, location, description, type, cost, group, status, image_url, daily_distances, overnight_facilities, price_is_estimate, date_is_estimate, location_link, destination_website, gps_coordinates } = req.body;
+    const {
+      name, date, location, description, cost, status,
+      image_url, price_is_estimate, date_is_estimate,
+      location_link, destination_website, gps_coordinates,
+      event_type, event_type_data,
+      registration_deadline, payment_deadline, registration_closed, pay_at_venue,
+      // Old fields for backward compatibility
+      difficulty, distance, type, group_type
+    } = req.body;
+
+    // Convert datetime-local format (YYYY-MM-DDTHH:MM) to PostgreSQL TIMESTAMP format (YYYY-MM-DDTHH:MM:SS)
+    // datetime-local inputs don't include seconds, but PostgreSQL TIMESTAMP requires them
+    const regDeadlineValue = registration_deadline && registration_deadline.length === 16
+      ? registration_deadline + ':00'
+      : registration_deadline || null;
+    const payDeadlineValue = payment_deadline && payment_deadline.length === 16
+      ? payment_deadline + ':00'
+      : payment_deadline || null;
 
     const result = await pool.query(
-      `INSERT INTO hikes (name, date, difficulty, distance, location, description, type, cost, group_type, status, image_url, daily_distances, overnight_facilities, price_is_estimate, date_is_estimate, location_link, destination_website, gps_coordinates, created_at)
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, NOW())
+      `INSERT INTO hikes (
+        name, date, location, description, cost, status,
+        image_url, price_is_estimate, date_is_estimate,
+        location_link, destination_website, gps_coordinates,
+        event_type, event_type_data,
+        registration_deadline, payment_deadline, registration_closed, pay_at_venue,
+        difficulty, distance, type, group_type,
+        created_at
+      )
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22, NOW())
        RETURNING *`,
-      [name, date, difficulty, distance, location, description, type, cost, group, status || 'gathering_interest', image_url, daily_distances ? JSON.stringify(daily_distances) : null, overnight_facilities, price_is_estimate || false, date_is_estimate || false, location_link, destination_website, gps_coordinates]
+      [
+        name, date, location, description, cost, status || 'gathering_interest',
+        image_url, price_is_estimate || false, date_is_estimate || false,
+        location_link, destination_website, gps_coordinates,
+        event_type || 'hiking', event_type_data ? JSON.stringify(event_type_data) : '{}',
+        regDeadlineValue, payDeadlineValue,
+        registration_closed === true, pay_at_venue === true,
+        // Provide defaults for old required fields
+        difficulty || 'Moderate', distance || 'TBA', type || 'day', group_type || 'family'
+      ]
     );
 
     const hike = result.rows[0];
 
     // Log activity
     const ipAddress = req.ip || req.connection.remoteAddress;
-    await logActivity(req.user.id, 'create_hike', 'hike', hike.id, JSON.stringify({ name, date, difficulty }), ipAddress);
+    await logActivity(req.user.id, 'create_hike', 'hike', hike.id, JSON.stringify({ name, date, event_type }), ipAddress);
 
     // Send notifications asynchronously (non-blocking) - PERFORMANCE OPTIMIZATION
     (async () => {
       try {
         const users = await pool.query(
-          'SELECT email, phone, notifications_email, notifications_whatsapp, name FROM users WHERE status = $1',
+          'SELECT id, email, phone, notifications_email, notifications_whatsapp, name FROM users WHERE status = $1',
           ['approved']
         );
 
         const hikeDate = new Date(date).toLocaleDateString();
-        const groupType = group === 'family' ? 'family' : "men's";
+        const eventTypeName = event_type || 'hiking';
 
         // Send all notifications in parallel
         await Promise.all(
@@ -106,8 +192,10 @@ exports.createHike = async (req, res) => {
               promises.push(
                 sendEmail(
                   user.email,
-                  'New Hike Added!',
-                  emailTemplates.newHikeEmail(name, hikeDate, difficulty, distance, description, cost, groupType)
+                  'New Event Added!',
+                  emailTemplates.newHikeEmail(name, hikeDate, eventTypeName, '', description, cost, 'all'),
+                  user.id,
+                  'new_hike'
                 )
               );
             }
@@ -116,7 +204,9 @@ exports.createHike = async (req, res) => {
               promises.push(
                 sendWhatsApp(
                   user.phone,
-                  `New ${groupType} hike: ${name} on ${hikeDate}. ${difficulty} difficulty, ${distance}. ${cost > 0 ? `Cost: R${cost}` : 'Free'}`
+                  `New ${eventTypeName} event: ${name} on ${hikeDate}. ${cost > 0 ? `Cost: R${cost}` : 'Free'}`,
+                  user.id,
+                  'new_hike'
                 )
               );
             }
@@ -125,7 +215,7 @@ exports.createHike = async (req, res) => {
           })
         );
 
-        console.log(`Notifications sent for hike: ${name}`);
+        console.log(`Notifications sent for event: ${name}`);
       } catch (error) {
         console.error('Error sending notifications:', error);
       }
@@ -133,8 +223,9 @@ exports.createHike = async (req, res) => {
 
     res.status(201).json(hike);
   } catch (error) {
-    console.error('Create hike error:', error);
-    res.status(500).json({ error: 'Failed to create hike' });
+    console.error('Create event error:', error);
+    console.error('Error details:', error.message);
+    res.status(500).json({ error: 'Failed to create event', details: error.message });
   }
 };
 
@@ -142,17 +233,46 @@ exports.createHike = async (req, res) => {
 exports.updateHike = async (req, res) => {
   try {
     const { id } = req.params;
-    const { name, date, difficulty, distance, location, description, type, cost, group, status, image_url, daily_distances, overnight_facilities, price_is_estimate, date_is_estimate, location_link, destination_website, gps_coordinates } = req.body;
+    const {
+      name, date, location, description, cost, status,
+      image_url, price_is_estimate, date_is_estimate,
+      location_link, destination_website, gps_coordinates,
+      event_type, event_type_data,
+      registration_deadline, payment_deadline, registration_closed, pay_at_venue,
+      // Old fields for backward compatibility
+      difficulty, distance, type, group_type
+    } = req.body;
+
+    // Convert datetime-local format (YYYY-MM-DDTHH:MM) to PostgreSQL TIMESTAMP format (YYYY-MM-DDTHH:MM:SS)
+    // datetime-local inputs don't include seconds, but PostgreSQL TIMESTAMP requires them
+    const regDeadlineValue = registration_deadline && registration_deadline.length === 16
+      ? registration_deadline + ':00'
+      : registration_deadline || null;
+    const payDeadlineValue = payment_deadline && payment_deadline.length === 16
+      ? payment_deadline + ':00'
+      : payment_deadline || null;
 
     const result = await pool.query(
       `UPDATE hikes
-       SET name = $1, date = $2, difficulty = $3, distance = $4, location = $5,
-           description = $6, type = $7, cost = $8, group_type = $9, status = $10,
-           image_url = $11, daily_distances = $12, overnight_facilities = $13,
-           price_is_estimate = $14, date_is_estimate = $15, location_link = $16, destination_website = $17, gps_coordinates = $18
-       WHERE id = $19
+       SET name = $1, date = $2, location = $3, description = $4, cost = $5, status = $6,
+           image_url = $7, price_is_estimate = $8, date_is_estimate = $9,
+           location_link = $10, destination_website = $11, gps_coordinates = $12,
+           event_type = $13, event_type_data = $14,
+           registration_deadline = $15, payment_deadline = $16, registration_closed = $17, pay_at_venue = $18,
+           difficulty = $19, distance = $20, type = $21, group_type = $22
+       WHERE id = $23
        RETURNING *`,
-      [name, date, difficulty, distance, location, description, type, cost, group, status || 'gathering_interest', image_url, daily_distances ? JSON.stringify(daily_distances) : null, overnight_facilities, price_is_estimate || false, date_is_estimate || false, location_link, destination_website, gps_coordinates, id]
+      [
+        name, date, location, description, cost, status || 'gathering_interest',
+        image_url, price_is_estimate || false, date_is_estimate || false,
+        location_link, destination_website, gps_coordinates,
+        event_type || 'hiking', event_type_data ? JSON.stringify(event_type_data) : '{}',
+        regDeadlineValue, payDeadlineValue,
+        registration_closed === true, pay_at_venue === true,
+        // Provide defaults for old required fields
+        difficulty || 'Moderate', distance || 'TBA', type || 'day', group_type || 'family',
+        id
+      ]
     );
 
     if (result.rows.length === 0) {
@@ -161,12 +281,13 @@ exports.updateHike = async (req, res) => {
 
     // Log activity
     const ipAddress = req.ip || req.connection.remoteAddress;
-    await logActivity(req.user.id, 'update_hike', 'hike', id, JSON.stringify({ name, date, status }), ipAddress);
+    await logActivity(req.user.id, 'update_hike', 'hike', id, JSON.stringify({ name, date, status, event_type }), ipAddress);
 
     res.json(result.rows[0]);
   } catch (error) {
-    console.error('Update hike error:', error);
-    res.status(500).json({ error: 'Failed to update hike' });
+    console.error('Update event error:', error);
+    console.error('Error details:', error.message);
+    res.status(500).json({ error: 'Failed to update event', details: error.message });
   }
 };
 
@@ -187,8 +308,8 @@ exports.deleteHike = async (req, res) => {
 
     res.json({ message: 'Hike deleted' });
   } catch (error) {
-    console.error('Delete hike error:', error);
-    res.status(500).json({ error: 'Failed to delete hike' });
+    console.error('Delete event error:', error);
+    res.status(500).json({ error: 'Failed to delete event' });
   }
 };
 
@@ -744,31 +865,79 @@ exports.getMyHikes = async (req, res) => {
 
     const interested = await pool.query(
       `SELECT h.*,
+              COALESCE(
+                json_agg(
+                  DISTINCT jsonb_build_object(
+                    'id', t.id,
+                    'name', t.name,
+                    'slug', t.slug,
+                    'category', t.category,
+                    'color', t.color,
+                    'icon', t.icon
+                  )
+                ) FILTER (WHERE t.id IS NOT NULL),
+                '[]'
+              ) as tags,
               (SELECT COUNT(*) FROM hike_interest WHERE hike_id = h.id AND attendance_status IN ('interested', 'confirmed')) as interested_count,
               (SELECT COUNT(*) FROM hike_interest WHERE hike_id = h.id AND attendance_status = 'confirmed') as confirmed_count
        FROM hikes h
        JOIN hike_interest i ON h.id = i.hike_id
+       LEFT JOIN event_tags et ON h.id = et.event_id
+       LEFT JOIN tags t ON et.tag_id = t.id
        WHERE i.user_id = $1 AND i.attendance_status = 'interested' AND h.date >= CURRENT_DATE
+       GROUP BY h.id, i.payment_status, i.amount_paid
        ORDER BY h.date ASC`,
       [userId]
     );
 
     const confirmed = await pool.query(
       `SELECT h.*, i.payment_status, i.amount_paid,
+              COALESCE(
+                json_agg(
+                  DISTINCT jsonb_build_object(
+                    'id', t.id,
+                    'name', t.name,
+                    'slug', t.slug,
+                    'category', t.category,
+                    'color', t.color,
+                    'icon', t.icon
+                  )
+                ) FILTER (WHERE t.id IS NOT NULL),
+                '[]'
+              ) as tags,
               (SELECT COUNT(*) FROM hike_interest WHERE hike_id = h.id AND attendance_status IN ('interested', 'confirmed')) as interested_count,
               (SELECT COUNT(*) FROM hike_interest WHERE hike_id = h.id AND attendance_status = 'confirmed') as confirmed_count
        FROM hikes h
        JOIN hike_interest i ON h.id = i.hike_id
+       LEFT JOIN event_tags et ON h.id = et.event_id
+       LEFT JOIN tags t ON et.tag_id = t.id
        WHERE i.user_id = $1 AND i.attendance_status = 'confirmed' AND h.date >= CURRENT_DATE
+       GROUP BY h.id, i.payment_status, i.amount_paid
        ORDER BY h.date ASC`,
       [userId]
     );
 
     const past = await pool.query(
-      `SELECT h.*
+      `SELECT h.*,
+              COALESCE(
+                json_agg(
+                  DISTINCT jsonb_build_object(
+                    'id', t.id,
+                    'name', t.name,
+                    'slug', t.slug,
+                    'category', t.category,
+                    'color', t.color,
+                    'icon', t.icon
+                  )
+                ) FILTER (WHERE t.id IS NOT NULL),
+                '[]'
+              ) as tags
        FROM hikes h
        JOIN hike_interest i ON h.id = i.hike_id
+       LEFT JOIN event_tags et ON h.id = et.event_id
+       LEFT JOIN tags t ON et.tag_id = t.id
        WHERE i.user_id = $1 AND i.attendance_status = 'attended' AND h.date < CURRENT_DATE
+       GROUP BY h.id
        ORDER BY h.date DESC
        LIMIT 10`,
       [userId]

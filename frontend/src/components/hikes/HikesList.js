@@ -18,9 +18,9 @@ const HikesList = () => {
 
   // Filter states
   const [searchTerm, setSearchTerm] = useState('');
-  const [difficultyFilter, setDifficultyFilter] = useState('all');
-  const [typeFilter, setTypeFilter] = useState('all');
+  const [eventTypeFilter, setEventTypeFilter] = useState('all'); // Changed from typeFilter to eventTypeFilter
   const [statusFilter, setStatusFilter] = useState('all');
+  const [dateRangeFilter, setDateRangeFilter] = useState('all');
 
   useEffect(() => {
     fetchHikes();
@@ -58,21 +58,9 @@ const HikesList = () => {
 
   const clearFilters = () => {
     setSearchTerm('');
-    setDifficultyFilter('all');
-    setTypeFilter('all');
+    setEventTypeFilter('all');
     setStatusFilter('all');
-  };
-
-  // eslint-disable-next-line no-unused-vars
-  const applyQuickFilter = (filterType) => {
-    clearFilters();
-    if (filterType === 'thisMonth') {
-      // This is already handled by date filtering, just clear others
-    } else if (filterType === 'easy') {
-      setDifficultyFilter('easy');
-    } else if (filterType === 'openSpots') {
-      setStatusFilter('open');
-    }
+    setDateRangeFilter('all');
   };
 
   // PERFORMANCE OPTIMIZATION: Memoize filter logic to prevent recalculation on every render
@@ -85,14 +73,26 @@ const HikesList = () => {
         return false;
       }
 
-      // Difficulty filter
-      if (difficultyFilter !== 'all' && hike.difficulty.toLowerCase() !== difficultyFilter.toLowerCase()) {
+      // Event Type filter (hiking, camping, 4x4, cycling, outdoor)
+      if (eventTypeFilter !== 'all' && hike.event_type !== eventTypeFilter) {
         return false;
       }
 
-      // Type filter
-      if (typeFilter !== 'all' && hike.type !== typeFilter) {
-        return false;
+      // Date Range filter
+      if (dateRangeFilter !== 'all') {
+        const hikeDate = new Date(hike.date);
+        const now = new Date();
+        const oneMonthFromNow = new Date(now.getTime() + 30 * 24 * 60 * 60 * 1000);
+        const threeMonthsFromNow = new Date(now.getTime() + 90 * 24 * 60 * 60 * 1000);
+        const sixMonthsFromNow = new Date(now.getTime() + 180 * 24 * 60 * 60 * 1000);
+
+        if (dateRangeFilter === 'thisMonth' && (hikeDate < now || hikeDate > oneMonthFromNow)) {
+          return false;
+        } else if (dateRangeFilter === 'next3Months' && (hikeDate < now || hikeDate > threeMonthsFromNow)) {
+          return false;
+        } else if (dateRangeFilter === 'next6Months' && (hikeDate < now || hikeDate > sixMonthsFromNow)) {
+          return false;
+        }
       }
 
       // Status filter
@@ -108,7 +108,7 @@ const HikesList = () => {
 
       return true;
     });
-  }, [hikes, searchTerm, difficultyFilter, typeFilter, statusFilter]);
+  }, [hikes, searchTerm, eventTypeFilter, dateRangeFilter, statusFilter]);
 
   // PERFORMANCE OPTIMIZATION: Memoize date calculations
   const { upcomingSoon, future, past } = useMemo(() => {
@@ -131,46 +131,7 @@ const HikesList = () => {
     };
   }, [filteredHikes]);
 
-  if (loading && hikes.length === 0) {
-    return (
-      <div className="container mt-4">
-        <div className="row">
-          <HikeCardSkeleton />
-          <HikeCardSkeleton />
-          <HikeCardSkeleton />
-          <HikeCardSkeleton />
-          <HikeCardSkeleton />
-          <HikeCardSkeleton />
-        </div>
-      </div>
-    );
-  }
-
-  if (filteredHikes.length === 0 && hikes.length > 0) {
-    return (
-      <>
-        {/* eslint-disable-next-line no-use-before-define */}
-        {renderFilters()}
-        <div className="card">
-          <div className="card-body text-center text-muted py-5">
-            <p>No hikes match your filters</p>
-            <button onClick={clearFilters} className="btn btn-primary">Clear Filters</button>
-          </div>
-        </div>
-      </>
-    );
-  }
-
-  if (hikes.length === 0) {
-    return (
-      <div className="card">
-        <div className="card-body text-center text-muted py-5">
-          No hikes scheduled
-        </div>
-      </div>
-    );
-  }
-
+  // Define renderFilters before it's used
   const renderFilters = () => (
     <div
       className="card shadow-sm mb-3"
@@ -190,7 +151,7 @@ const HikesList = () => {
               <input
                 type="text"
                 className="form-control form-control-sm"
-                placeholder="Search hikes..."
+                placeholder="Search events..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 style={{
@@ -216,8 +177,8 @@ const HikesList = () => {
           <div className="col-6 col-md-2">
             <select
               className="form-select form-select-sm"
-              value={difficultyFilter}
-              onChange={(e) => setDifficultyFilter(e.target.value)}
+              value={eventTypeFilter}
+              onChange={(e) => setEventTypeFilter(e.target.value)}
               style={{
                 background: theme === 'dark' ? 'var(--bg-secondary)' : 'white',
                 color: theme === 'dark' ? 'var(--text-primary)' : '#212529',
@@ -225,19 +186,20 @@ const HikesList = () => {
                 fontSize: '0.85rem'
               }}
             >
-              <option value="all">All Difficulty</option>
-              <option value="easy">Easy</option>
-              <option value="moderate">Moderate</option>
-              <option value="hard">Hard</option>
-              <option value="expert">Expert</option>
+              <option value="all">All Event Types</option>
+              <option value="hiking">Hiking</option>
+              <option value="camping">Camping</option>
+              <option value="4x4">4x4</option>
+              <option value="cycling">Cycling</option>
+              <option value="outdoor">Outdoor</option>
             </select>
           </div>
 
           <div className="col-6 col-md-2">
             <select
               className="form-select form-select-sm"
-              value={typeFilter}
-              onChange={(e) => setTypeFilter(e.target.value)}
+              value={dateRangeFilter}
+              onChange={(e) => setDateRangeFilter(e.target.value)}
               style={{
                 background: theme === 'dark' ? 'var(--bg-secondary)' : 'white',
                 color: theme === 'dark' ? 'var(--text-primary)' : '#212529',
@@ -245,9 +207,10 @@ const HikesList = () => {
                 fontSize: '0.85rem'
               }}
             >
-              <option value="all">All Types</option>
-              <option value="day">Day</option>
-              <option value="multi">Multi-Day</option>
+              <option value="all">All Dates</option>
+              <option value="thisMonth">This Month</option>
+              <option value="next3Months">Next 3 Months</option>
+              <option value="next6Months">Next 6 Months</option>
             </select>
           </div>
 
@@ -286,6 +249,58 @@ const HikesList = () => {
       </div>
     </div>
   );
+
+  if (loading && hikes.length === 0) {
+    return (
+      <div className="container mt-4">
+        <div className="row">
+          <HikeCardSkeleton />
+          <HikeCardSkeleton />
+          <HikeCardSkeleton />
+          <HikeCardSkeleton />
+          <HikeCardSkeleton />
+          <HikeCardSkeleton />
+        </div>
+      </div>
+    );
+  }
+
+  if (filteredHikes.length === 0 && hikes.length > 0) {
+    return (
+      <>
+        {renderFilters()}
+        <div className="card shadow-sm" style={{
+          background: theme === 'dark' ? 'var(--card-bg)' : 'white',
+          border: theme === 'dark' ? '1px solid var(--border-color)' : '1px solid #dee2e6'
+        }}>
+          <div className="card-body text-center py-5">
+            <div style={{ fontSize: '3rem', marginBottom: '1rem' }}>🔍</div>
+            <h5 style={{ color: theme === 'dark' ? 'var(--text-primary)' : '#212529' }}>
+              No Events Found
+            </h5>
+            <p className="text-muted mb-4">
+              {eventTypeFilter !== 'all'
+                ? `No ${eventTypeFilter} events match your current filters.`
+                : 'No events match your current filters.'}
+            </p>
+            <button onClick={clearFilters} className="btn btn-primary">
+              Clear All Filters
+            </button>
+          </div>
+        </div>
+      </>
+    );
+  }
+
+  if (hikes.length === 0) {
+    return (
+      <div className="card">
+        <div className="card-body text-center text-muted py-5">
+          No hikes scheduled
+        </div>
+      </div>
+    );
+  }
 
   return (
     <>

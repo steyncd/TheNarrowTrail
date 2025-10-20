@@ -5,7 +5,10 @@ const { authenticateToken } = require('../middleware/auth');
 const { requirePermission } = require('../middleware/permissions');
 const analyticsController = require('../controllers/analyticsController');
 
-// All analytics routes require analytics.view permission
+// Public statistics endpoint (NO AUTH REQUIRED) - MUST be before authentication middleware
+router.get('/public/statistics', analyticsController.getPublicStatistics);
+
+// All other analytics routes require analytics.view permission
 router.use(authenticateToken);
 router.use(requirePermission('analytics.view'));
 

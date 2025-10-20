@@ -1,9 +1,12 @@
 import React, { useState } from 'react';
 import { useAuth } from '../../contexts/AuthContext';
+import { useNavigate, useLocation } from 'react-router-dom';
 import ForgotPassword from './ForgotPassword';
 
 const LoginForm = ({ onClose, onShowSignUp }) => {
   const { login } = useAuth();
+  const navigate = useNavigate();
+  const location = useLocation();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
@@ -20,7 +23,18 @@ const LoginForm = ({ onClose, onShowSignUp }) => {
     if (result.success) {
       setEmail('');
       setPassword('');
-      if (onClose) onClose();
+
+      // Check for redirect parameter in URL
+      const params = new URLSearchParams(location.search);
+      const redirectPath = params.get('redirect');
+
+      if (redirectPath) {
+        // Redirect to the specified path
+        navigate(redirectPath);
+      } else if (onClose) {
+        // Default behavior - close the modal
+        onClose();
+      }
     } else {
       setError(result.error);
     }

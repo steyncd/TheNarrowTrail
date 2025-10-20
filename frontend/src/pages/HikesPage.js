@@ -8,8 +8,8 @@ const HikesPage = () => {
     <div>
       <PageHeader
         icon={Mountain}
-        title="Hikes"
-        subtitle="Browse and express interest in upcoming hiking adventures"
+        title="Events"
+        subtitle="Browse and express interest in upcoming outdoor adventures"
       />
 
       <HikesList />

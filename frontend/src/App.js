@@ -1,6 +1,6 @@
 // App.js - Main Application with React Router (OPTIMIZED WITH LAZY LOADING)
 import React, { Suspense, lazy } from 'react';
-import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, Navigate, useParams } from 'react-router-dom';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 import { ThemeProvider, useTheme } from './contexts/ThemeContext';
 import { SocketProvider } from './contexts/SocketContext';
@@ -9,6 +9,7 @@ import PrivateRoute from './components/auth/PrivateRoute';
 import LoadingSpinner from './components/common/LoadingSpinner';
 import ErrorBoundary from './components/common/ErrorBoundary';
 import { initMobileDiagnostics } from './utils/mobileDiagnostics';
+import { setupChunkErrorHandler } from './utils/chunkErrorHandler';
 
 // PERFORMANCE OPTIMIZATION: Eager load critical components for first paint
 import LandingPage from './components/landing/LandingPage';
@@ -19,6 +20,14 @@ import SuggestHikeButton from './components/common/SuggestHikeButton';
 import OfflineIndicator from './components/common/OfflineIndicator';
 import PWAInstallPrompt from './components/common/PWAInstallPrompt';
 import PWAUtilities from './components/common/PWAUtilities';
+import UpdateNotification from './components/common/UpdateNotification';
+import { useVersionCheck } from './hooks/useVersionCheck';
+
+// Redirect component that properly handles route parameters
+function EventEditRedirect() {
+  const { id } = useParams();
+  return <Navigate to={`/admin/hikes/edit/${id}`} replace />;
+}
 
 // PERFORMANCE OPTIMIZATION: Lazy load all pages to reduce initial bundle size
 // Pages are only loaded when user navigates to them
@@ -45,10 +54,18 @@ const DataRetentionPage = lazy(() => import('./pages/DataRetentionPage'));
 const NotificationPreferencesPage = lazy(() => import('./pages/NotificationPreferencesPage'));
 const ManageHikesPage = lazy(() => import('./pages/ManageHikesPage'));
 const HikeManagementPage = lazy(() => import('./pages/HikeManagementPage'));
+const AddEventPage = lazy(() => import('./pages/AddEventPage'));
+const EditEventPage = lazy(() => import('./pages/EditEventPage'));
+const WeatherSettingsPage = lazy(() => import('./pages/WeatherSettingsPage'));
+const PortalSettingsPage = lazy(() => import('./pages/PortalSettingsPage'));
 
 // Legal pages
 const PrivacyPolicy = lazy(() => import('./components/legal/PrivacyPolicy'));
 const TermsAndConditions = lazy(() => import('./components/legal/TermsAndConditions'));
+
+// PWA handler pages
+const ShareTargetPage = lazy(() => import('./pages/ShareTargetPage'));
+const GPXHandlerPage = lazy(() => import('./pages/GPXHandlerPage'));
 
 // Public Route Wrapper (allows access without authentication)
 function PublicRouteWrapper({ children }) {
@@ -129,10 +146,14 @@ function LazyLoadFallback() {
 }
 
 function App() {
-  // Initialize mobile diagnostics on app start
+  // Initialize mobile diagnostics and chunk error handler on app start
   React.useEffect(() => {
     initMobileDiagnostics();
+    setupChunkErrorHandler(); // Automatically reload on chunk errors
   }, []);
+
+  // Version checking for automatic updates
+  const { updateAvailable, latestVersion, refreshApp, dismissUpdate } = useVersionCheck();
 
   return (
     <ErrorBoundary>
@@ -141,6 +162,15 @@ function App() {
           <AuthProvider>
             <PermissionProvider>
               <SocketProvider>
+          {/* Show update notification banner when new version is available */}
+          {updateAvailable && (
+            <UpdateNotification
+              onUpdate={refreshApp}
+              onDismiss={dismissUpdate}
+              latestVersion={latestVersion}
+            />
+          )}
+
           <Routes>
             {/* Public Routes */}
             <Route
@@ -282,6 +312,33 @@ function App() {
               }
             />
             <Route
+              path="/admin/hikes/add"
+              element={
+                <PrivateRoute requireAdmin>
+                  <PrivateRouteWrapper>
+                    <Suspense fallback={<LazyLoadFallback />}>
+                      <AddEventPage />
+                    </Suspense>
+                  </PrivateRouteWrapper>
+                </PrivateRoute>
+              }
+            />
+            <Route
+              path="/admin/hikes/edit/:id"
+              element={
+                <PrivateRoute requireAdmin>
+                  <PrivateRouteWrapper>
+                    <Suspense fallback={<LazyLoadFallback />}>
+                      <EditEventPage />
+                    </Suspense>
+                  </PrivateRouteWrapper>
+                </PrivateRoute>
+              }
+            />
+            {/* Legacy routes - redirect to new paths */}
+            <Route path="/events/add" element={<Navigate to="/admin/hikes/add" replace />} />
+            <Route path="/events/edit/:id" element={<EventEditRedirect />} />
+            <Route
               path="/manage-hikes/:hikeId"
               element={
                 <PrivateRoute requireAdmin>
@@ -403,6 +460,30 @@ function App() {
                 </PrivateRoute>
               }
             />
+            <Route
+              path="/admin/weather-settings"
+              element={
+                <PrivateRoute requireAdmin>
+                  <PrivateRouteWrapper>
+                    <Suspense fallback={<LazyLoadFallback />}>
+                      <WeatherSettingsPage />
+                    </Suspense>
+                  </PrivateRouteWrapper>
+                </PrivateRoute>
+              }
+            />
+            <Route
+              path="/admin/portal-settings"
+              element={
+                <PrivateRoute requireAdmin>
+                  <PrivateRouteWrapper>
+                    <Suspense fallback={<LazyLoadFallback />}>
+                      <PortalSettingsPage />
+                    </Suspense>
+                  </PrivateRouteWrapper>
+                </PrivateRoute>
+              }
+            />
             
             {/* User data retention page */}
             <Route
@@ -436,11 +517,37 @@ function App() {
             <Route
               path="/about"
               element={
-                <PrivateRouteWrapper>
+                <PublicRouteWrapper>
                   <Suspense fallback={<LazyLoadFallback />}>
                     <AboutPage />
                   </Suspense>
-                </PrivateRouteWrapper>
+                </PublicRouteWrapper>
+              }
+            />
+
+            {/* PWA Handler Routes */}
+            <Route
+              path="/share"
+              element={
+                <Suspense fallback={<LazyLoadFallback />}>
+                  <ShareTargetPage />
+                </Suspense>
+              }
+            />
+            <Route
+              path="/open-gpx"
+              element={
+                <Suspense fallback={<LazyLoadFallback />}>
+                  <GPXHandlerPage />
+                </Suspense>
+              }
+            />
+            <Route
+              path="/hike"
+              element={
+                <Suspense fallback={<LazyLoadFallback />}>
+                  <HikeDetailsPage />
+                </Suspense>
               }
             />
 

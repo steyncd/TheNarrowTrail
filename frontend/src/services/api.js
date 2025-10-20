@@ -66,6 +66,53 @@ class ApiService {
     }
   }
 
+  // Convenience HTTP methods
+  async get(endpoint, token = null) {
+    const response = await fetch(`${this.baseURL}${endpoint}`, {
+      method: 'GET',
+      headers: this.getAuthHeaders(token)
+    });
+    if (!response.ok) {
+      throw new Error(`GET ${endpoint} failed: ${response.statusText}`);
+    }
+    return response.json();
+  }
+
+  async post(endpoint, data, token = null) {
+    const response = await fetch(`${this.baseURL}${endpoint}`, {
+      method: 'POST',
+      headers: this.getAuthHeaders(token),
+      body: JSON.stringify(data)
+    });
+    if (!response.ok) {
+      throw new Error(`POST ${endpoint} failed: ${response.statusText}`);
+    }
+    return response.json();
+  }
+
+  async put(endpoint, data, token = null) {
+    const response = await fetch(`${this.baseURL}${endpoint}`, {
+      method: 'PUT',
+      headers: this.getAuthHeaders(token),
+      body: JSON.stringify(data)
+    });
+    if (!response.ok) {
+      throw new Error(`PUT ${endpoint} failed: ${response.statusText}`);
+    }
+    return response.json();
+  }
+
+  async delete(endpoint, token = null) {
+    const response = await fetch(`${this.baseURL}${endpoint}`, {
+      method: 'DELETE',
+      headers: this.getAuthHeaders(token)
+    });
+    if (!response.ok) {
+      throw new Error(`DELETE ${endpoint} failed: ${response.statusText}`);
+    }
+    return response.json();
+  }
+
   // Hikes
   async getHikes(token) {
     const response = await fetch(`${this.baseURL}/api/hikes`, {
@@ -348,6 +395,11 @@ class ApiService {
     const data = await response.json();
     // Backend returns { users: [...], pagination: {...} } or just [...]
     return data;
+  }
+
+  async getAllUsers(token) {
+    // Alias for getUsers - fetches all users
+    return this.getUsers(token);
   }
 
   async getConsentStatus(token) {
@@ -801,6 +853,152 @@ class ApiService {
       throw new Error(`Failed to fetch content: ${contentKey}`);
     }
     return response.json();
+  }
+
+  // Public branding settings (no auth required)
+  async getPublicBrandingSettings() {
+    const response = await fetch(`${this.baseURL}/api/settings/public/branding`, {
+      headers: { 'Content-Type': 'application/json' }
+    });
+    if (!response.ok) {
+      throw new Error('Failed to fetch branding settings');
+    }
+    return response.json();
+  }
+
+  // System Settings (admin only)
+  async getAllSettings(token) {
+    return this.get('/api/settings', token);
+  }
+
+  async getSettings(token) {
+    return this.get('/api/settings', token);
+  }
+
+  async getSettingsByCategory(category, token) {
+    return this.get(`/api/settings/category/${category}`, token);
+  }
+
+  async getSettingByKey(key, token) {
+    return this.get(`/api/settings/${key}`, token);
+  }
+
+  async updateSetting(data, token) {
+    return this.put('/api/settings', data, token);
+  }
+
+  async updateSettingsBatch(settings, token) {
+    return this.put('/api/settings/batch', { settings }, token);
+  }
+
+  async getWeatherProviders(token) {
+    return this.get('/api/settings/weather/providers', token);
+  }
+
+  async testWeatherProvider(provider, location, date, token) {
+    return this.post('/api/settings/weather/test', { provider, location, date }, token);
+  }
+
+  // Roles & Permissions (admin only)
+  async getRoles(token) {
+    return this.get('/api/permissions/roles', token);
+  }
+
+  async getRoleById(id, token) {
+    return this.get(`/api/permissions/roles/${id}`, token);
+  }
+
+  async createRole(roleData, token) {
+    return this.post('/api/permissions/roles', roleData, token);
+  }
+
+  async updateRole(id, roleData, token) {
+    return this.put(`/api/permissions/roles/${id}`, roleData, token);
+  }
+
+  async deleteRole(id, token) {
+    return this.delete(`/api/permissions/roles/${id}`, token);
+  }
+
+  async getPermissions(token) {
+    return this.get('/api/permissions/permissions', token);
+  }
+
+  async getPermissionsByCategory(token) {
+    return this.get('/api/permissions/permissions/by-category', token);
+  }
+
+  async getPermissionStats(token) {
+    return this.get('/api/permissions/permissions/stats', token);
+  }
+
+  // Event Types
+  async getEventTypes(activeOnly = true) {
+    const query = activeOnly ? '?active_only=true' : '';
+    return this.get(`/api/event-types${query}`);
+  }
+
+  async getEventType(name) {
+    return this.get(`/api/event-types/${name}`);
+  }
+
+  async getEventTypeStats() {
+    return this.get('/api/event-types/stats');
+  }
+
+  async createEventType(eventTypeData, token) {
+    return this.post('/api/event-types', eventTypeData, token);
+  }
+
+  async updateEventType(id, eventTypeData, token) {
+    return this.put(`/api/event-types/${id}`, eventTypeData, token);
+  }
+
+  // Tags
+  async getTags(category = null, search = null) {
+    const params = new URLSearchParams();
+    if (category) params.append('category', category);
+    if (search) params.append('search', search);
+    const query = params.toString() ? `?${params.toString()}` : '';
+    return this.get(`/api/tags${query}`);
+  }
+
+  async getTagCategories() {
+    return this.get('/api/tags/categories');
+  }
+
+  async getPopularTags(limit = 20) {
+    return this.get(`/api/tags/popular?limit=${limit}`);
+  }
+
+  async createTag(tagData, token) {
+    return this.post('/api/tags', tagData, token);
+  }
+
+  async updateTag(id, tagData, token) {
+    return this.put(`/api/tags/${id}`, tagData, token);
+  }
+
+  async deleteTag(id, token) {
+    return this.delete(`/api/tags/${id}`, token);
+  }
+
+  // Event Tags
+  async getEventTags(eventId) {
+    return this.get(`/api/tags/events/${eventId}`);
+  }
+
+  async addEventTags(eventId, tagIds, token) {
+    return this.post(`/api/tags/events/${eventId}`, { tag_ids: tagIds }, token);
+  }
+
+  async removeEventTag(eventId, tagId, token) {
+    return this.delete(`/api/tags/events/${eventId}/${tagId}`, token);
+  }
+
+  async updateEventTags(eventId, tagIds, token) {
+    // Replace all tags for an event
+    return this.put(`/api/tags/events/${eventId}`, { tag_ids: tagIds }, token);
   }
 }
 

@@ -1,9 +1,38 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { Link } from 'react-router-dom';
-import { Calendar, CheckCircle, AlertCircle, MapPin, Heart } from 'lucide-react';
+import { Calendar, CheckCircle, AlertCircle, MapPin, Heart, Mountain, Tent, Truck, Bike, Compass } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
 import { api } from '../../services/api';
 import PageHeader from '../common/PageHeader';
+
+// Event type configuration
+const EVENT_TYPE_CONFIG = {
+  hiking: {
+    icon: Mountain,
+    color: '#4CAF50',
+    label: 'Hiking'
+  },
+  camping: {
+    icon: Tent,
+    color: '#FF9800',
+    label: 'Camping'
+  },
+  '4x4': {
+    icon: Truck,
+    color: '#795548',
+    label: '4x4'
+  },
+  cycling: {
+    icon: Bike,
+    color: '#2196F3',
+    label: 'Cycling'
+  },
+  outdoor: {
+    icon: Compass,
+    color: '#9C27B0',
+    label: 'Outdoor'
+  }
+};
 
 function MyHikesPage() {
   const { token } = useAuth();
@@ -131,7 +160,25 @@ function MyHikesPage() {
             </div>
           )}
           <div className="card-body">
-            <h5 className="card-title">{hike.name}</h5>
+            <div className="d-flex justify-content-between align-items-start mb-2">
+              <h5 className="card-title mb-0">{hike.name}</h5>
+              {hike.event_type && EVENT_TYPE_CONFIG[hike.event_type] && (() => {
+                const EventIcon = EVENT_TYPE_CONFIG[hike.event_type].icon;
+                return (
+                  <span
+                    className="badge d-inline-flex align-items-center gap-1"
+                    style={{
+                      backgroundColor: EVENT_TYPE_CONFIG[hike.event_type].color,
+                      fontSize: '0.75rem',
+                      fontWeight: '600'
+                    }}
+                  >
+                    <EventIcon size={14} />
+                    {EVENT_TYPE_CONFIG[hike.event_type].label}
+                  </span>
+                );
+              })()}
+            </div>
             <p className="card-text">
               <Calendar size={16} className="me-2" />
               {new Date(hike.date).toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
@@ -170,7 +217,25 @@ function MyHikesPage() {
     <div key={hike.id} className="col-md-6">
       <div className="card h-100" style={{borderLeft: '4px solid #17a2b8'}}>
         <div className="card-body">
-          <h5 className="card-title">{hike.name}</h5>
+          <div className="d-flex justify-content-between align-items-start mb-2">
+            <h5 className="card-title mb-0">{hike.name}</h5>
+            {hike.event_type && EVENT_TYPE_CONFIG[hike.event_type] && (() => {
+              const EventIcon = EVENT_TYPE_CONFIG[hike.event_type].icon;
+              return (
+                <span
+                  className="badge d-inline-flex align-items-center gap-1"
+                  style={{
+                    backgroundColor: EVENT_TYPE_CONFIG[hike.event_type].color,
+                    fontSize: '0.75rem',
+                    fontWeight: '600'
+                  }}
+                >
+                  <EventIcon size={14} />
+                  {EVENT_TYPE_CONFIG[hike.event_type].label}
+                </span>
+              );
+            })()}
+          </div>
           <p className="card-text">
             <Calendar size={16} className="me-2" />
             {new Date(hike.date).toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
@@ -191,8 +256,8 @@ function MyHikesPage() {
     <div>
       <PageHeader
         icon={Heart}
-        title="My Hikes Dashboard"
-        subtitle="Manage your confirmed hikes and track your interests"
+        title="My Events Dashboard"
+        subtitle="Manage your confirmed events and track your interests"
       />
 
       {/* Stats Cards */}
@@ -208,8 +273,8 @@ function MyHikesPage() {
         <div className="col-6 col-md-3">
           <div className="card text-center" style={{borderTop: '3px solid #4d7c3d'}}>
             <div className="card-body py-2">
-              <h4 className="text-success mb-1">{[...myHikes.confirmed, ...myHikes.interested].filter(h => h.type === 'multi').length}</h4>
-              <small className="text-muted">Multi-Day</small>
+              <h4 className="text-success mb-1">{[...myHikes.confirmed, ...myHikes.interested].filter(h => ['hiking', 'camping', '4x4', 'cycling', 'outdoor'].includes(h.event_type)).length}</h4>
+              <small className="text-muted">All Types</small>
             </div>
           </div>
         </div>

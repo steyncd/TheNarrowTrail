@@ -1,0 +1,85 @@
+.cycling-fields {
+  padding: 1.5rem;
+  background: #f8f9fa;
+  border-radius: 8px;
+  border: 1px solid #dee2e6;
+}
+
+.cycling-fields .section-title {
+  color: #2196F3;
+  font-weight: 600;
+  margin-bottom: 0.5rem;
+}
+
+.cycling-fields .form-group {
+  margin-bottom: 1.25rem;
+}
+
+.cycling-fields .form-label {
+  font-weight: 500;
+  color: #495057;
+  margin-bottom: 0.5rem;
+}
+
+.cycling-fields .terrain-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 0.75rem;
+  margin-top: 0.5rem;
+}
+
+.cycling-fields .terrain-checkbox {
+  display: flex;
+  align-items: center;
+  padding: 0.5rem;
+  background: white;
+  border: 1px solid #dee2e6;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.cycling-fields .terrain-checkbox:hover {
+  border-color: #2196F3;
+  background: #e3f2fd;
+}
+
+.cycling-fields .terrain-checkbox input {
+  margin-right: 0.5rem;
+  cursor: pointer;
+}
+
+.cycling-fields .boolean-options {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1.5rem;
+  margin-top: 0.5rem;
+}
+
+.cycling-fields .option-checkbox {
+  display: flex;
+  align-items: center;
+  cursor: pointer;
+}
+
+.cycling-fields .option-checkbox input {
+  margin-right: 0.5rem;
+  width: 1.2rem;
+  height: 1.2rem;
+  cursor: pointer;
+}
+
+.cycling-fields .option-checkbox span {
+  font-weight: 500;
+}
+
+@media (max-width: 768px) {
+  .cycling-fields .terrain-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .cycling-fields .boolean-options {
+    flex-direction: column;
+    gap: 0.75rem;
+  }
+}

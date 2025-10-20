@@ -116,7 +116,7 @@ const AnalyticsPage = () => {
           <div className="col-md-6 col-lg-3">
             <MetricCard
               icon={Calendar}
-              title="Upcoming Hikes"
+              title="Upcoming Events"
               value={overview.upcoming_hikes}
               subtitle="Scheduled events"
               color="success"
@@ -136,7 +136,7 @@ const AnalyticsPage = () => {
               icon={Target}
               title="Avg Attendance"
               value={hikeAnalytics?.average_attendance || 0}
-              subtitle="Per hike"
+              subtitle="Per event"
               color="warning"
             />
           </div>
@@ -194,7 +194,7 @@ const AnalyticsPage = () => {
                       <tr>
                         <th>Rank</th>
                         <th>User</th>
-                        <th>Confirmed Hikes</th>
+                        <th>Confirmed Events</th>
                         <th>Activity Level</th>
                       </tr>
                     </thead>

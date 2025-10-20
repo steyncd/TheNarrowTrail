@@ -11,7 +11,6 @@ const ManageHikesPage = () => {
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState('hikes');
   const [activeFinanceTab, setActiveFinanceTab] = useState('payments');
-  const [showAddHikeForm, setShowAddHikeForm] = useState(false);
 
   return (
     <PermissionGate 
@@ -30,16 +29,16 @@ const ManageHikesPage = () => {
     >
       <div className="container-fluid py-4">
         <PageHeader
-          title="Manage Hikes"
-          subtitle="Hike management and payment tracking"
+          title="Manage Events"
+          subtitle="Event management and payment tracking"
           icon={Settings}
           action={
             activeTab === 'hikes' ? (
               <button
                 className="btn btn-primary"
-                onClick={() => setShowAddHikeForm(true)}
+                onClick={() => navigate('/events/add')}
               >
-                Add Hike
+                Add Event
               </button>
             ) : null
           }
@@ -56,7 +55,7 @@ const ManageHikesPage = () => {
                 type="button"
               >
                 <Settings size={18} className="me-2" />
-                Hikes & Events
+                Events
               </button>
             </li>
             <li className="nav-item">
@@ -77,7 +76,7 @@ const ManageHikesPage = () => {
       <div className="tab-content">
         {activeTab === 'hikes' && (
           <div className="tab-pane fade show active">
-            <AdminPanel showAddHikeForm={showAddHikeForm} setShowAddHikeForm={setShowAddHikeForm} />
+            <AdminPanel />
           </div>
         )}
         

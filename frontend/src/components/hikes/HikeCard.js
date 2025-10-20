@@ -1,9 +1,43 @@
 import React, { memo, useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { Calendar, CheckCircle, Heart, AlertCircle, XCircle, Sparkles } from 'lucide-react';
+import { Calendar, CheckCircle, Heart, AlertCircle, XCircle, Sparkles, Mountain, Tent, Truck, Bike, Compass } from 'lucide-react';
 import useFavorites from '../../hooks/useFavorites';
 import { useTheme } from '../../contexts/ThemeContext';
 import { useSocket } from '../../contexts/SocketContext';
+
+// Event type configuration with generic images
+const EVENT_TYPE_CONFIG = {
+  hiking: {
+    icon: Mountain,
+    color: '#4CAF50',
+    label: 'Hiking',
+    genericImage: 'https://images.unsplash.com/photo-1551632811-561732d1e306?w=800&h=600&fit=crop'
+  },
+  camping: {
+    icon: Tent,
+    color: '#FF9800',
+    label: 'Camping',
+    genericImage: 'https://images.unsplash.com/photo-1504280390367-361c6d9f38f4?w=800&h=600&fit=crop'
+  },
+  '4x4': {
+    icon: Truck,
+    color: '#795548',
+    label: '4x4',
+    genericImage: 'https://images.unsplash.com/photo-1533130061792-64b345e4a833?w=1200&h=800&fit=crop'
+  },
+  cycling: {
+    icon: Bike,
+    color: '#2196F3',
+    label: 'Cycling',
+    genericImage: 'https://images.unsplash.com/photo-1517649763962-0c623066013b?w=800&h=600&fit=crop'
+  },
+  outdoor: {
+    icon: Compass,
+    color: '#9C27B0',
+    label: 'Outdoor',
+    genericImage: 'https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=800&h=600&fit=crop'
+  }
+};
 
 // PERFORMANCE OPTIMIZATION: Memoized component to prevent unnecessary re-renders
 // Only re-renders when hike data or user interest status changes
@@ -52,6 +86,14 @@ const HikeCard = memo(({ hike, isPast, onViewDetails, onToggleInterest, loading,
   const isCancelled = hike.status === 'cancelled';
   const isNew = !isPast && new Date() - new Date(hike.created_at || hike.date) < 7 * 24 * 60 * 60 * 1000;
 
+  // Registration closed logic
+  const isRegistrationClosed = hike.registration_closed ||
+    (hike.registration_deadline && new Date(hike.registration_deadline) < new Date());
+
+  const isRegistrationClosingSoon = hike.registration_deadline &&
+    !isRegistrationClosed &&
+    (new Date(hike.registration_deadline) - new Date()) < 7 * 24 * 60 * 60 * 1000; // 7 days
+
   const handleFavoriteClick = (e) => {
     e.stopPropagation();
     toggleFavorite(hike.id);
@@ -60,7 +102,7 @@ const HikeCard = memo(({ hike, isPast, onViewDetails, onToggleInterest, loading,
   return (
     <div className="col-md-6 col-lg-4">
       <div
-        className="card shadow-sm h-100"
+        className="card shadow-sm h-100 d-flex flex-column"
         style={{
           overflow: 'hidden',
           background: theme === 'dark' ? 'var(--card-bg)' : 'white',
@@ -82,112 +124,171 @@ const HikeCard = memo(({ hike, isPast, onViewDetails, onToggleInterest, loading,
             : '0 1px 3px rgba(0,0,0,0.12)';
         }}
       >
-        {isConfirmed && (
-          <div style={{
-            background: 'linear-gradient(135deg, #28a745 0%, #20c997 100%)',
-            color: 'white',
-            padding: '8px 16px',
-            fontWeight: 'bold',
-            fontSize: '0.9rem',
-            letterSpacing: '1px',
-            textAlign: 'center',
-            boxShadow: '0 2px 8px rgba(40, 167, 69, 0.3)',
-            position: 'relative',
-            zIndex: 1
-          }}>
-            <CheckCircle size={16} className="me-2" style={{verticalAlign: 'text-bottom'}} />
-            BOOKED!
-          </div>
-        )}
-
         {/* Thumbnail Image */}
-        {hike.image_url && (
-          <div style={{
-            position: 'relative',
-            width: '100%',
-            height: '200px',
-            overflow: 'hidden',
-            background: theme === 'dark' ? '#1a1a1a' : '#f8f9fa'
-          }}>
-            <img
-              src={hike.image_url}
-              alt={hike.name}
-              style={{
-                width: '100%',
-                height: '100%',
-                objectFit: 'cover',
-                transition: 'transform 0.3s ease'
-              }}
-              onMouseEnter={(e) => e.target.style.transform = 'scale(1.05)'}
-              onMouseLeave={(e) => e.target.style.transform = 'scale(1)'}
-              onError={(e) => {
-                e.target.style.display = 'none';
-                e.target.parentElement.style.display = 'none';
-              }}
-            />
-            {/* Status Badges Overlay on Image */}
-            {!isPast && (isNew || isFewSpotsLeft || isFull || isCancelled) && (
-              <div className="position-absolute top-0 start-0 d-flex flex-wrap gap-2 p-2">
-                {isNew && (
+        <div style={{
+          position: 'relative',
+          width: '100%',
+          height: '200px',
+          overflow: 'hidden',
+          background: theme === 'dark' ? '#1a1a1a' : '#f8f9fa'
+        }}>
+          {/* Corner Ribbon for Booked Status */}
+          {isConfirmed && !isRegistrationClosed && (
+            <div style={{
+              position: 'absolute',
+              top: '15px',
+              right: '-35px',
+              background: 'linear-gradient(135deg, #28a745 0%, #20c997 100%)',
+              color: 'white',
+              padding: '5px 40px',
+              fontWeight: 'bold',
+              fontSize: '0.75rem',
+              letterSpacing: '1px',
+              textAlign: 'center',
+              transform: 'rotate(45deg)',
+              boxShadow: '0 3px 10px rgba(40, 167, 69, 0.5)',
+              zIndex: 10,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: '4px'
+            }}>
+              <CheckCircle size={12} />
+              BOOKED
+            </div>
+          )}
+
+          {/* Corner Ribbon for Registration Closed */}
+          {isRegistrationClosed && (
+            <div style={{
+              position: 'absolute',
+              top: '15px',
+              right: '-35px',
+              background: 'linear-gradient(135deg, #dc3545 0%, #c82333 100%)',
+              color: 'white',
+              padding: '5px 40px',
+              fontWeight: 'bold',
+              fontSize: '0.75rem',
+              letterSpacing: '1px',
+              textAlign: 'center',
+              transform: 'rotate(45deg)',
+              boxShadow: '0 3px 10px rgba(220, 53, 69, 0.5)',
+              zIndex: 10,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: '4px'
+            }}>
+              <XCircle size={12} />
+              CLOSED
+            </div>
+          )}
+          <img
+            src={hike.image_url || EVENT_TYPE_CONFIG[hike.event_type || 'hiking']?.genericImage}
+            alt={hike.name}
+            style={{
+              width: '100%',
+              height: '100%',
+              objectFit: 'cover',
+              transition: 'transform 0.3s ease'
+            }}
+            onMouseEnter={(e) => e.target.style.transform = 'scale(1.05)'}
+            onMouseLeave={(e) => e.target.style.transform = 'scale(1)'}
+            onError={(e) => {
+              // If image fails to load, show a colored placeholder with icon
+              const eventType = hike.event_type || 'hiking';
+              const config = EVENT_TYPE_CONFIG[eventType];
+              e.target.style.display = 'none';
+              const placeholder = document.createElement('div');
+              placeholder.style.cssText = `
+                width: 100%;
+                height: 100%;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                background: linear-gradient(135deg, ${config.color}dd 0%, ${config.color}88 100%);
+                color: white;
+              `;
+              placeholder.innerHTML = `<div style="text-align: center;"><div style="font-size: 3rem; margin-bottom: 0.5rem;">🏔️</div><div style="font-size: 1rem; font-weight: 600;">${config.label}</div></div>`;
+              e.target.parentElement.appendChild(placeholder);
+            }}
+          />
+            {/* Badges Overlay on Image (Top Left) - Event Type, Status, and Target Audience */}
+            {(hike.event_type || hike.tags?.find(tag => tag.category === 'target_audience') || (!isPast && (isNew || isFewSpotsLeft || isFull || isCancelled))) && (
+              <div className="position-absolute top-0 start-0 d-flex flex-column align-items-start gap-2 p-2">
+                {/* Row 1: Event Type Badge */}
+                {hike.event_type && EVENT_TYPE_CONFIG[hike.event_type] && (() => {
+                  const EventIcon = EVENT_TYPE_CONFIG[hike.event_type].icon;
+                  return (
+                    <span
+                      className="badge d-flex align-items-center gap-1"
+                      style={{
+                        background: EVENT_TYPE_CONFIG[hike.event_type].color,
+                        boxShadow: '0 2px 4px rgba(0,0,0,0.3)',
+                        fontSize: '0.75rem',
+                        fontWeight: '600'
+                      }}
+                    >
+                      <EventIcon size={14} />
+                      {EVENT_TYPE_CONFIG[hike.event_type].label}
+                    </span>
+                  );
+                })()}
+
+                {/* Row 2: Target Audience Badge */}
+                {hike.tags && (() => {
+                  const targetAudienceTag = hike.tags.find(tag => tag.category === 'target_audience');
+                  if (targetAudienceTag) {
+                    return (
+                      <span
+                        className="badge"
+                        style={{
+                          backgroundColor: targetAudienceTag.color || '#9C27B0',
+                          boxShadow: '0 2px 4px rgba(0,0,0,0.3)',
+                          fontSize: '0.85rem',
+                          fontWeight: '600',
+                          padding: '6px 10px'
+                        }}
+                      >
+                        {targetAudienceTag.name}
+                      </span>
+                    );
+                  }
+                  return null;
+                })()}
+
+                {/* Row 3+: Status Badges */}
+                <div className="d-flex flex-wrap gap-2">
+                {!isPast && isNew && (
                   <span className="badge d-flex align-items-center gap-1" style={{ background: '#28a745', boxShadow: '0 2px 4px rgba(0,0,0,0.3)' }}>
                     <Sparkles size={14} />
                     New
                   </span>
                 )}
-                {isFewSpotsLeft && (
+                {!isPast && isFewSpotsLeft && (
                   <span className="badge d-flex align-items-center gap-1" style={{ background: '#fd7e14', boxShadow: '0 2px 4px rgba(0,0,0,0.3)' }}>
                     <AlertCircle size={14} />
                     Few Spots Left
                   </span>
                 )}
-                {isFull && (
+                {!isPast && isFull && (
                   <span className="badge d-flex align-items-center gap-1" style={{ background: '#dc3545', boxShadow: '0 2px 4px rgba(0,0,0,0.3)' }}>
                     <XCircle size={14} />
                     Full
                   </span>
                 )}
-                {isCancelled && (
+                {!isPast && isCancelled && (
                   <span className="badge d-flex align-items-center gap-1" style={{ background: '#6c757d', boxShadow: '0 2px 4px rgba(0,0,0,0.3)' }}>
                     <XCircle size={14} />
                     Cancelled
                   </span>
                 )}
+                </div>
               </div>
             )}
           </div>
-        )}
 
-        {/* Status Badges Row (when no image) */}
-        {!hike.image_url && !isPast && (isNew || isFewSpotsLeft || isFull || isCancelled) && (
-          <div className="d-flex flex-wrap gap-2 p-3 pb-0">
-            {isNew && (
-              <span className="badge d-flex align-items-center gap-1" style={{ background: '#28a745' }}>
-                <Sparkles size={14} />
-                New
-              </span>
-            )}
-            {isFewSpotsLeft && (
-              <span className="badge d-flex align-items-center gap-1" style={{ background: '#fd7e14' }}>
-                <AlertCircle size={14} />
-                Few Spots Left
-              </span>
-            )}
-            {isFull && (
-              <span className="badge d-flex align-items-center gap-1" style={{ background: '#dc3545' }}>
-                <XCircle size={14} />
-                Full
-              </span>
-            )}
-            {isCancelled && (
-              <span className="badge d-flex align-items-center gap-1" style={{ background: '#6c757d' }}>
-                <XCircle size={14} />
-                Cancelled
-              </span>
-            )}
-          </div>
-        )}
-
-        <div className="card-body d-flex flex-column">
+        <div className="card-body flex-grow-1 d-flex flex-column">
           <div className="d-flex justify-content-between align-items-start mb-3">
             <div className="flex-grow-1">
               <h5 className="card-title" style={{ color: theme === 'dark' ? 'var(--text-primary)' : '#212529' }}>
@@ -198,7 +299,10 @@ const HikeCard = memo(({ hike, isPast, onViewDetails, onToggleInterest, loading,
               </p>
             </div>
             <div className="d-flex align-items-start gap-2">
-              <span className="badge bg-warning text-dark">{hike.difficulty}</span>
+              {/* Show difficulty from event_type_data if available, fallback to old field */}
+              {(hike.event_type_data?.difficulty || hike.difficulty) && (
+                <span className="badge bg-warning text-dark">{hike.event_type_data?.difficulty || hike.difficulty}</span>
+              )}
               <button
                 onClick={handleFavoriteClick}
                 className="btn btn-link p-0"
@@ -225,9 +329,14 @@ const HikeCard = memo(({ hike, isPast, onViewDetails, onToggleInterest, loading,
               <Calendar size={16} className="me-1" />
               {new Date(hike.date).toLocaleDateString()}
             </span>
-            <span className="text-nowrap">Distance: {hike.distance}</span>
-            <span className="badge bg-info">{hike.type === 'day' ? 'Day Hike' : 'Multi-Day'}</span>
-            <span className="badge bg-secondary">{hike.group_type === 'family' ? 'Family' : "Men's"}</span>
+            {/* Show distance from event_type_data if available, fallback to old field */}
+            {(hike.event_type_data?.distance || hike.distance) && (
+              <span className="text-nowrap">Distance: {hike.event_type_data?.distance || hike.distance}</span>
+            )}
+            {/* Only show hike type for hiking events - use event_type_data */}
+            {hike.event_type === 'hiking' && hike.event_type_data?.hike_type && (
+              <span className="badge bg-info">{hike.event_type_data.hike_type}</span>
+            )}
             {hike.cost > 0 && <span className="text-success fw-bold">R{hike.cost}</span>}
             <span className={`badge ${
               displayStatus === 'completed' ? 'bg-success' :
@@ -245,36 +354,89 @@ const HikeCard = memo(({ hike, isPast, onViewDetails, onToggleInterest, loading,
             )}
           </div>
 
-          {!isPast ? (
-            <div className="d-flex flex-column flex-sm-row gap-2">
+          {/* Tags Display - Prominent display of all tag categories */}
+          {hike.tags && hike.tags.length > 0 && (
+            <div className="mb-3">
+              <div className="d-flex flex-wrap gap-1">
+                {/* Show all tags with their category colors */}
+                {hike.tags.slice(0, 8).map(tag => (
+                  <span
+                    key={tag.id}
+                    className="badge"
+                    style={{
+                      backgroundColor: tag.color || '#6366F1',
+                      fontSize: '0.7rem',
+                      fontWeight: '500',
+                      padding: '4px 8px'
+                    }}
+                    title={`${tag.category}: ${tag.name}`}
+                  >
+                    {tag.name}
+                  </span>
+                ))}
+                {hike.tags.length > 8 && (
+                  <span
+                    className="badge bg-secondary"
+                    style={{
+                      fontSize: '0.7rem',
+                      fontWeight: '500',
+                      padding: '4px 8px'
+                    }}
+                    title={`${hike.tags.slice(8).map(t => t.name).join(', ')}`}
+                  >
+                    +{hike.tags.length - 8} more
+                  </span>
+                )}
+              </div>
+            </div>
+          )}
+
+          {/* Registration Closing Soon Warning */}
+          {isRegistrationClosingSoon && !isPast && (
+            <div className="alert alert-warning py-2 px-3 mb-3" style={{ fontSize: '0.85rem' }}>
+              <AlertCircle size={14} className="me-1" style={{ verticalAlign: 'text-top' }} />
+              <strong>Closes:</strong> {new Date(hike.registration_deadline).toLocaleDateString('en-US', {
+                month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit'
+              })}
+            </div>
+          )}
+
+          {/* Buttons - pushed to bottom with mt-auto */}
+          <div className="mt-auto">
+            {!isPast ? (
+              <div className="d-flex flex-column flex-sm-row gap-2">
+                <Link
+                  to={`/hikes/${hike.id}`}
+                  className="btn btn-outline-primary flex-grow-1"
+                  style={{minHeight: '44px', display: 'flex', alignItems: 'center', justifyContent: 'center', textDecoration: 'none'}}
+                >
+                  View Details
+                </Link>
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onToggleInterest(hike.id);
+                  }}
+                  className={`btn flex-grow-1 ${isInterested ? 'btn-secondary' : isRegistrationClosed ? 'btn-danger' : 'btn-success'}`}
+                  style={{minHeight: '44px'}}
+                  disabled={loading || (isRegistrationClosed && !isInterested)}
+                  title={isRegistrationClosed ? 'Registration is closed for this event' : ''}
+                >
+                  {loading ? 'Loading...' :
+                   isRegistrationClosed && !isInterested ? 'Registration Closed' :
+                   isInterested ? 'Remove Interest' : "I'm Interested!"}
+                </button>
+              </div>
+            ) : (
               <Link
                 to={`/hikes/${hike.id}`}
-                className="btn btn-outline-primary flex-grow-1"
+                className="btn btn-outline-secondary w-100"
                 style={{minHeight: '44px', display: 'flex', alignItems: 'center', justifyContent: 'center', textDecoration: 'none'}}
               >
                 View Details
               </Link>
-              <button
-                onClick={(e) => {
-                  e.stopPropagation();
-                  onToggleInterest(hike.id);
-                }}
-                className={`btn flex-grow-1 ${isInterested ? 'btn-secondary' : 'btn-success'}`}
-                style={{minHeight: '44px'}}
-                disabled={loading}
-              >
-                {loading ? 'Loading...' : (isInterested ? 'Remove Interest' : "I'm Interested!")}
-              </button>
-            </div>
-          ) : (
-            <Link
-              to={`/hikes/${hike.id}`}
-              className="btn btn-outline-secondary w-100"
-              style={{minHeight: '44px', display: 'flex', alignItems: 'center', justifyContent: 'center', textDecoration: 'none'}}
-            >
-              View Details
-            </Link>
-          )}
+            )}
+          </div>
         </div>
       </div>
     </div>

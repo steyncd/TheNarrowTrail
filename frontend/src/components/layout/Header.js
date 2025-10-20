@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { Menu, Calendar, Heart, Settings, Users, BarChart3, User, Info, FileText, Home } from 'lucide-react';
+import { Menu, Calendar, Heart, Settings, BarChart3, User, Info, Home } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
 import { useTheme } from '../../contexts/ThemeContext';
 import usePermission from '../../hooks/usePermission';
@@ -18,6 +18,11 @@ const Header = () => {
   const [pendingUsersCount, setPendingUsersCount] = useState(0);
   const [newFeedbackCount, setNewFeedbackCount] = useState(0);
   const [newSuggestionsCount, setNewSuggestionsCount] = useState(0);
+  const [brandingSettings, setBrandingSettings] = useState({
+    branding_logo_url: '/hiking-logo.png',
+    branding_portal_name: 'THE NARROW TRAIL',
+    branding_tagline: '"Small is the gate and narrow the road that leads to life" - Matthew 7:14'
+  });
   const profileButtonRef = useRef(null);
 
   // Keep backward compatibility with old isAdmin check - recalculate when permissions change
@@ -38,6 +43,20 @@ const Header = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [currentUser, isAdmin, token]);
 
+  // Fetch public branding settings (no auth required)
+  const fetchBrandingSettings = async () => {
+    try {
+      const settings = await api.getPublicBrandingSettings();
+      setBrandingSettings(prevSettings => ({
+        ...prevSettings,
+        ...settings
+      }));
+    } catch (err) {
+      console.error('Error fetching branding settings:', err);
+      // Keep using defaults if fetch fails
+    }
+  };
+
   // Fetch unread counts for admins
   const fetchUnreadCounts = async () => {
     try {
@@ -57,6 +76,12 @@ const Header = () => {
     }
   };
 
+  // Fetch branding settings on mount
+  useEffect(() => {
+    fetchBrandingSettings();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   useEffect(() => {
     if (isAdmin && token) {
       fetchUnreadCounts();
@@ -70,8 +95,8 @@ const Header = () => {
   const navLinks = [
     { path: '/landing', label: 'Home', icon: Home },
     { path: '/about', label: 'About', icon: Info },
-    { path: '/hikes', label: 'Hikes', icon: Calendar },
-    { path: '/my-hikes', label: 'My Hikes', icon: Heart },
+    { path: '/hikes', label: 'Events', icon: Calendar },
+    { path: '/my-hikes', label: 'My Events', icon: Heart },
     { path: '/favorites', label: 'Favorites', icon: Heart },
     { path: '/calendar', label: 'Calendar', icon: Calendar },
   ];
@@ -80,10 +105,9 @@ const Header = () => {
   // Filter admin links based on permissions - recalculate when permissions change
   const filteredAdminLinks = useMemo(() => {
     const links = [
-      { path: '/admin/manage-hikes', label: 'Manage Hikes', icon: Settings, permission: 'hikes.edit' },
+      { path: '/admin/manage-hikes', label: 'Manage Events', icon: Settings, permission: 'hikes.edit' },
       { path: '/admin/analytics', label: 'Analytics', icon: BarChart3, permission: 'analytics.view' },
-      { path: '/admin/users', label: 'Users & Roles', icon: Users, permission: 'users.view' },
-      { path: '/admin/content', label: 'Content', icon: FileText, permission: 'feedback.view' },
+      { path: '/admin/portal-settings', label: 'Portal Settings', icon: Settings, permission: 'settings.view' },
     ];
     return links.filter(link => !link.permission || can(link.permission));
   }, [can]); // Recalculate when permissions change
@@ -107,10 +131,10 @@ const Header = () => {
         <nav className="navbar navbar-dark" style={{ padding: '8px 0', margin: 0 }}>
           <div className="container-fluid px-3" style={{ paddingTop: 0, paddingBottom: 0 }}>
             {/* Left: Logo & Brand */}
-            <div className="d-flex align-items-center">
+            <div className="d-flex align-items-center" style={{ flex: '1 1 auto', minWidth: 0 }}>
               {/* Mobile Menu Toggle */}
               <button
-                className="btn btn-link text-white d-lg-none p-0 me-3"
+                className="btn btn-link text-white d-lg-none p-0 me-2 flex-shrink-0"
                 onClick={() => setShowMobileMenu(true)}
                 style={{ textDecoration: 'none' }}
               >
@@ -118,25 +142,33 @@ const Header = () => {
               </button>
 
               {/* Logo */}
-              <Link to="/hikes" className="d-flex align-items-center text-decoration-none">
+              <Link to="/hikes" className="d-flex align-items-center text-decoration-none" style={{ minWidth: 0, flex: '1 1 auto' }}>
                 <img
-                  src="https://media-jnb2-1.cdn.whatsapp.net/v/t61.24694-24/531816244_1267185695145803_3816874698378382952_n.jpg?ccb=11-4&oh=01_Q5Aa2gE6eCgVsJ7VS5mA4tUUzfCHqn50KfOgB46uc6VedXqULA&oe=68F0F796&_nc_sid=5e03e0&_nc_cat=111"
-                  alt="The Narrow Trail"
+                  src={brandingSettings.branding_logo_url || '/hiking-logo.png'}
+                  alt={brandingSettings.branding_portal_name || 'The Narrow Trail'}
                   style={{
-                    width: '50px',
-                    height: '50px',
+                    width: '40px',
+                    height: '40px',
                     borderRadius: '50%',
                     border: '2px solid #4a7c7c',
                     objectFit: 'cover'
                   }}
-                  className="me-3"
+                  className="me-2 flex-shrink-0"
+                  onError={(e) => {
+                    // Fallback to default logo if custom logo fails to load
+                    e.target.src = '/hiking-logo.png';
+                  }}
                 />
-                <div>
-                  <h1 className="navbar-brand mb-0 fw-bold text-white" style={{ fontSize: '1.25rem', letterSpacing: '1px' }}>
-                    THE NARROW TRAIL
-                  </h1>
+                <div style={{ minWidth: 0, flex: '1 1 auto' }}>
+                  <span className="navbar-brand mb-0 text-white d-none d-sm-inline" style={{ fontWeight: '700', letterSpacing: '1px', fontSize: '1.5rem', fontFamily: "'Russo One', sans-serif", textTransform: 'uppercase' }}>
+                    {brandingSettings.branding_portal_name || 'THE NARROW TRAIL'}
+                  </span>
+                  <span className="navbar-brand mb-0 text-white d-inline d-sm-none" style={{ fontWeight: '700', letterSpacing: '1px', fontSize: '1rem', fontFamily: "'Russo One', sans-serif", textTransform: 'uppercase', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', display: 'block', maxWidth: '150px' }}>
+                    {brandingSettings.branding_portal_name || 'THE NARROW TRAIL'}
+                  </span>
+                  <br className="d-none d-md-block" />
                   <small className="text-white-50 d-none d-md-block" style={{ fontSize: '0.75rem', fontStyle: 'italic' }}>
-                    "Small is the gate and narrow the road that leads to life" - Matthew 7:14
+                    {brandingSettings.branding_tagline || '"Small is the gate and narrow the road that leads to life" - Matthew 7:14'}
                   </small>
                 </div>
               </Link>
@@ -203,7 +235,7 @@ const Header = () => {
             </div>
 
             {/* Right: User Profile */}
-            <div className="d-flex align-items-center">
+            <div className="d-flex align-items-center flex-shrink-0">
               {/* User Profile Dropdown */}
               <div className="position-relative">
                 <button

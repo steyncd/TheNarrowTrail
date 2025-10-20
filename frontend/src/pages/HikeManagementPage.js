@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { ArrowLeft, Users, Edit, Mail, Settings, Calendar, MapPin, Clock, DollarSign } from 'lucide-react';
+import { ArrowLeft, Users, Edit, Mail, Settings, Calendar, MapPin, Clock, DollarSign, Trash2 } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { api } from '../services/api';
 import PageHeader from '../components/common/PageHeader';
@@ -8,7 +8,6 @@ import PageHeader from '../components/common/PageHeader';
 import EmergencyContactsModal from '../components/admin/EmergencyContactsModal';
 import PackingListEditorModal from '../components/admin/PackingListEditorModal';
 import EmailAttendeesModal from '../components/admin/EmailAttendeesModal';
-import AddHikeForm from '../components/hikes/AddHikeForm';
 import AttendeeManagement from '../components/admin/AttendeeManagement';
 
 const HikeManagementPage = () => {
@@ -21,12 +20,13 @@ const HikeManagementPage = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [activeTab, setActiveTab] = useState('attendees');
-  
+
   // Modal states
   const [showEmergencyContactsModal, setShowEmergencyContactsModal] = useState(false);
   const [showPackingListModal, setShowPackingListModal] = useState(false);
   const [showEmailModal, setShowEmailModal] = useState(false);
-  const [showEditForm, setShowEditForm] = useState(false);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [deleting, setDeleting] = useState(false);
 
   useEffect(() => {
     fetchHikeDetails();
@@ -38,7 +38,7 @@ const HikeManagementPage = () => {
       const data = await api.getHikeById(hikeId, token);
       setHike(data);
     } catch (err) {
-      setError('Failed to load hike details');
+      setError('Failed to load event details');
       console.error('Fetch hike error:', err);
     } finally {
       setLoading(false);
@@ -58,6 +58,19 @@ const HikeManagementPage = () => {
     });
   };
 
+  const handleDeleteEvent = async () => {
+    setDeleting(true);
+    try {
+      await api.deleteHike(hikeId, token);
+      alert('Event deleted successfully!');
+      navigate('/admin/manage-hikes');
+    } catch (err) {
+      console.error('Delete event error:', err);
+      alert(err.response?.data?.error || 'Failed to delete event');
+      setDeleting(false);
+    }
+  };
+
   if (loading) {
     return (
       <div className="container-fluid py-4">
@@ -65,7 +78,7 @@ const HikeManagementPage = () => {
           <div className="spinner-border text-primary" role="status">
             <span className="visually-hidden">Loading...</span>
           </div>
-          <p className="mt-2">Loading hike details...</p>
+          <p className="mt-2">Loading event details...</p>
         </div>
       </div>
     );
@@ -76,10 +89,10 @@ const HikeManagementPage = () => {
       <div className="container-fluid py-4">
         <div className="alert alert-danger">
           <h4>Error</h4>
-          <p>{error || 'Hike not found'}</p>
+          <p>{error || 'Event not found'}</p>
           <button className="btn btn-primary" onClick={handleBack}>
             <ArrowLeft size={16} className="me-1" />
-            Back to Manage Hikes
+            Back to Manage Events
           </button>
         </div>
       </div>
@@ -95,7 +108,7 @@ const HikeManagementPage = () => {
         action={
           <button className="btn btn-outline-primary" onClick={handleBack}>
             <ArrowLeft size={16} className="me-1" />
-            Back to Manage Hikes
+            Back to Manage Events
           </button>
         }
       />
@@ -106,7 +119,7 @@ const HikeManagementPage = () => {
           <div className="card-body">
             <div className="row">
               <div className="col-md-8">
-                <h5 className="card-title mb-3">Hike Overview</h5>
+                <h5 className="card-title mb-3">Event Overview</h5>
                 <div className="row">
                   <div className="col-sm-6 mb-2">
                     <div className="d-flex align-items-center">
@@ -146,12 +159,12 @@ const HikeManagementPage = () => {
               </div>
               <div className="col-md-4">
                 <div className="d-flex flex-column gap-2">
-                  <button 
+                  <button
                     className="btn btn-primary"
-                    onClick={() => setShowEditForm(true)}
+                    onClick={() => navigate(`/events/edit/${hikeId}`, { state: { from: 'manage-events' } })}
                   >
                     <Edit size={16} className="me-1" />
-                    Edit Hike Details
+                    Edit Event Details
                   </button>
                   <button 
                     className="btn btn-info"
@@ -166,11 +179,18 @@ const HikeManagementPage = () => {
                   >
                     Emergency Contacts
                   </button>
-                  <button 
+                  <button
                     className="btn btn-secondary"
                     onClick={() => setShowPackingListModal(true)}
                   >
                     Manage Packing List
+                  </button>
+                  <button
+                    className="btn btn-danger"
+                    onClick={() => setShowDeleteModal(true)}
+                  >
+                    <Trash2 size={16} className="me-1" />
+                    Delete Event
                   </button>
                 </div>
               </div>
@@ -213,20 +233,6 @@ const HikeManagementPage = () => {
       </div>
 
       {/* Modals */}
-      {showEditForm && (
-        <AddHikeForm
-          show={showEditForm}
-          hikeToEdit={hike}
-          onClose={() => setShowEditForm(false)}
-          onSuccess={() => {
-            setShowEditForm(false);
-            fetchHikeDetails();
-          }}
-        />
-      )}
-
-
-
       {showEmergencyContactsModal && (
         <EmergencyContactsModal
           show={showEmergencyContactsModal}
@@ -254,6 +260,68 @@ const HikeManagementPage = () => {
             setShowEmailModal(false);
           }}
         />
+      )}
+
+      {/* Delete Confirmation Modal */}
+      {showDeleteModal && (
+        <div className="modal show d-block" style={{ backgroundColor: 'rgba(0,0,0,0.5)' }}>
+          <div className="modal-dialog">
+            <div className="modal-content">
+              <div className="modal-header bg-danger text-white">
+                <h5 className="modal-title">
+                  <Trash2 size={20} className="me-2" />
+                  Delete Event
+                </h5>
+                <button
+                  type="button"
+                  className="btn-close btn-close-white"
+                  onClick={() => setShowDeleteModal(false)}
+                  disabled={deleting}
+                ></button>
+              </div>
+              <div className="modal-body">
+                <div className="alert alert-danger d-flex align-items-start">
+                  <div className="me-2">⚠️</div>
+                  <div>
+                    <strong>Warning: This action cannot be undone!</strong>
+                    <p className="mb-0 mt-2">
+                      Deleting this event will permanently remove:
+                    </p>
+                    <ul className="mt-2 mb-0">
+                      <li>All event details and data</li>
+                      <li>All attendee registrations</li>
+                      <li>All comments and interactions</li>
+                      <li>All payment records</li>
+                      <li>All carpool arrangements</li>
+                    </ul>
+                  </div>
+                </div>
+                <p className="mb-0">
+                  Are you absolutely sure you want to delete "<strong>{hike?.name}</strong>"?
+                </p>
+              </div>
+              <div className="modal-footer">
+                <button
+                  type="button"
+                  className="btn btn-secondary"
+                  onClick={() => setShowDeleteModal(false)}
+                  disabled={deleting}
+                >
+                  Cancel
+                </button>
+                <button
+                  type="button"
+                  className="btn btn-danger"
+                  onClick={handleDeleteEvent}
+                  disabled={deleting}
+                >
+                  <Trash2 size={16} className="me-2" />
+                  {deleting ? 'Deleting...' : 'Delete Event'}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );

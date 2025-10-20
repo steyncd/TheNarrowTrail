@@ -357,7 +357,7 @@ exports.promoteUser = async (req, res) => {
 
     // Get user info
     const userResult = await pool.query(
-      'SELECT id, name, email, role FROM users WHERE id = $1',
+      'SELECT id, name, email, phone, role, notifications_email, notifications_whatsapp FROM users WHERE id = $1',
       [id]
     );
 
@@ -371,20 +371,71 @@ exports.promoteUser = async (req, res) => {
       return res.status(400).json({ error: 'User is already an admin' });
     }
 
-    // Update user role to admin
+    // Get admin role ID
+    const roleResult = await pool.query(
+      'SELECT id FROM roles WHERE name = $1',
+      ['admin']
+    );
+
+    if (roleResult.rows.length === 0) {
+      return res.status(500).json({ error: 'Admin role not found in system' });
+    }
+
+    const adminRoleId = roleResult.rows[0].id;
+
+    // Update user role to admin in users table
     const result = await pool.query(
       'UPDATE users SET role = $1 WHERE id = $2 RETURNING id, name, email, phone, role, status, notifications_email, notifications_whatsapp, created_at',
       ['admin', id]
     );
 
+    // Remove any existing roles from user_roles table
+    await pool.query(
+      'DELETE FROM user_roles WHERE user_id = $1',
+      [id]
+    );
+
+    // Assign admin role in user_roles table
+    await pool.query(
+      'INSERT INTO user_roles (user_id, role_id, assigned_at, assigned_by) VALUES ($1, $2, NOW(), $3)',
+      [id, adminRoleId, req.user.id]
+    );
+
     // Send notification email
-    await sendEmail(
-      user.email,
-      'Admin Access Granted',
-      emailTemplates.adminPromotionEmail(user.name)
+    if (user.notifications_email) {
+      await sendEmail(
+        user.email,
+        'Admin Access Granted',
+        emailTemplates.adminPromotionEmail(user.name)
+      );
+    }
+
+    // Send WhatsApp notification
+    if (user.notifications_whatsapp && user.phone) {
+      await sendWhatsApp(
+        user.phone,
+        `Congratulations ${user.name}! You have been promoted to Administrator. You now have full access to manage the hiking portal.`
+      );
+    }
+
+    // Log activity
+    const ipAddress = req.ip || req.connection.remoteAddress;
+    await logActivity(
+      req.user.id,
+      'promote_to_admin',
+      'user',
+      id,
+      JSON.stringify({
+        user_name: user.name,
+        user_email: user.email,
+        promoted_from: user.role,
+        promoted_to: 'admin'
+      }),
+      ipAddress
     );
 
     res.json({
+      success: true,
       message: 'User promoted to admin successfully',
       user: result.rows[0]
     });

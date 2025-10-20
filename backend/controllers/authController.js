@@ -8,6 +8,7 @@ const { sendEmail, sendWhatsApp } = require('../services/notificationService');
 const { logActivity } = require('../utils/activityLogger');
 const emailTemplates = require('../services/emailTemplates');
 const { validateRegistrationForAutoApproval, getValidationSummary } = require('../utils/registrationValidator');
+const { getRegistrationSettings } = require('../services/settingsService');
 
 // Register new user
 exports.register = async (req, res) => {
@@ -29,11 +30,21 @@ exports.register = async (req, res) => {
       return res.status(400).json({ error: 'Email already registered' });
     }
 
-    // Validate registration for auto-approval
-    const validation = await validateRegistrationForAutoApproval(name, email, phone);
-    const initialStatus = validation.shouldAutoApprove ? 'approved' : 'pending';
-    
-    console.log(`Registration validation for ${email}:`, getValidationSummary(validation));
+    // Get registration settings
+    const regSettings = await getRegistrationSettings();
+
+    // Determine initial status
+    let initialStatus = 'pending'; // Default to pending
+    let validation = null;
+
+    // Only run auto-approval validation if admin approval is NOT required
+    if (!regSettings.require_admin_approval) {
+      validation = await validateRegistrationForAutoApproval(name, email, phone);
+      initialStatus = validation.shouldAutoApprove ? 'approved' : 'pending';
+      console.log(`Registration validation for ${email}:`, getValidationSummary(validation));
+    } else {
+      console.log(`Registration for ${email}: Admin approval required (setting enabled)`);
+    }
 
     // Hash password
     const hashedPassword = await bcrypt.hash(password, 10);
@@ -75,13 +86,16 @@ exports.register = async (req, res) => {
       ['admin', 'approved']
     );
 
-    if (validation.shouldAutoApprove) {
+    // Handle different approval scenarios
+    if (initialStatus === 'approved' && validation && validation.shouldAutoApprove) {
       // AUTO-APPROVED: Send welcome email and SMS to user
-      await sendEmail(
-        email,
-        'Welcome to The Narrow Trail!',
-        emailTemplates.welcomeEmail(name)
-      );
+      if (regSettings.send_welcome_email) {
+        await sendEmail(
+          email,
+          'Welcome to The Narrow Trail!',
+          emailTemplates.welcomeEmail(name)
+        );
+      }
 
       // Send welcome WhatsApp/SMS to user
       await sendWhatsApp(
@@ -113,21 +127,24 @@ exports.register = async (req, res) => {
       // Log auto-approval
       const ipAddress = req.ip || req.connection.remoteAddress;
       await logActivity(
-        user.id, 
-        'user_auto_approved', 
-        'user', 
-        user.id, 
-        JSON.stringify({ 
-          email, 
-          name, 
+        user.id,
+        'user_auto_approved',
+        'user',
+        user.id,
+        JSON.stringify({
+          email,
+          name,
           validation_reason: validation.reason,
-          checks: validation.checks 
-        }), 
+          checks: validation.checks
+        }),
         ipAddress
       );
 
     } else {
       // PENDING APPROVAL: Notify admins for manual review
+      const pendingReason = validation ? validation.reason : 'Admin approval required by system setting';
+      const pendingChecks = validation ? validation.checks : ['⚙️ Admin approval setting is enabled'];
+
       for (const admin of admins.rows) {
         if (admin.notifications_email) {
           await sendEmail(
@@ -136,15 +153,15 @@ exports.register = async (req, res) => {
             `<p><strong>${name}</strong> has registered and requires manual approval.</p>
              <p>Email: ${email}</p>
              <p>Phone: ${phone}</p>
-             <p><strong>Reason for Manual Review:</strong> ${validation.reason}</p>
+             <p><strong>Reason for Manual Review:</strong> ${pendingReason}</p>
              <p><strong>Validation Details:</strong></p>
-             <pre>${validation.checks.join('\n')}</pre>`
+             <pre>${pendingChecks.join('\n')}</pre>`
           );
         }
         if (admin.notifications_whatsapp) {
           await sendWhatsApp(
             admin.phone,
-            `New registration requires review: ${name} (${email}). Reason: ${validation.reason}`
+            `New registration requires review: ${name} (${email}). Reason: ${pendingReason}`
           );
         }
       }
@@ -152,26 +169,26 @@ exports.register = async (req, res) => {
       // Log pending registration
       const ipAddress = req.ip || req.connection.remoteAddress;
       await logActivity(
-        user.id, 
-        'user_registration', 
-        'user', 
-        user.id, 
-        JSON.stringify({ 
-          email, 
-          name, 
-          requires_review: validation.reason,
-          checks: validation.checks 
-        }), 
+        user.id,
+        'user_registration',
+        'user',
+        user.id,
+        JSON.stringify({
+          email,
+          name,
+          requires_review: pendingReason,
+          checks: pendingChecks
+        }),
         ipAddress
       );
     }
 
     res.status(201).json({
-      message: validation.shouldAutoApprove 
+      message: initialStatus === 'approved'
         ? 'Registration successful! Please check your email to verify your account. Your account has been approved and you can log in after verification.'
         : 'Registration successful! Please check your email to verify your account. Your registration will be reviewed by an admin.',
       user: user,
-      autoApproved: validation.shouldAutoApprove
+      autoApproved: initialStatus === 'approved'
     });
   } catch (error) {
     console.error('Registration error:', error);

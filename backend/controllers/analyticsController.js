@@ -319,4 +319,38 @@ exports.clearCache = (req, res) => {
   res.json({ success: true, message: 'Analytics cache cleared' });
 };
 
+// Get public statistics (NO AUTH REQUIRED)
+// Returns basic statistics for display on landing page
+exports.getPublicStatistics = async (req, res) => {
+  try {
+    const statisticsQuery = `
+      SELECT
+        (SELECT COUNT(*) FROM users WHERE status = 'approved') as total_hikers,
+        (SELECT COUNT(*) FROM hikes WHERE date < CURRENT_DATE AND status != 'cancelled') as completed_hikes,
+        (SELECT COUNT(*) FROM hikes WHERE date >= CURRENT_DATE AND status != 'cancelled') as upcoming_hikes,
+        (SELECT SUM(CAST(REGEXP_REPLACE(distance, '[^0-9.]', '', 'g') AS DECIMAL))
+         FROM hikes
+         WHERE date < CURRENT_DATE
+         AND distance ~ '^[0-9.]+'
+         AND status != 'cancelled') as total_distance_km
+    `;
+
+    const result = await pool.query(statisticsQuery);
+    const stats = result.rows[0];
+
+    // Convert to numbers and format
+    const statistics = {
+      total_hikers: parseInt(stats.total_hikers) || 0,
+      completed_hikes: parseInt(stats.completed_hikes) || 0,
+      upcoming_hikes: parseInt(stats.upcoming_hikes) || 0,
+      total_distance_km: Math.round(parseFloat(stats.total_distance_km) || 0)
+    };
+
+    res.json(statistics);
+  } catch (err) {
+    console.error('Get public statistics error:', err);
+    res.status(500).json({ error: 'Failed to fetch public statistics' });
+  }
+};
+
 module.exports = exports;

@@ -7,6 +7,40 @@ const adminController = require('../controllers/adminController');
 const pool = require('../config/database');
 const fs = require('fs');
 const path = require('path');
+const multer = require('multer');
+
+// Configure multer for file uploads
+const storage = multer.diskStorage({
+  destination: function (req, file, cb) {
+    const uploadDir = path.join(__dirname, '../uploads/branding');
+    if (!fs.existsSync(uploadDir)) {
+      fs.mkdirSync(uploadDir, { recursive: true });
+    }
+    cb(null, uploadDir);
+  },
+  filename: function (req, file, cb) {
+    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
+    cb(null, file.fieldname + '-' + uniqueSuffix + path.extname(file.originalname));
+  }
+});
+
+const upload = multer({
+  storage: storage,
+  limits: {
+    fileSize: 5 * 1024 * 1024 // 5MB limit
+  },
+  fileFilter: function (req, file, cb) {
+    const allowedTypes = /jpeg|jpg|png|svg|ico/;
+    const extname = allowedTypes.test(path.extname(file.originalname).toLowerCase());
+    const mimetype = allowedTypes.test(file.mimetype);
+
+    if (mimetype && extname) {
+      return cb(null, true);
+    } else {
+      cb(new Error('Only image files are allowed (JPEG, PNG, SVG, ICO)'));
+    }
+  }
+});
 
 // Setup endpoint doesn't require authentication
 router.post('/setup-admin', async (req, res) => {
@@ -79,10 +113,10 @@ router.post('/users', authenticateToken, requirePermission('users.create'), admi
 router.put('/users/:id', authenticateToken, requirePermission('users.edit'), adminController.updateUser);
 
 // POST /api/admin/users/:id/reset-password - Reset user password
-router.post('/users/:id/reset-password', authenticateToken, requirePermission('users.manage'), adminController.resetUserPassword);
+router.post('/users/:id/reset-password', authenticateToken, requirePermission('users.reset_password'), adminController.resetUserPassword);
 
 // PUT /api/admin/users/:id/promote - Promote user to admin
-router.put('/users/:id/promote', authenticateToken, requirePermission('users.manage'), adminController.promoteUser);
+router.put('/users/:id/promote', authenticateToken, requirePermission('users.promote'), adminController.promoteUser);
 
 // Notification routes
 // GET /api/admin/notifications - Get notification log
@@ -110,6 +144,24 @@ router.get('/retention/logs', authenticateToken, requirePermission('audit.view')
 
 // POST /api/admin/retention/service - Start/stop retention service
 router.post('/retention/service', authenticateToken, requirePermission('settings.manage'), adminController.toggleRetentionService);
+
+// Weather cache management
+// POST /api/admin/clear-weather-cache - Clear weather cache
+router.post('/clear-weather-cache', authenticateToken, requirePermission('settings.edit'), async (req, res) => {
+  try {
+    const { clearWeatherCache } = require('../services/weatherService');
+    clearWeatherCache();
+
+    res.json({
+      success: true,
+      message: 'Weather cache cleared successfully',
+      timestamp: new Date().toISOString()
+    });
+  } catch (error) {
+    console.error('Clear weather cache error:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
 
 // Migration routes - require settings management permission
 // POST /api/admin/run-migration/:filename - Run database migration
@@ -150,6 +202,78 @@ router.post('/run-migration/:filename', authenticateToken, requirePermission('se
     }
   } catch (error) {
     console.error('Migration endpoint error:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Logo upload endpoint
+// POST /api/admin/upload-logo - Upload portal logo
+router.post('/upload-logo', authenticateToken, requirePermission('settings.edit'), upload.single('logo'), async (req, res) => {
+  try {
+    if (!req.file) {
+      return res.status(400).json({ error: 'No file uploaded' });
+    }
+
+    // Construct URL for the uploaded file
+    const fileUrl = `/uploads/branding/${req.file.filename}`;
+
+    // Update setting in database
+    const client = await pool.connect();
+    try {
+      await client.query(`
+        INSERT INTO system_settings (setting_key, setting_value, setting_type, category, is_public)
+        VALUES ('branding_logo_url', $1, 'string', 'branding', true)
+        ON CONFLICT (setting_key)
+        DO UPDATE SET setting_value = $1, updated_at = NOW()
+      `, [fileUrl]);
+
+      res.json({
+        success: true,
+        url: fileUrl,
+        filename: req.file.filename,
+        message: 'Logo uploaded successfully'
+      });
+    } finally {
+      client.release();
+    }
+  } catch (error) {
+    console.error('Logo upload error:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Favicon upload endpoint
+// POST /api/admin/upload-favicon - Upload favicon
+router.post('/upload-favicon', authenticateToken, requirePermission('settings.edit'), upload.single('favicon'), async (req, res) => {
+  try {
+    if (!req.file) {
+      return res.status(400).json({ error: 'No file uploaded' });
+    }
+
+    // Construct URL for the uploaded file
+    const fileUrl = `/uploads/branding/${req.file.filename}`;
+
+    // Update setting in database
+    const client = await pool.connect();
+    try {
+      await client.query(`
+        INSERT INTO system_settings (setting_key, setting_value, setting_type, category, is_public)
+        VALUES ('branding_favicon_url', $1, 'string', 'branding', true)
+        ON CONFLICT (setting_key)
+        DO UPDATE SET setting_value = $1, updated_at = NOW()
+      `, [fileUrl]);
+
+      res.json({
+        success: true,
+        url: fileUrl,
+        filename: req.file.filename,
+        message: 'Favicon uploaded successfully'
+      });
+    } finally {
+      client.release();
+    }
+  } catch (error) {
+    console.error('Favicon upload error:', error);
     res.status(500).json({ error: error.message });
   }
 });

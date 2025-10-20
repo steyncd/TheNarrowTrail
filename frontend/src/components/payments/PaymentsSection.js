@@ -16,6 +16,7 @@ function PaymentsSection({ hikeId, hikeCost, isAdmin }) {
   const [showAddModal, setShowAddModal] = useState(false);
   const [editingPayment, setEditingPayment] = useState(null);
   const [users, setUsers] = useState([]);
+  const [paymentMethods, setPaymentMethods] = useState([]);
 
   const [formData, setFormData] = useState({
     userId: '',
@@ -30,6 +31,7 @@ function PaymentsSection({ hikeId, hikeCost, isAdmin }) {
     if (token) {
       fetchPayments();
       fetchStats();
+      fetchPaymentSettings();
       if (isAdmin) {
         fetchUsers();
       }
@@ -67,9 +69,65 @@ function PaymentsSection({ hikeId, hikeCost, isAdmin }) {
   const fetchUsers = async () => {
     try {
       const data = await api.getUsers(token);
-      setUsers(data || []);
+      console.log('Users data received:', data);
+
+      // Handle different response formats
+      if (Array.isArray(data)) {
+        setUsers(data);
+      } else if (data && Array.isArray(data.users)) {
+        setUsers(data.users);
+      } else if (data && Array.isArray(data.data)) {
+        setUsers(data.data);
+      } else {
+        console.warn('Unexpected users data format:', data);
+        setUsers([]);
+      }
     } catch (error) {
       console.error('Error fetching users:', error);
+      setUsers([]);
+    }
+  };
+
+  const fetchPaymentSettings = async () => {
+    try {
+      const data = await api.getAllSettings(token);
+      console.log('Settings data received:', data);
+
+      // Build list of enabled payment methods
+      const enabledMethods = [];
+
+      // Check each payment method setting
+      const methodSettings = {
+        'cash': data.find(s => s.setting_key === 'payment_cash_enabled'),
+        'bank_transfer': data.find(s => s.setting_key === 'payment_bank_transfer_enabled'),
+        'card': data.find(s => s.setting_key === 'payment_card_enabled'),
+        'other': data.find(s => s.setting_key === 'payment_other_enabled')
+      };
+
+      // Add enabled methods with their labels
+      if (methodSettings.cash?.setting_value === 'true' || methodSettings.cash?.setting_value === true) {
+        enabledMethods.push({ value: 'cash', label: 'Cash' });
+      }
+      if (methodSettings.bank_transfer?.setting_value === 'true' || methodSettings.bank_transfer?.setting_value === true) {
+        enabledMethods.push({ value: 'bank_transfer', label: 'Bank Transfer' });
+      }
+      if (methodSettings.card?.setting_value === 'true' || methodSettings.card?.setting_value === true) {
+        enabledMethods.push({ value: 'card', label: 'Card' });
+      }
+      if (methodSettings.other?.setting_value === 'true' || methodSettings.other?.setting_value === true) {
+        enabledMethods.push({ value: 'other', label: 'Other' });
+      }
+
+      setPaymentMethods(enabledMethods);
+    } catch (error) {
+      console.error('Error fetching payment settings:', error);
+      // Fallback to all methods if settings can't be loaded
+      setPaymentMethods([
+        { value: 'cash', label: 'Cash' },
+        { value: 'bank_transfer', label: 'Bank Transfer' },
+        { value: 'card', label: 'Card' },
+        { value: 'other', label: 'Other' }
+      ]);
     }
   };
 
@@ -392,7 +450,7 @@ function PaymentsSection({ hikeId, hikeCost, isAdmin }) {
                         disabled={editingPayment}
                       >
                         <option value="">Select user...</option>
-                        {users.map(user => (
+                        {Array.isArray(users) && users.map(user => (
                           <option key={user.id} value={user.id}>
                             {user.name} ({user.email})
                           </option>
@@ -433,10 +491,15 @@ function PaymentsSection({ hikeId, hikeCost, isAdmin }) {
                         value={formData.paymentMethod}
                         onChange={(e) => setFormData({ ...formData, paymentMethod: e.target.value })}
                       >
-                        <option value="cash">Cash</option>
-                        <option value="bank_transfer">Bank Transfer</option>
-                        <option value="card">Card</option>
-                        <option value="other">Other</option>
+                        {paymentMethods.length > 0 ? (
+                          paymentMethods.map(method => (
+                            <option key={method.value} value={method.value}>
+                              {method.label}
+                            </option>
+                          ))
+                        ) : (
+                          <option value="">Loading payment methods...</option>
+                        )}
                       </select>
                     </div>
 

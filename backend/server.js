@@ -29,6 +29,9 @@ const contentRoutes = require('./routes/content');
 const publicContentRoutes = require('./routes/publicContent');
 const notificationPreferencesRoutes = require('./routes/notificationPreferences');
 const permissionRoutes = require('./routes/permissions');
+const settingsRoutes = require('./routes/settings');
+const eventTypesRoutes = require('./routes/eventTypes');
+const tagsRoutes = require('./routes/tags');
 
 // Import controllers for special routes
 const hikeController = require('./controllers/hikeController');
@@ -43,14 +46,18 @@ app.use(cors({
   origin: [
     'https://www.thenarrowtrail.co.za',
     'https://thenarrowtrail.co.za',
-    'https://helloliam.web.app', 
-    ...(process.env.FRONTEND_URL ? [process.env.FRONTEND_URL] : []),
-    ...(process.env.NODE_ENV === 'development' ? ['http://localhost:3000', 'http://localhost:3001'] : [])
+    'https://helloliam.web.app',
+    'http://localhost:3000',
+    'http://localhost:3001',
+    ...(process.env.FRONTEND_URL ? [process.env.FRONTEND_URL] : [])
   ].filter(Boolean),
   credentials: true
 }));
 app.use(express.json({ limit: '10mb' })); // Increased limit for photo uploads
 app.use(express.urlencoded({ limit: '10mb', extended: true }));
+
+// Serve uploaded files (branding assets, etc.)
+app.use('/uploads', express.static('uploads'));
 
 // Activity tracking middleware for POPIA retention compliance
 const { trackUserActivity } = require('./middleware/activityTracker');
@@ -99,6 +106,9 @@ app.use('/api/calendar', calendarRoutes);
 app.use('/api/tokens', tokenRoutes);
 app.use('/api/weather', weatherRoutes);
 app.use('/api/notification-preferences', notificationPreferencesRoutes);
+app.use('/api/settings', settingsRoutes); // System settings (admin only)
+app.use('/api/event-types', eventTypesRoutes); // Event types (hiking, camping, 4x4, etc.)
+app.use('/api/tags', tagsRoutes); // Tags system for events
 app.use('/api/public-content', publicContentRoutes); // Public content API - NO AUTH (must be before /api)
 app.use('/api/content', contentRoutes);
 app.use('/api', expenseRoutes); // Expenses routes

@@ -4,6 +4,7 @@ import { useAuth } from '../contexts/AuthContext';
 import { getContent } from '../services/contentApi';
 import ReactMarkdown from 'react-markdown';
 import { useNavigate } from 'react-router-dom';
+import PublicHeader from '../components/layout/PublicHeader';
 
 function AboutPage() {
   const { currentUser } = useAuth();
@@ -34,6 +35,9 @@ function AboutPage() {
 
   return (
     <div className="min-vh-100" style={{background: 'linear-gradient(135deg, #2d5a7c 0%, #4a7c59 100%)'}}>
+      {/* Show public header for unauthenticated users */}
+      {!currentUser && <PublicHeader hideLoginButton={!!currentUser} />}
+
       <div className="container py-5">
         {/* Header with Edit Button */}
         <div className="text-center mb-5">

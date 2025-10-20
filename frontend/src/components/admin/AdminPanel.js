@@ -1,16 +1,22 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { Clock, Calendar, CheckCircle, Search, Settings } from 'lucide-react';
+import { Clock, Calendar, CheckCircle, Search, Settings, Mountain, Tent, Truck, Bike, Compass } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 import { api } from '../../services/api';
-import AddHikeForm from '../hikes/AddHikeForm';
 
-function AdminPanel({ showAddHikeForm, setShowAddHikeForm }) {
+// Event type configuration
+const EVENT_TYPE_CONFIG = {
+  hiking: { icon: Mountain, color: '#4CAF50', label: 'Hiking' },
+  camping: { icon: Tent, color: '#FF9800', label: 'Camping' },
+  '4x4': { icon: Truck, color: '#795548', label: '4x4' },
+  cycling: { icon: Bike, color: '#2196F3', label: 'Cycling' },
+  outdoor: { icon: Compass, color: '#9C27B0', label: 'Outdoor' }
+};
+
+function AdminPanel() {
   const { token } = useAuth();
   const navigate = useNavigate();
   const [hikes, setHikes] = useState([]);
-  const [showEditHikeForm, setShowEditHikeForm] = useState(false);
-  const [selectedHike, setSelectedHike] = useState(null);
   const [openDropdown, setOpenDropdown] = useState(null);
   
   // Search and filter states
@@ -114,9 +120,30 @@ function AdminPanel({ showAddHikeForm, setShowAddHikeForm }) {
                 <div className="small text-muted">
                   <span className="me-3">{new Date(hike.date).toLocaleDateString()}</span>
                   <span className="me-3">{hike.distance}</span>
+                  {/* Event Type Badge */}
+                  {hike.event_type && EVENT_TYPE_CONFIG[hike.event_type] && (() => {
+                    const EventIcon = EVENT_TYPE_CONFIG[hike.event_type].icon;
+                    return (
+                      <span
+                        className="badge me-2 d-inline-flex align-items-center gap-1"
+                        style={{ backgroundColor: EVENT_TYPE_CONFIG[hike.event_type].color }}
+                      >
+                        <EventIcon size={14} />
+                        {EVENT_TYPE_CONFIG[hike.event_type].label}
+                      </span>
+                    );
+                  })()}
                   <span className="badge bg-warning text-dark me-2">{hike.difficulty}</span>
-                  <span className="badge bg-info me-2">{hike.type === 'day' ? 'Day' : 'Multi-Day'}</span>
-                  <span className="badge bg-secondary me-2">{hike.group_type === 'family' ? 'Family' : "Men's"}</span>
+                  {/* Only show Day/Multi-Day for hiking events */}
+                  {hike.event_type === 'hiking' && hike.type && (
+                    <span className="badge bg-info me-2">{hike.type === 'day' ? 'Day' : 'Multi-Day'}</span>
+                  )}
+                  {/* Target audience from tags instead of group_type column */}
+                  {hike.tags && hike.tags.filter(t => t.category === 'target_audience').slice(0, 1).map(tag => (
+                    <span key={tag.id} className="badge me-2" style={{ backgroundColor: tag.color || '#9C27B0' }}>
+                      {tag.name}
+                    </span>
+                  ))}
                   <span className={'badge me-2 ' +
                     (displayStatus === 'completed' ? 'bg-success' :
                      displayStatus === 'cancelled' ? 'bg-secondary' :
@@ -155,7 +182,7 @@ function AdminPanel({ showAddHikeForm, setShowAddHikeForm }) {
           <div className="card-body py-3">
             <div className="row g-3 align-items-end">
               <div className="col-md-4">
-                <label className="form-label small mb-1">Search hikes</label>
+                <label className="form-label small mb-1">Search events</label>
                 <div className="input-group">
                   <span className="input-group-text bg-light">
                     <Search size={16} />
@@ -199,7 +226,7 @@ function AdminPanel({ showAddHikeForm, setShowAddHikeForm }) {
               </div>
               <div className="col-md-2">
                 <div className="text-muted small">
-                  {filteredHikes.length} of {hikes.length} hikes
+                  {filteredHikes.length} of {hikes.length} events
                 </div>
               </div>
             </div>
@@ -223,7 +250,7 @@ function AdminPanel({ showAddHikeForm, setShowAddHikeForm }) {
         <div className="mb-5">
           <h4 className="mb-3 text-info">
             <Calendar size={20} className="me-2" />
-            Future Hikes
+            Future Events
           </h4>
           <div className="row g-4">
             {future.map(hike => renderManageHike(hike, false))}
@@ -235,7 +262,7 @@ function AdminPanel({ showAddHikeForm, setShowAddHikeForm }) {
         <div className="mb-5">
           <h4 className="mb-3 text-muted">
             <CheckCircle size={20} className="me-2" />
-            Past Hikes
+            Past Events
           </h4>
           <div className="row g-4">
             {past.map(hike => renderManageHike(hike, true))}
@@ -245,29 +272,9 @@ function AdminPanel({ showAddHikeForm, setShowAddHikeForm }) {
 
       {hikes.length === 0 && (
         <div className="text-center py-5">
-          <p className="text-muted">No hikes created yet. Click "Add Hike" to get started.</p>
+          <p className="text-muted">No events created yet. Click "Add Event" to get started.</p>
         </div>
       )}
-
-      {/* Add Hike Modal */}
-      <AddHikeForm
-        show={showAddHikeForm}
-        onClose={() => setShowAddHikeForm(false)}
-        onSuccess={fetchHikes}
-      />
-
-      {/* Edit Hike Modal */}
-      <AddHikeForm
-        show={showEditHikeForm}
-        onClose={() => {
-          setShowEditHikeForm(false);
-          setSelectedHike(null);
-        }}
-        hikeToEdit={selectedHike}
-        onSuccess={fetchHikes}
-      />
-
-
     </div>
   );
 }

@@ -1,25 +1,36 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../../contexts/AuthContext';
 import { api } from '../../services/api';
+import EventTypeSelector from '../events/EventTypeSelector';
+import TagSelector from '../events/TagSelector';
+import HikingFields from '../events/eventTypes/HikingFields';
+import CampingFields from '../events/eventTypes/CampingFields';
+import FourWheelDriveFields from '../events/eventTypes/FourWheelDriveFields';
+import OutdoorEventFields from '../events/eventTypes/OutdoorEventFields';
+import CyclingFields from '../events/eventTypes/CyclingFields';
 
 function AddHikeForm({ show, onClose, hikeToEdit, onSuccess }) {
   const { token } = useAuth();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [gpxFile, setGpxFile] = useState(null);
+  const [gpxData, setGpxData] = useState(null);
+  const [processingGpx, setProcessingGpx] = useState(false);
+
+  // Event type and tagging state
+  const [eventType, setEventType] = useState('hiking');
+  const [eventTypeData, setEventTypeData] = useState({});
+  const [selectedTags, setSelectedTags] = useState([]);
+
   const [hikeData, setHikeData] = useState({
     name: '',
     date: '',
-    difficulty: 'Easy',
-    distance: '',
     location: '',
     description: '',
-    type: 'day',
     group: 'family',
     status: 'gathering_interest',
     cost: 0,
     image_url: '',
-    daily_distances: [],
-    overnight_facilities: '',
     price_is_estimate: false,
     date_is_estimate: false,
     location_link: '',
@@ -28,67 +39,251 @@ function AddHikeForm({ show, onClose, hikeToEdit, onSuccess }) {
   });
 
   useEffect(() => {
-    if (hikeToEdit) {
-      setHikeData({
-        name: hikeToEdit.name || '',
-        date: hikeToEdit.date ? hikeToEdit.date.split('T')[0] : '',
-        difficulty: hikeToEdit.difficulty || 'Easy',
-        distance: hikeToEdit.distance || '',
-        location: hikeToEdit.location || '',
-        description: hikeToEdit.description || '',
-        type: hikeToEdit.type || 'day',
-        group: hikeToEdit.group_type || 'family',
-        status: hikeToEdit.status || 'gathering_interest',
-        cost: hikeToEdit.cost || 0,
-        image_url: hikeToEdit.image_url || '',
-        daily_distances: hikeToEdit.daily_distances || [],
-        overnight_facilities: hikeToEdit.overnight_facilities || '',
-        price_is_estimate: hikeToEdit.price_is_estimate || false,
-        date_is_estimate: hikeToEdit.date_is_estimate || false,
-        location_link: hikeToEdit.location_link || '',
-        destination_website: hikeToEdit.destination_website || '',
-        gps_coordinates: hikeToEdit.gps_coordinates || ''
-      });
-    } else {
-      setHikeData({
-        name: '',
-        date: '',
-        difficulty: 'Easy',
-        distance: '',
-        location: '',
-        description: '',
-        type: 'day',
-        group: 'family',
-        status: 'gathering_interest',
-        cost: 0,
-        image_url: '',
-        daily_distances: [],
-        overnight_facilities: '',
-        price_is_estimate: false,
-        date_is_estimate: false,
-        location_link: '',
-        destination_website: '',
-        gps_coordinates: ''
-      });
+    const loadData = async () => {
+      if (hikeToEdit) {
+        setHikeData({
+          name: hikeToEdit.name || '',
+          date: hikeToEdit.date ? hikeToEdit.date.split('T')[0] : '',
+          location: hikeToEdit.location || '',
+          description: hikeToEdit.description || '',
+          group: hikeToEdit.group_type || 'family',
+          status: hikeToEdit.status || 'gathering_interest',
+          cost: hikeToEdit.cost || 0,
+          image_url: hikeToEdit.image_url || '',
+          price_is_estimate: hikeToEdit.price_is_estimate || false,
+          date_is_estimate: hikeToEdit.date_is_estimate || false,
+          location_link: hikeToEdit.location_link || '',
+          destination_website: hikeToEdit.destination_website || '',
+          gps_coordinates: hikeToEdit.gps_coordinates || ''
+        });
+
+        // Load event type and tags
+        if (hikeToEdit.event_type) {
+          setEventType(hikeToEdit.event_type);
+        }
+        if (hikeToEdit.event_type_data) {
+          setEventTypeData(hikeToEdit.event_type_data);
+        }
+
+        // Load tags for this event
+        if (hikeToEdit.id) {
+          try {
+            const tagsResponse = await api.getEventTags(hikeToEdit.id);
+            if (tagsResponse.success && tagsResponse.tags) {
+              setSelectedTags(tagsResponse.tags);
+            }
+          } catch (error) {
+            console.error('Failed to load event tags:', error);
+          }
+        }
+      } else {
+        setHikeData({
+          name: '',
+          date: '',
+          location: '',
+          description: '',
+          group: 'family',
+          status: 'gathering_interest',
+          cost: 0,
+          image_url: '',
+          price_is_estimate: false,
+          date_is_estimate: false,
+          location_link: '',
+          destination_website: '',
+          gps_coordinates: ''
+        });
+        setEventType('hiking');
+        setEventTypeData({});
+        setSelectedTags([]);
+      }
+      setError('');
+    };
+
+    if (show) {
+      loadData();
     }
-    setError('');
   }, [hikeToEdit, show]);
+
+  const handleGpxUpload = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    if (!file.name.endsWith('.gpx')) {
+      setError('Please select a valid GPX file');
+      return;
+    }
+
+    setGpxFile(file);
+    setProcessingGpx(true);
+    setError('');
+
+    try {
+      const fileContent = await file.text();
+      const parser = new DOMParser();
+      const xmlDoc = parser.parseFromString(fileContent, 'text/xml');
+
+      // Check for parsing errors
+      const parserError = xmlDoc.querySelector('parsererror');
+      if (parserError) {
+        throw new Error('Invalid GPX file format');
+      }
+
+      // Extract metadata
+      const metadata = xmlDoc.querySelector('metadata');
+      const gpxName = metadata?.querySelector('name')?.textContent || file.name.replace('.gpx', '');
+      const gpxDescription = metadata?.querySelector('desc')?.textContent || '';
+
+      // Extract track points
+      const trackPoints = Array.from(xmlDoc.querySelectorAll('trkpt')).map(point => ({
+        lat: parseFloat(point.getAttribute('lat')),
+        lon: parseFloat(point.getAttribute('lon')),
+        ele: parseFloat(point.querySelector('ele')?.textContent || 0)
+      }));
+
+      if (trackPoints.length === 0) {
+        throw new Error('No track points found in GPX file');
+      }
+
+      // Calculate statistics
+      const stats = calculateTrackStats(trackPoints);
+
+      // Format GPS coordinates (first point)
+      const firstPoint = trackPoints[0];
+      const gpsCoords = `${firstPoint.lat.toFixed(6)}, ${firstPoint.lon.toFixed(6)}`;
+
+      // Update form data with GPX information
+      setHikeData(prev => ({
+        ...prev,
+        name: prev.name || gpxName,
+        description: prev.description || gpxDescription,
+        distance: `${stats.distance.toFixed(1)} km`,
+        gps_coordinates: gpsCoords
+      }));
+
+      setGpxData({
+        name: gpxName,
+        description: gpxDescription,
+        trackPoints,
+        stats
+      });
+
+    } catch (err) {
+      console.error('GPX parsing error:', err);
+      setError(err.message || 'Failed to process GPX file');
+      setGpxFile(null);
+      setGpxData(null);
+    } finally {
+      setProcessingGpx(false);
+    }
+  };
+
+  const calculateTrackStats = (points) => {
+    let totalDistance = 0;
+    let totalElevationGain = 0;
+    let totalElevationLoss = 0;
+    let minElevation = points[0]?.ele || 0;
+    let maxElevation = points[0]?.ele || 0;
+
+    for (let i = 1; i < points.length; i++) {
+      const prev = points[i - 1];
+      const curr = points[i];
+
+      // Calculate distance using Haversine formula
+      const R = 6371; // Earth's radius in km
+      const dLat = toRad(curr.lat - prev.lat);
+      const dLon = toRad(curr.lon - prev.lon);
+      const a = Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+                Math.cos(toRad(prev.lat)) * Math.cos(toRad(curr.lat)) *
+                Math.sin(dLon / 2) * Math.sin(dLon / 2);
+      const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+      totalDistance += R * c;
+
+      // Calculate elevation changes
+      const elevDiff = curr.ele - prev.ele;
+      if (elevDiff > 0) {
+        totalElevationGain += elevDiff;
+      } else {
+        totalElevationLoss += Math.abs(elevDiff);
+      }
+
+      // Track min/max elevation
+      minElevation = Math.min(minElevation, curr.ele);
+      maxElevation = Math.max(maxElevation, curr.ele);
+    }
+
+    return {
+      distance: totalDistance,
+      elevationGain: Math.round(totalElevationGain),
+      elevationLoss: Math.round(totalElevationLoss),
+      minElevation: Math.round(minElevation),
+      maxElevation: Math.round(maxElevation)
+    };
+  };
+
+  const toRad = (degrees) => {
+    return degrees * (Math.PI / 180);
+  };
+
+  const clearGpxData = () => {
+    setGpxFile(null);
+    setGpxData(null);
+  };
 
   const handleSubmit = async () => {
     setError('');
+
+    // Validate common fields
     if (!hikeData.name || !hikeData.date) {
-      setError('Name and date are required');
+      setError('Event name and date are required');
       return;
+    }
+
+    // Validate event-type-specific required fields
+    if (eventType === 'hiking') {
+      if (!eventTypeData.difficulty) {
+        setError('Difficulty is required for hiking events');
+        return;
+      }
+      if (!eventTypeData.hike_type) {
+        setError('Hike type (day/multi-day) is required for hiking events');
+        return;
+      }
+    } else if (eventType === 'camping') {
+      if (!eventTypeData.camping_type) {
+        setError('Camping type is required for camping events');
+        return;
+      }
+    } else if (eventType === '4x4') {
+      if (!eventTypeData.difficulty) {
+        setError('Difficulty level is required for 4x4 excursions');
+        return;
+      }
+    } else if (eventType === 'cycling') {
+      if (!eventTypeData.ride_type) {
+        setError('Ride type is required for cycling events');
+        return;
+      }
+      if (!eventTypeData.difficulty) {
+        setError('Difficulty level is required for cycling events');
+        return;
+      }
+    } else if (eventType === 'outdoor') {
+      if (!eventTypeData.activity_type) {
+        setError('Activity type is required for outdoor events');
+        return;
+      }
+      if (eventTypeData.activity_type === 'other' && !eventTypeData.custom_activity_name) {
+        setError('Please specify the activity name');
+        return;
+      }
     }
 
     setLoading(true);
     try {
-      // Filter out empty strings from daily_distances before sending
       const submissionData = {
         ...hikeData,
-        daily_distances: Array.isArray(hikeData.daily_distances)
-          ? hikeData.daily_distances.filter(d => d && d.trim())
-          : []
+        event_type: eventType,
+        event_type_data: eventTypeData
       };
 
       let result;
@@ -99,14 +294,27 @@ function AddHikeForm({ show, onClose, hikeToEdit, onSuccess }) {
       }
 
       if (result.success) {
+        const eventId = hikeToEdit ? hikeToEdit.id : (result.id || result.hike?.id);
+
+        // Save tags if any are selected
+        if (selectedTags.length > 0 && eventId) {
+          try {
+            const tagIds = selectedTags.map(tag => tag.id);
+            await api.addEventTags(eventId, tagIds, token);
+          } catch (tagError) {
+            console.error('Failed to save tags:', tagError);
+            // Don't fail the entire operation if tags fail
+          }
+        }
+
         if (onSuccess) onSuccess();
         onClose();
       } else {
-        setError(result.error || 'Failed to save hike');
+        setError(result.error || 'Failed to save event');
       }
     } catch (err) {
       setError('Connection error. Please try again.');
-      console.error('Save hike error:', err);
+      console.error('Save event error:', err);
     } finally {
       setLoading(false);
     }
@@ -120,24 +328,38 @@ function AddHikeForm({ show, onClose, hikeToEdit, onSuccess }) {
         <div className="modal-content">
           <div className="modal-header">
             <h5 className="modal-title" style={{fontSize: 'clamp(0.9rem, 3vw, 1.25rem)'}}>
-              {hikeToEdit ? 'Edit Hike' : 'Add New Hike'}
+              {hikeToEdit ? 'Edit Event' : 'Add New Event'}
             </h5>
             <button type="button" className="btn-close" onClick={onClose}></button>
           </div>
           <div className="modal-body px-2 px-md-3 py-3">
             {error && <div className="alert alert-danger">{error}</div>}
 
+            {/* Event Type Selector */}
+            <div className="mb-4">
+              <h6 className="mb-2">Event Type</h6>
+              <EventTypeSelector
+                value={eventType}
+                onChange={setEventType}
+                disabled={loading}
+              />
+            </div>
+
+            {/* Common Fields for ALL Event Types */}
             <div className="row g-3">
+              {/* Name */}
               <div className="col-md-6">
-                <label className="form-label">Hike Name *</label>
+                <label className="form-label">Event Name *</label>
                 <input
                   type="text"
                   className="form-control"
-                  placeholder="Hike name"
+                  placeholder="Event name"
                   value={hikeData.name}
                   onChange={(e) => setHikeData({...hikeData, name: e.target.value})}
                 />
               </div>
+
+              {/* Date */}
               <div className="col-md-6">
                 <label className="form-label">Date *</label>
                 <input
@@ -159,6 +381,8 @@ function AddHikeForm({ show, onClose, hikeToEdit, onSuccess }) {
                   </label>
                 </div>
               </div>
+
+              {/* Location */}
               <div className="col-md-6">
                 <label className="form-label">Location</label>
                 <input
@@ -168,42 +392,11 @@ function AddHikeForm({ show, onClose, hikeToEdit, onSuccess }) {
                   value={hikeData.location}
                   onChange={(e) => setHikeData({...hikeData, location: e.target.value})}
                 />
-                <small className="text-muted">City or landmark for weather forecast</small>
+                <small className="text-muted">City or landmark</small>
               </div>
-              <div className="col-md-3">
-                <label className="form-label">Difficulty</label>
-                <select
-                  className="form-select"
-                  value={hikeData.difficulty}
-                  onChange={(e) => setHikeData({...hikeData, difficulty: e.target.value})}
-                >
-                  <option>Easy</option>
-                  <option>Moderate</option>
-                  <option>Hard</option>
-                </select>
-              </div>
-              <div className="col-md-3">
-                <label className="form-label">Distance</label>
-                <input
-                  type="text"
-                  className="form-control"
-                  placeholder="e.g., 5km"
-                  value={hikeData.distance}
-                  onChange={(e) => setHikeData({...hikeData, distance: e.target.value})}
-                />
-              </div>
-              <div className="col-md-3">
-                <label className="form-label">Type</label>
-                <select
-                  className="form-select"
-                  value={hikeData.type}
-                  onChange={(e) => setHikeData({...hikeData, type: e.target.value})}
-                >
-                  <option value="day">Day Hike</option>
-                  <option value="multi">Multi-Day</option>
-                </select>
-              </div>
-              <div className="col-md-3">
+
+              {/* Cost */}
+              <div className="col-md-6">
                 <label className="form-label">Cost (R)</label>
                 <input
                   type="number"
@@ -225,18 +418,9 @@ function AddHikeForm({ show, onClose, hikeToEdit, onSuccess }) {
                   </label>
                 </div>
               </div>
-              <div className="col-md-4">
-                <label className="form-label">Group Type</label>
-                <select
-                  className="form-select"
-                  value={hikeData.group}
-                  onChange={(e) => setHikeData({...hikeData, group: e.target.value})}
-                >
-                  <option value="family">Family Hike</option>
-                  <option value="mens">Men's Hike</option>
-                </select>
-              </div>
-              <div className="col-md-8">
+
+              {/* Status */}
+              <div className="col-12">
                 <label className="form-label">Status</label>
                 <select
                   className="form-select"
@@ -249,33 +433,35 @@ function AddHikeForm({ show, onClose, hikeToEdit, onSuccess }) {
                   <option value="trip_booked">Trip Booked</option>
                 </select>
               </div>
+
+              {/* Description */}
               <div className="col-12">
                 <label className="form-label">Description</label>
                 <textarea
                   className="form-control"
-                  placeholder="Description"
+                  placeholder="Describe the event..."
                   rows="3"
                   value={hikeData.description}
                   onChange={(e) => setHikeData({...hikeData, description: e.target.value})}
                 />
               </div>
 
-              {/* Image URL */}
+              {/* Event Image URL */}
               <div className="col-md-6">
-                <label className="form-label">Hike Image URL (optional)</label>
+                <label className="form-label">Event Image URL</label>
                 <input
                   type="url"
                   className="form-control"
-                  placeholder="https://example.com/hike-image.jpg"
+                  placeholder="https://example.com/image.jpg"
                   value={hikeData.image_url}
                   onChange={(e) => setHikeData({...hikeData, image_url: e.target.value})}
                 />
-                <small className="text-muted">Link to an image of the trail or destination</small>
+                <small className="text-muted">Link to event image</small>
               </div>
 
               {/* GPS Coordinates */}
               <div className="col-md-6">
-                <label className="form-label">GPS Coordinates (optional)</label>
+                <label className="form-label">GPS Coordinates</label>
                 <input
                   type="text"
                   className="form-control"
@@ -283,12 +469,12 @@ function AddHikeForm({ show, onClose, hikeToEdit, onSuccess }) {
                   value={hikeData.gps_coordinates}
                   onChange={(e) => setHikeData({...hikeData, gps_coordinates: e.target.value})}
                 />
-                <small className="text-muted">Format: latitude, longitude (e.g., -33.9249, 18.4241)</small>
+                <small className="text-muted">Latitude, longitude</small>
               </div>
 
-              {/* Location and Destination Website Links */}
+              {/* Location Link */}
               <div className="col-md-6">
-                <label className="form-label">Location Link (optional)</label>
+                <label className="form-label">Location Link</label>
                 <input
                   type="url"
                   className="form-control"
@@ -298,49 +484,71 @@ function AddHikeForm({ show, onClose, hikeToEdit, onSuccess }) {
                 />
                 <small className="text-muted">Google Maps or location link</small>
               </div>
+
+              {/* Official Website URL */}
               <div className="col-md-6">
-                <label className="form-label">Destination Official Website (optional)</label>
+                <label className="form-label">Official Website URL</label>
                 <input
                   type="url"
                   className="form-control"
-                  placeholder="https://park-website.com"
+                  placeholder="https://official-website.com"
                   value={hikeData.destination_website}
                   onChange={(e) => setHikeData({...hikeData, destination_website: e.target.value})}
                 />
-                <small className="text-muted">Official park/destination website</small>
+                <small className="text-muted">Official event/destination website</small>
               </div>
+            </div>
 
-              {/* Multi-Day Specific Fields */}
-              {hikeData.type === 'multi' && (
-                <>
-                  <div className="col-12">
-                    <hr className="my-3" />
-                    <h6 className="text-info">Multi-Day Specific Details</h6>
-                  </div>
-                  <div className="col-12">
-                    <label className="form-label">Daily Distances</label>
-                    <textarea
-                      className="form-control"
-                      placeholder="Day 1: 10km to base camp, Day 2: 12km to summit, Day 3: 8km return"
-                      rows="2"
-                      value={Array.isArray(hikeData.daily_distances) ? hikeData.daily_distances.join(', ') : ''}
-                      onChange={(e) => setHikeData({...hikeData, daily_distances: e.target.value.split(',').map(d => d.trim())})}
-                    />
-                    <small className="text-muted">Separate each day with a comma</small>
-                  </div>
-                  <div className="col-12">
-                    <label className="form-label">Overnight Facilities</label>
-                    <textarea
-                      className="form-control"
-                      placeholder="Campsite with basic amenities, huts with bunk beds, etc."
-                      rows="3"
-                      value={hikeData.overnight_facilities}
-                      onChange={(e) => setHikeData({...hikeData, overnight_facilities: e.target.value})}
-                    />
-                    <small className="text-muted">Describe accommodation, camping facilities, amenities, etc.</small>
-                  </div>
-                </>
+            {/* Event Type-Specific Fields */}
+            <div className="mt-4">
+              {eventType === 'hiking' && (
+                <HikingFields
+                  data={eventTypeData}
+                  onChange={setEventTypeData}
+                />
               )}
+
+              {eventType === 'camping' && (
+                <CampingFields
+                  data={eventTypeData}
+                  onChange={setEventTypeData}
+                />
+              )}
+
+              {eventType === '4x4' && (
+                <FourWheelDriveFields
+                  data={eventTypeData}
+                  onChange={setEventTypeData}
+                />
+              )}
+
+              {eventType === 'cycling' && (
+                <CyclingFields
+                  data={eventTypeData}
+                  onChange={setEventTypeData}
+                />
+              )}
+
+              {eventType === 'outdoor' && (
+                <OutdoorEventFields
+                  data={eventTypeData}
+                  onChange={setEventTypeData}
+                />
+              )}
+            </div>
+
+            {/* Tags Section */}
+            <div className="mt-4 mb-3">
+              <h6 className="mb-2">Tags</h6>
+              <p className="text-muted small">
+                Add tags to help users find your event. Select from existing tags or create custom ones.
+              </p>
+              <TagSelector
+                selectedTags={selectedTags}
+                onChange={setSelectedTags}
+                allowCustom={true}
+                maxTags={10}
+              />
             </div>
           </div>
           <div className="modal-footer">
@@ -348,7 +556,7 @@ function AddHikeForm({ show, onClose, hikeToEdit, onSuccess }) {
               Cancel
             </button>
             <button type="button" className="btn btn-success" onClick={handleSubmit} disabled={loading}>
-              {loading ? 'Saving...' : (hikeToEdit ? 'Update Hike' : 'Add Hike')}
+              {loading ? 'Saving...' : (hikeToEdit ? 'Update Event' : 'Add Event')}
             </button>
           </div>
         </div>

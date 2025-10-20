@@ -1,8 +1,8 @@
 const express = require('express');
 const router = express.Router();
 const pool = require('../config/database');
-const { getWeatherForecast, getHikingSuitability } = require('../services/weatherService');
-const { authenticateToken } = require('../middleware/auth');
+const { getWeatherForecast, getHikingSuitability, clearWeatherCache, getWeatherCacheStats } = require('../services/weatherService');
+const { authenticateToken, requireAdmin } = require('../middleware/auth');
 
 // Get weather forecast for a hike
 router.get('/hike/:hikeId', authenticateToken, async (req, res) => {
@@ -79,6 +79,28 @@ router.get('/forecast', authenticateToken, async (req, res) => {
   } catch (error) {
     console.error('Error fetching weather forecast:', error);
     res.status(500).json({ error: 'Failed to fetch weather forecast' });
+  }
+});
+
+// Get cache statistics (admin only)
+router.get('/cache/stats', authenticateToken, requireAdmin, async (req, res) => {
+  try {
+    const stats = getWeatherCacheStats();
+    res.json(stats);
+  } catch (error) {
+    console.error('Error getting cache stats:', error);
+    res.status(500).json({ error: 'Failed to get cache statistics' });
+  }
+});
+
+// Clear weather cache (admin only)
+router.post('/cache/clear', authenticateToken, requireAdmin, async (req, res) => {
+  try {
+    const result = clearWeatherCache();
+    res.json({ success: true, ...result });
+  } catch (error) {
+    console.error('Error clearing cache:', error);
+    res.status(500).json({ error: 'Failed to clear cache' });
   }
 });
 

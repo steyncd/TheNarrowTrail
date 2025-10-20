@@ -14,8 +14,8 @@ const HikeDistributionCharts = ({ data }) => {
     value: parseInt(item.count)
   })) || [];
 
-  const typeData = data.by_type?.map(item => ({
-    name: item.type.charAt(0).toUpperCase() + item.type.slice(1),
+  const eventTypeData = data.by_event_type?.map(item => ({
+    name: item.event_type.charAt(0).toUpperCase() + item.event_type.slice(1).replace('4x4', '4x4'),
     value: parseInt(item.count)
   })) || [];
 
@@ -47,11 +47,43 @@ const HikeDistributionCharts = ({ data }) => {
 
   return (
     <div className="row g-4">
-      {/* Hikes by Difficulty */}
+      {/* Events by Type (hiking, camping, 4x4, cycling, outdoor) */}
       <div className="col-lg-4">
         <div className={`card h-100 ${isDark ? 'bg-dark text-light' : ''}`}>
           <div className="card-body">
-            <h5 className="card-title mb-4">Hikes by Difficulty</h5>
+            <h5 className="card-title mb-4">Events by Type</h5>
+            {eventTypeData.length > 0 ? (
+              <ResponsiveContainer width="100%" height={250}>
+                <PieChart>
+                  <Pie
+                    data={eventTypeData}
+                    cx="50%"
+                    cy="50%"
+                    labelLine={false}
+                    label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
+                    outerRadius={80}
+                    fill="#8884d8"
+                    dataKey="value"
+                  >
+                    {eventTypeData.map((entry, index) => (
+                      <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                    ))}
+                  </Pie>
+                  <Tooltip content={<CustomTooltip />} />
+                </PieChart>
+              </ResponsiveContainer>
+            ) : (
+              <p className="text-muted text-center">No data available</p>
+            )}
+          </div>
+        </div>
+      </div>
+
+      {/* Events by Difficulty */}
+      <div className="col-lg-4">
+        <div className={`card h-100 ${isDark ? 'bg-dark text-light' : ''}`}>
+          <div className="card-body">
+            <h5 className="card-title mb-4">Events by Difficulty</h5>
             {difficultyData.length > 0 ? (
               <ResponsiveContainer width="100%" height={250}>
                 <PieChart>
@@ -79,43 +111,11 @@ const HikeDistributionCharts = ({ data }) => {
         </div>
       </div>
 
-      {/* Hikes by Type */}
+      {/* Events by Status */}
       <div className="col-lg-4">
         <div className={`card h-100 ${isDark ? 'bg-dark text-light' : ''}`}>
           <div className="card-body">
-            <h5 className="card-title mb-4">Hikes by Type</h5>
-            {typeData.length > 0 ? (
-              <ResponsiveContainer width="100%" height={250}>
-                <PieChart>
-                  <Pie
-                    data={typeData}
-                    cx="50%"
-                    cy="50%"
-                    labelLine={false}
-                    label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
-                    outerRadius={80}
-                    fill="#8884d8"
-                    dataKey="value"
-                  >
-                    {typeData.map((entry, index) => (
-                      <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                    ))}
-                  </Pie>
-                  <Tooltip content={<CustomTooltip />} />
-                </PieChart>
-              </ResponsiveContainer>
-            ) : (
-              <p className="text-muted text-center">No data available</p>
-            )}
-          </div>
-        </div>
-      </div>
-
-      {/* Hikes by Status */}
-      <div className="col-lg-4">
-        <div className={`card h-100 ${isDark ? 'bg-dark text-light' : ''}`}>
-          <div className="card-body">
-            <h5 className="card-title mb-4">Hikes by Status</h5>
+            <h5 className="card-title mb-4">Events by Status</h5>
             {statusData.length > 0 ? (
               <ResponsiveContainer width="100%" height={250}>
                 <BarChart data={statusData}>

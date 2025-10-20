@@ -4,6 +4,33 @@ const { sendEmail, sendWhatsApp } = require('../services/notificationService');
 const { logActivity } = require('../utils/activityLogger');
 const { emitInterestUpdate } = require('../services/socketService');
 const emailTemplates = require('../services/emailTemplates');
+const { getHikeSettings } = require('../services/settingsService');
+
+/**
+ * Helper function to check if registration deadline has passed
+ * @param {Date} hikeDate - The date of the hike
+ * @param {number} deadlineHours - Hours before hike when registration closes
+ * @returns {boolean} True if deadline has passed
+ */
+const isRegistrationDeadlinePassed = (hikeDate, deadlineHours) => {
+  const now = new Date();
+  const deadline = new Date(hikeDate);
+  deadline.setHours(deadline.getHours() - deadlineHours);
+  return now > deadline;
+};
+
+/**
+ * Helper function to check if cancellation deadline has passed
+ * @param {Date} hikeDate - The date of the hike
+ * @param {number} deadlineHours - Hours before hike when cancellation is not allowed
+ * @returns {boolean} True if deadline has passed
+ */
+const isCancellationDeadlinePassed = (hikeDate, deadlineHours) => {
+  const now = new Date();
+  const deadline = new Date(hikeDate);
+  deadline.setHours(deadline.getHours() - deadlineHours);
+  return now > deadline;
+};
 
 // Toggle interest in hike
 exports.toggleInterest = async (req, res) => {
@@ -127,17 +154,32 @@ exports.confirmAttendance = async (req, res) => {
     const { id } = req.params;
     const userId = req.user.id;
 
-    // Check if user has expressed interest
-    const existing = await pool.query(
-      'SELECT * FROM hike_interest WHERE hike_id = $1 AND user_id = $2',
-      [id, userId]
-    );
+    // Fetch hike details and settings in parallel
+    const [existingResult, hikeResult, hikeSettings] = await Promise.all([
+      pool.query('SELECT * FROM hike_interest WHERE hike_id = $1 AND user_id = $2', [id, userId]),
+      pool.query('SELECT date FROM hikes WHERE id = $1', [id]),
+      getHikeSettings()
+    ]);
 
-    if (existing.rows.length === 0) {
+    if (existingResult.rows.length === 0) {
       return res.status(400).json({ error: 'Must express interest first before confirming attendance' });
     }
 
-    const currentStatus = existing.rows[0].attendance_status;
+    // Check registration deadline before allowing confirmation
+    if (hikeResult.rows.length > 0) {
+      const hikeDate = hikeResult.rows[0].date;
+      if (isRegistrationDeadlinePassed(hikeDate, hikeSettings.registration_deadline_hours)) {
+        const deadlineDate = new Date(hikeDate);
+        deadlineDate.setHours(deadlineDate.getHours() - hikeSettings.registration_deadline_hours);
+        return res.status(400).json({
+          error: `Registration deadline has passed. Registrations closed ${hikeSettings.registration_deadline_hours} hours before the event (${deadlineDate.toLocaleString()}).`
+        });
+      }
+    }
+
+    const existing = existingResult.rows;
+
+    const currentStatus = existing[0].attendance_status;
 
     // Toggle between confirmed and interested
     if (currentStatus === 'confirmed') {
@@ -246,13 +288,27 @@ exports.cancelAttendance = async (req, res) => {
     const { id } = req.params;
     const userId = req.user.id;
 
-    const existing = await pool.query(
-      'SELECT * FROM hike_interest WHERE hike_id = $1 AND user_id = $2',
-      [id, userId]
-    );
+    // Fetch interest record, hike details, and settings in parallel
+    const [existingResult, hikeResult, hikeSettings] = await Promise.all([
+      pool.query('SELECT * FROM hike_interest WHERE hike_id = $1 AND user_id = $2', [id, userId]),
+      pool.query('SELECT date FROM hikes WHERE id = $1', [id]),
+      getHikeSettings()
+    ]);
 
-    if (existing.rows.length === 0) {
+    if (existingResult.rows.length === 0) {
       return res.status(404).json({ error: 'No interest record found' });
+    }
+
+    // Check cancellation deadline
+    if (hikeResult.rows.length > 0) {
+      const hikeDate = hikeResult.rows[0].date;
+      if (isCancellationDeadlinePassed(hikeDate, hikeSettings.cancellation_deadline_hours)) {
+        const deadlineDate = new Date(hikeDate);
+        deadlineDate.setHours(deadlineDate.getHours() - hikeSettings.cancellation_deadline_hours);
+        return res.status(400).json({
+          error: `Cancellation deadline has passed. Cancellations must be made at least ${hikeSettings.cancellation_deadline_hours} hours before the event (deadline was ${deadlineDate.toLocaleString()}).`
+        });
+      }
     }
 
     // Update to cancelled
