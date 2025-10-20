@@ -132,57 +132,112 @@ const HikeCard = memo(({ hike, isPast, onViewDetails, onToggleInterest, loading,
           overflow: 'hidden',
           background: theme === 'dark' ? '#1a1a1a' : '#f8f9fa'
         }}>
-          {/* Corner Ribbon for Booked Status */}
-          {isConfirmed && !isRegistrationClosed && (
-            <div style={{
-              position: 'absolute',
-              top: '15px',
-              right: '-35px',
-              background: 'linear-gradient(135deg, #28a745 0%, #20c997 100%)',
-              color: 'white',
-              padding: '5px 40px',
-              fontWeight: 'bold',
-              fontSize: '0.75rem',
-              letterSpacing: '1px',
-              textAlign: 'center',
-              transform: 'rotate(45deg)',
-              boxShadow: '0 3px 10px rgba(40, 167, 69, 0.5)',
-              zIndex: 10,
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              gap: '4px'
-            }}>
-              <CheckCircle size={12} />
-              BOOKED
-            </div>
-          )}
+          {/* Corner Ribbon for Event Status */}
+          {(() => {
+            // Determine which status ribbon to show (priority order)
+            let ribbonConfig = null;
 
-          {/* Corner Ribbon for Registration Closed */}
-          {isRegistrationClosed && (
-            <div style={{
-              position: 'absolute',
-              top: '15px',
-              right: '-35px',
-              background: 'linear-gradient(135deg, #dc3545 0%, #c82333 100%)',
-              color: 'white',
-              padding: '5px 40px',
-              fontWeight: 'bold',
-              fontSize: '0.75rem',
-              letterSpacing: '1px',
-              textAlign: 'center',
-              transform: 'rotate(45deg)',
-              boxShadow: '0 3px 10px rgba(220, 53, 69, 0.5)',
-              zIndex: 10,
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              gap: '4px'
-            }}>
-              <XCircle size={12} />
-              CLOSED
-            </div>
-          )}
+            // Priority 1: Registration Closed (overrides status)
+            if (isRegistrationClosed && !isPast) {
+              ribbonConfig = {
+                text: 'CLOSED',
+                icon: XCircle,
+                gradient: 'linear-gradient(135deg, #dc3545 0%, #c82333 100%)',
+                shadow: 'rgba(220, 53, 69, 0.5)'
+              };
+            }
+            // Priority 2: User's booking status (if confirmed)
+            else if (isConfirmed && !isPast) {
+              ribbonConfig = {
+                text: 'BOOKED',
+                icon: CheckCircle,
+                gradient: 'linear-gradient(135deg, #28a745 0%, #20c997 100%)',
+                shadow: 'rgba(40, 167, 69, 0.5)'
+              };
+            }
+            // Priority 3: Event Status
+            else if (!isPast) {
+              switch (hike.status) {
+                case 'trip_booked':
+                  ribbonConfig = {
+                    text: 'TRIP BOOKED',
+                    icon: CheckCircle,
+                    gradient: 'linear-gradient(135deg, #28a745 0%, #20c997 100%)',
+                    shadow: 'rgba(40, 167, 69, 0.5)'
+                  };
+                  break;
+                case 'cancelled':
+                  ribbonConfig = {
+                    text: 'CANCELLED',
+                    icon: XCircle,
+                    gradient: 'linear-gradient(135deg, #6c757d 0%, #5a6268 100%)',
+                    shadow: 'rgba(108, 117, 125, 0.5)'
+                  };
+                  break;
+                case 'final_planning':
+                  ribbonConfig = {
+                    text: 'FINAL PLANNING',
+                    icon: CheckCircle,
+                    gradient: 'linear-gradient(135deg, #007bff 0%, #0056b3 100%)',
+                    shadow: 'rgba(0, 123, 255, 0.5)'
+                  };
+                  break;
+                case 'pre_planning':
+                  ribbonConfig = {
+                    text: 'PRE PLANNING',
+                    icon: AlertCircle,
+                    gradient: 'linear-gradient(135deg, #ffc107 0%, #e0a800 100%)',
+                    shadow: 'rgba(255, 193, 7, 0.5)'
+                  };
+                  break;
+                case 'gathering_interest':
+                  // Don't show ribbon for gathering interest (default state)
+                  ribbonConfig = null;
+                  break;
+                default:
+                  ribbonConfig = null;
+              }
+            }
+            // Past events
+            else if (isPast && hike.status === 'trip_booked') {
+              ribbonConfig = {
+                text: 'COMPLETED',
+                icon: CheckCircle,
+                gradient: 'linear-gradient(135deg, #28a745 0%, #20c997 100%)',
+                shadow: 'rgba(40, 167, 69, 0.5)'
+              };
+            }
+
+            // Render ribbon if we have config
+            if (ribbonConfig) {
+              const RibbonIcon = ribbonConfig.icon;
+              return (
+                <div style={{
+                  position: 'absolute',
+                  top: '15px',
+                  right: '-35px',
+                  background: ribbonConfig.gradient,
+                  color: 'white',
+                  padding: '5px 40px',
+                  fontWeight: 'bold',
+                  fontSize: '0.7rem',
+                  letterSpacing: '1px',
+                  textAlign: 'center',
+                  transform: 'rotate(45deg)',
+                  boxShadow: `0 3px 10px ${ribbonConfig.shadow}`,
+                  zIndex: 10,
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: '4px'
+                }}>
+                  <RibbonIcon size={12} />
+                  {ribbonConfig.text}
+                </div>
+              );
+            }
+            return null;
+          })()}
           <img
             src={hike.image_url || EVENT_TYPE_CONFIG[hike.event_type || 'hiking']?.genericImage}
             alt={hike.name}
