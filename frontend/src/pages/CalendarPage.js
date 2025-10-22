@@ -65,8 +65,8 @@ const CalendarPage = () => {
     <>
       <PageHeader
         icon={CalendarIcon}
-        title="Hikes Calendar"
-        subtitle="View all hikes in calendar format"
+        title="Events Calendar"
+        subtitle="View all events in calendar format"
       />
 
       <HikesCalendar

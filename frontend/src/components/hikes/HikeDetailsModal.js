@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { Calendar, MapPin, ExternalLink, Printer, Users, DollarSign, Info } from 'lucide-react';
+import { Calendar, MapPin, ExternalLink, Printer, Users, DollarSign, Info, ArrowRight } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 import { api } from '../../services/api';
 import { useAuth } from '../../contexts/AuthContext';
 import { useTheme } from '../../contexts/ThemeContext';
@@ -13,6 +14,7 @@ const HikeDetailsModal = ({ hike, onClose }) => {
   // eslint-disable-next-line no-unused-vars
   const { token, currentUser } = useAuth();
   const { theme } = useTheme();
+  const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState('info');
   const [hikeStatus, setHikeStatus] = useState(null);
   const [loading, setLoading] = useState(false);
@@ -389,7 +391,18 @@ const HikeDetailsModal = ({ hike, onClose }) => {
             )}
           </div>
 
-          <div className="modal-footer">
+          <div className="modal-footer d-flex justify-content-between">
+            <button
+              type="button"
+              className="btn btn-primary"
+              onClick={() => {
+                navigate(`/hikes/${hike.id}`);
+                onClose();
+              }}
+            >
+              <ArrowRight size={18} className="me-2" />
+              View Full Details
+            </button>
             <button type="button" className="btn btn-secondary" onClick={onClose}>Close</button>
           </div>
         </div>

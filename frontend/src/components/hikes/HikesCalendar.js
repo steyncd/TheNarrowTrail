@@ -28,6 +28,30 @@ const HikesCalendar = ({ hikes, onDateClick, onHikeClick }) => {
     });
   };
 
+  const getEventTypeEmoji = (eventType) => {
+    const emojis = {
+      'hiking': '🏔️',
+      'camping': '⛺',
+      'cycling': '🚴',
+      '4x4': '🚙',
+      'outdoor': '🏕️',
+      'general': '🎯'
+    };
+    return emojis[eventType] || '📅';
+  };
+
+  const getStatusEmoji = (status) => {
+    const emojis = {
+      'gathering_interest': '💭',
+      'pre_planning': '📝',
+      'final_planning': '🎯',
+      'trip_booked': '✅',
+      'completed': '🏆',
+      'cancelled': '❌'
+    };
+    return emojis[status] || '📅';
+  };
+
   const getDifficultyColor = (difficulty) => {
     const colors = {
       easy: '#28a745',
@@ -122,15 +146,26 @@ const HikesCalendar = ({ hikes, onDateClick, onHikeClick }) => {
                     whiteSpace: 'nowrap',
                     cursor: 'pointer',
                     minHeight: '0',
-                    lineHeight: '1.2'
+                    lineHeight: '1.2',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '2px'
                   }}
                   onClick={(e) => {
                     e.stopPropagation();
                     onHikeClick && onHikeClick(hike);
                   }}
-                  title={hike.name}
+                  title={`${hike.name} - ${(hike.event_type || 'hiking').charAt(0).toUpperCase() + (hike.event_type || 'hiking').slice(1)} - ${(hike.status || 'gathering_interest').replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())}`}
                 >
-                  {hike.name}
+                  <span style={{ flexShrink: 0, fontSize: '0.9em' }}>
+                    {getEventTypeEmoji(hike.event_type || 'hiking')}
+                  </span>
+                  <span style={{ flexShrink: 0, fontSize: '0.8em' }}>
+                    {getStatusEmoji(hike.status || 'gathering_interest')}
+                  </span>
+                  <span style={{ overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                    {hike.name}
+                  </span>
                 </div>
               ))}
               {dayHikes.length > 3 && (
@@ -237,14 +272,47 @@ const HikesCalendar = ({ hikes, onDateClick, onHikeClick }) => {
 
       {/* Legend */}
       <div className="mt-4 pt-3" style={{ borderTop: `1px solid ${theme === 'dark' ? 'var(--border-color)' : '#dee2e6'}` }}>
-        <div className="small fw-bold mb-2" style={{ color: theme === 'dark' ? 'var(--text-secondary)' : '#6c757d' }}>
-          Difficulty Legend:
-        </div>
-        <div className="d-flex flex-wrap gap-2">
-          <span className="badge" style={{ background: getDifficultyColor('easy') }}>Easy</span>
-          <span className="badge" style={{ background: getDifficultyColor('moderate') }}>Moderate</span>
-          <span className="badge" style={{ background: getDifficultyColor('hard') }}>Hard</span>
-          <span className="badge" style={{ background: getDifficultyColor('expert') }}>Expert</span>
+        <div className="row g-3">
+          {/* Difficulty Legend */}
+          <div className="col-md-4">
+            <div className="small fw-bold mb-2" style={{ color: theme === 'dark' ? 'var(--text-secondary)' : '#6c757d' }}>
+              Difficulty:
+            </div>
+            <div className="d-flex flex-wrap gap-2">
+              <span className="badge" style={{ background: getDifficultyColor('easy') }}>Easy</span>
+              <span className="badge" style={{ background: getDifficultyColor('moderate') }}>Moderate</span>
+              <span className="badge" style={{ background: getDifficultyColor('hard') }}>Hard</span>
+              <span className="badge" style={{ background: getDifficultyColor('expert') }}>Expert</span>
+            </div>
+          </div>
+
+          {/* Event Type Legend */}
+          <div className="col-md-4">
+            <div className="small fw-bold mb-2" style={{ color: theme === 'dark' ? 'var(--text-secondary)' : '#6c757d' }}>
+              Event Types:
+            </div>
+            <div className="d-flex flex-wrap gap-2" style={{ fontSize: '0.85rem' }}>
+              <span>{getEventTypeEmoji('hiking')} Hiking</span>
+              <span>{getEventTypeEmoji('camping')} Camping</span>
+              <span>{getEventTypeEmoji('cycling')} Cycling</span>
+              <span>{getEventTypeEmoji('4x4')} 4x4</span>
+              <span>{getEventTypeEmoji('outdoor')} Outdoor</span>
+            </div>
+          </div>
+
+          {/* Status Legend */}
+          <div className="col-md-4">
+            <div className="small fw-bold mb-2" style={{ color: theme === 'dark' ? 'var(--text-secondary)' : '#6c757d' }}>
+              Status:
+            </div>
+            <div className="d-flex flex-wrap gap-2" style={{ fontSize: '0.85rem' }}>
+              <span>{getStatusEmoji('gathering_interest')} Interest</span>
+              <span>{getStatusEmoji('pre_planning')} Pre-Plan</span>
+              <span>{getStatusEmoji('final_planning')} Planning</span>
+              <span>{getStatusEmoji('trip_booked')} Booked</span>
+              <span>{getStatusEmoji('completed')} Done</span>
+            </div>
+          </div>
         </div>
       </div>
     </div>
