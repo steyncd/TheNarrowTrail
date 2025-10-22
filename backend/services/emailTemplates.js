@@ -331,12 +331,24 @@ function adminPromotionEmail(userName) {
 }
 
 /**
- * New hike notification
+ * New event notification - supports all event types (hiking, camping, cycling, 4x4, outdoor)
  */
-function newHikeEmail(hikeName, hikeDate, difficulty, distance, description, cost, groupType) {
+function newHikeEmail(eventName, eventDate, eventType, additionalDetails, description, cost, targetAudience) {
+  // Define event type metadata
+  const eventTypeConfig = {
+    hiking: { name: 'Hike', emoji: '🏔️', activity: 'hike', button: 'View Hikes' },
+    camping: { name: 'Camping Trip', emoji: '⛺', activity: 'camping trip', button: 'View Camping Trips' },
+    cycling: { name: 'Cycling Event', emoji: '🚴', activity: 'ride', button: 'View Cycling Events' },
+    '4x4': { name: '4x4 Adventure', emoji: '🚙', activity: '4x4 trip', button: 'View 4x4 Adventures' },
+    outdoor: { name: 'Outdoor Adventure', emoji: '🏕️', activity: 'adventure', button: 'View Adventures' }
+  };
+
+  const config = eventTypeConfig[eventType] || eventTypeConfig.hiking;
+  const audienceText = targetAudience === 'all' ? '' : `${targetAudience} `;
+
   const content = `
     <h2 style="margin: 0 0 20px 0; color: #2d5a7c; font-size: 24px; font-weight: 600;">
-      New ${groupType} Hike: ${hikeName}
+      ${config.emoji} New ${audienceText}${config.name}: ${eventName}
     </h2>
     <table width="100%" cellpadding="0" cellspacing="0" border="0" style="margin: 20px 0;">
       <tr>
@@ -344,15 +356,7 @@ function newHikeEmail(hikeName, hikeDate, difficulty, distance, description, cos
           <table width="100%" cellpadding="8" cellspacing="0" border="0">
             <tr>
               <td style="color: #6c757d; font-size: 14px; font-weight: 600; width: 120px;">📅 DATE</td>
-              <td style="color: #495057; font-size: 16px;">${hikeDate}</td>
-            </tr>
-            <tr>
-              <td style="color: #6c757d; font-size: 14px; font-weight: 600; padding-top: 8px;">⛰️ DIFFICULTY</td>
-              <td style="color: #495057; font-size: 16px; padding-top: 8px;">${difficulty}</td>
-            </tr>
-            <tr>
-              <td style="color: #6c757d; font-size: 14px; font-weight: 600; padding-top: 8px;">📏 DISTANCE</td>
-              <td style="color: #495057; font-size: 16px; padding-top: 8px;">${distance}</td>
+              <td style="color: #495057; font-size: 16px;">${eventDate}</td>
             </tr>
             ${cost > 0 ? `
             <tr>
@@ -371,7 +375,7 @@ function newHikeEmail(hikeName, hikeDate, difficulty, distance, description, cos
   `;
 
   return getEmailTemplate(
-    'New Hike Added!',
+    `New ${config.name} Added!`,
     content,
     'Log in to the portal to express your interest and see more details.'
   );
@@ -418,57 +422,77 @@ function newRegistrationAdminEmail(userName, email, phone) {
 }
 
 /**
- * Admin notification for hike interest
+ * Admin notification for event interest - supports all event types
  */
-function hikeInterestAdminEmail(userName, hikeName, hikeDate) {
+function hikeInterestAdminEmail(userName, eventName, eventDate, eventType = 'hiking') {
+  const eventTypeConfig = {
+    hiking: { name: 'Hike', emoji: '🏔️' },
+    camping: { name: 'Camping Trip', emoji: '⛺' },
+    cycling: { name: 'Cycling Event', emoji: '🚴' },
+    '4x4': { name: '4x4 Adventure', emoji: '🚙' },
+    outdoor: { name: 'Outdoor Adventure', emoji: '🏕️' }
+  };
+
+  const config = eventTypeConfig[eventType] || eventTypeConfig.hiking;
+
   const content = `
     <h2 style="margin: 0 0 20px 0; color: #4a7c59; font-size: 24px; font-weight: 600;">
-      Hike Interest Notification
+      ${config.emoji} Event Interest Notification
     </h2>
     <p style="margin: 0 0 20px 0; color: #495057; font-size: 16px; line-height: 1.6;">
-      <strong>${userName}</strong> has expressed interest in:
+      <strong>${userName}</strong> has expressed interest in this ${config.name.toLowerCase()}:
     </p>
     <div style="padding: 20px; background-color: #e8f5e9; border-left: 4px solid #4a7c59; border-radius: 4px;">
       <p style="margin: 0; color: #2d3748; font-size: 18px; font-weight: 600;">
-        ${hikeName}
+        ${eventName}
       </p>
       <p style="margin: 8px 0 0 0; color: #4a5568; font-size: 14px;">
-        📅 ${hikeDate}
+        📅 ${eventDate}
       </p>
     </div>
-    ${createButton('View Hike Details', `${getFrontendUrl()}/admin`, '#4a7c59')}
+    ${createButton('View Event Details', `${getFrontendUrl()}/admin`, '#4a7c59')}
   `;
 
   return getEmailTemplate(
-    'Hike Interest',
+    `${config.name} Interest`,
     content
   );
 }
 
 /**
- * Admin notification for confirmed attendance
+ * Admin notification for confirmed attendance - supports all event types
  */
-function attendanceConfirmedAdminEmail(userName, hikeName, hikeDate) {
+function attendanceConfirmedAdminEmail(userName, eventName, eventDate, eventType = 'hiking') {
+  const eventTypeConfig = {
+    hiking: { name: 'Hike', emoji: '🏔️', participants: 'Hikers' },
+    camping: { name: 'Camping Trip', emoji: '⛺', participants: 'Campers' },
+    cycling: { name: 'Cycling Event', emoji: '🚴', participants: 'Cyclists' },
+    '4x4': { name: '4x4 Adventure', emoji: '🚙', participants: 'Participants' },
+    outdoor: { name: 'Outdoor Adventure', emoji: '🏕️', participants: 'Participants' }
+  };
+
+  const config = eventTypeConfig[eventType] || eventTypeConfig.hiking;
+
   const content = `
     <h2 style="margin: 0 0 20px 0; color: #4a7c59; font-size: 24px; font-weight: 600;">
-      Attendance Confirmed
+      ${config.emoji} Attendance Confirmed
     </h2>
     <p style="margin: 0 0 20px 0; color: #495057; font-size: 16px; line-height: 1.6;">
-      <strong>${userName}</strong> has confirmed attendance for:
+      <strong>${userName}</strong> has confirmed attendance for this ${config.name.toLowerCase()}:
     </p>
     <div style="padding: 20px; background-color: #e8f5e9; border-left: 4px solid #4a7c59; border-radius: 4px;">
       <p style="margin: 0; color: #2d3748; font-size: 18px; font-weight: 600;">
-        ${hikeName}
+        ${eventName}
       </p>
       <p style="margin: 8px 0 0 0; color: #4a5568; font-size: 14px;">
-        📅 ${hikeDate}
+        📅 ${eventDate}
       </p>
     </div>
-    ${createButton('View Confirmed Hikers', `${getFrontendUrl()}/admin`, '#4a7c59')}
+    ${createButton(`View Confirmed ${config.participants}`, `${getFrontendUrl()}/admin`, '#4a7c59')}
   `;
 
   return getEmailTemplate(
-    'Hike Attendance Confirmed',
+    `${config.name} Attendance Confirmed`,
     content
   );
 }
@@ -519,11 +543,21 @@ function feedbackAdminEmail(userName, userEmail, feedbackType, message) {
 }
 
 /**
- * Hike announcement email template
- * Used when admin sends announcements to hike attendees
+ * Event announcement email template - supports all event types
+ * Used when admin sends announcements to event attendees
  */
-function hikeAnnouncementEmail(userName, hikeName, hikeDate, subject, message) {
-  const formattedDate = new Date(hikeDate).toLocaleDateString('en-US', {
+function hikeAnnouncementEmail(userName, eventName, eventDate, subject, message, eventType = 'hiking') {
+  const eventTypeConfig = {
+    hiking: { name: 'Hike', emoji: '🏔️', label: 'Hike' },
+    camping: { name: 'Camping Trip', emoji: '⛺', label: 'Trip' },
+    cycling: { name: 'Cycling Event', emoji: '🚴', label: 'Event' },
+    '4x4': { name: '4x4 Adventure', emoji: '🚙', label: 'Adventure' },
+    outdoor: { name: 'Outdoor Adventure', emoji: '🏕️', label: 'Event' }
+  };
+
+  const config = eventTypeConfig[eventType] || eventTypeConfig.hiking;
+
+  const formattedDate = new Date(eventDate).toLocaleDateString('en-US', {
     weekday: 'long',
     year: 'numeric',
     month: 'long',
@@ -532,7 +566,7 @@ function hikeAnnouncementEmail(userName, hikeName, hikeDate, subject, message) {
 
   const content = `
     <h2 style="margin: 0 0 10px 0; color: #2d5a7c; font-size: 24px; font-weight: 600;">
-      ${subject}
+      ${config.emoji} ${subject}
     </h2>
 
     <p style="margin: 0 0 20px 0; color: #495057; font-size: 16px; line-height: 1.6;">
@@ -540,7 +574,7 @@ function hikeAnnouncementEmail(userName, hikeName, hikeDate, subject, message) {
     </p>
 
     ${createInfoBox(`
-      <strong style="color: #2d5a7c;">Hike:</strong> ${hikeName}<br>
+      <strong style="color: #2d5a7c;">${config.label}:</strong> ${eventName}<br>
       <strong style="color: #2d5a7c;">Date:</strong> ${formattedDate}
     `)}
 
@@ -551,14 +585,14 @@ ${message}
     </div>
 
     <p style="margin: 24px 0 0 0; color: #6c757d; font-size: 14px; line-height: 1.6;">
-      If you have any questions or concerns, please reply to this email or contact the hike organizers.
+      If you have any questions or concerns, please reply to this email or contact the event organizers.
     </p>
   `;
 
   return getEmailTemplate(
     subject,
     content,
-    'This announcement was sent to all confirmed attendees of this hike.'
+    `This announcement was sent to all confirmed attendees of this ${config.name.toLowerCase()}.`
   );
 }
 

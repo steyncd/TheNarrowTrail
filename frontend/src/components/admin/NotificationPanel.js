@@ -59,8 +59,8 @@ const NOTIFICATION_TYPES = {
     },
     {
       code: 'new_hike_added',
-      name: 'New Hike Announcements',
-      description: 'Notification when new hikes are added',
+      name: 'New Event Announcements',
+      description: 'Notification when new events are added',
       critical: false,
       userFacing: true
     }
@@ -76,8 +76,8 @@ const NOTIFICATION_TYPES = {
     },
     {
       code: 'hike_interest',
-      name: 'Hike Interest',
-      description: 'When users express interest in hikes',
+      name: 'Event Interest',
+      description: 'When users express interest in events',
       critical: false,
       userFacing: false,
       adminOnly: true
@@ -100,8 +100,8 @@ const NOTIFICATION_TYPES = {
     },
     {
       code: 'new_suggestion',
-      name: 'Hike Suggestions',
-      description: 'When users suggest new hikes',
+      name: 'Event Suggestions',
+      description: 'When users suggest new events',
       critical: false,
       userFacing: false,
       adminOnly: true

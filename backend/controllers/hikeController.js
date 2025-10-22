@@ -1041,7 +1041,7 @@ exports.emailHikeAttendees = async (req, res) => {
 
     // Get hike details
     const hikeResult = await pool.query(
-      'SELECT name, date FROM hikes WHERE id = $1',
+      'SELECT name, date, event_type FROM hikes WHERE id = $1',
       [id]
     );
 
@@ -1050,6 +1050,7 @@ exports.emailHikeAttendees = async (req, res) => {
     }
 
     const hike = hikeResult.rows[0];
+    const eventType = hike.event_type || 'hiking';
 
     // Get all confirmed attendees with email notifications enabled
     const attendeesResult = await pool.query(
@@ -1064,7 +1065,7 @@ exports.emailHikeAttendees = async (req, res) => {
     const attendees = attendeesResult.rows;
 
     if (attendees.length === 0) {
-      return res.status(400).json({ error: 'No confirmed attendees with email enabled found for this hike' });
+      return res.status(400).json({ error: 'No confirmed attendees with email enabled found for this event' });
     }
 
     // Send email to each attendee
@@ -1074,7 +1075,8 @@ exports.emailHikeAttendees = async (req, res) => {
         hike.name,
         hike.date,
         subject,
-        message
+        message,
+        eventType
       );
 
       return sendEmail(

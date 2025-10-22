@@ -13,8 +13,8 @@ const NOTIFICATION_TYPES = [
   { code: 'password_reset_confirmed', name: 'Password Reset Confirmation', critical: false, description: 'Confirmation of password changes' },
   { code: 'admin_password_reset', name: 'Admin Password Reset', critical: true, description: 'Critical security notifications (cannot be disabled)' },
   { code: 'admin_promotion', name: 'Admin Promotion', critical: false, description: 'When you get admin privileges' },
-  { code: 'new_hike_added', name: 'New Hike Added', critical: false, description: 'Notifications about new hiking opportunities' },
-  { code: 'hike_announcement', name: 'Hike Announcements', critical: false, description: 'Updates about hikes you\'re interested in' }
+  { code: 'new_hike_added', name: 'New Events Added', critical: false, description: 'Notifications about new events and activities' },
+  { code: 'hike_announcement', name: 'Event Announcements', critical: false, description: 'Updates about events you\'re interested in' }
 ];
 
 const NotificationPreferences = () => {

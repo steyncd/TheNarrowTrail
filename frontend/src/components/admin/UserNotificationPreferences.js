@@ -13,10 +13,10 @@ const NOTIFICATION_TYPES = [
   { code: 'password_reset_confirmed', name: 'Password Reset Confirmation', critical: false },
   { code: 'admin_password_reset', name: 'Admin Password Reset', critical: true },
   { code: 'admin_promotion', name: 'Admin Promotion', critical: false },
-  { code: 'new_hike_added', name: 'New Hike Added', critical: false },
-  { code: 'hike_announcement', name: 'Hike Announcement', critical: false },
+  { code: 'new_hike_added', name: 'New Event Added', critical: false },
+  { code: 'hike_announcement', name: 'Event Announcements', critical: false },
   { code: 'new_registration', name: 'New Registration (Admin)', critical: false },
-  { code: 'hike_interest', name: 'Hike Interest (Admin)', critical: false },
+  { code: 'hike_interest', name: 'Event Interest (Admin)', critical: false },
   { code: 'attendance_confirmed', name: 'Attendance Confirmed (Admin)', critical: false },
   { code: 'new_feedback', name: 'New Feedback (Admin)', critical: false },
   { code: 'new_suggestion', name: 'New Suggestion (Admin)', critical: false }

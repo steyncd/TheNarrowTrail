@@ -83,7 +83,7 @@ exports.toggleInterest = async (req, res) => {
           'INSERT INTO hike_interest (hike_id, user_id, attendance_status, created_at, updated_at) VALUES ($1, $2, $3, NOW(), NOW())',
           [id, userId, 'interested']
         ),
-        pool.query('SELECT id, name, date FROM hikes WHERE id = $1', [id]),
+        pool.query('SELECT id, name, date, event_type FROM hikes WHERE id = $1', [id]),
         pool.query('SELECT name FROM users WHERE id = $1', [userId]),
         pool.query(
           'SELECT email, phone, notifications_email, notifications_whatsapp FROM users WHERE role = $1 AND status = $2',
@@ -94,8 +94,19 @@ exports.toggleInterest = async (req, res) => {
       const hike = hikeResult.rows[0];
       const user = userResult.rows[0];
       const admins = adminsResult;
+      const eventType = hike.event_type || 'hiking';
 
       const hikeDate = new Date(hike.date).toLocaleDateString();
+
+      // Event type configuration for notifications
+      const eventTypeConfig = {
+        hiking: 'hike',
+        camping: 'camping trip',
+        cycling: 'ride',
+        '4x4': '4x4 trip',
+        outdoor: 'adventure'
+      };
+      const eventLabel = eventTypeConfig[eventType] || 'hike';
 
       // PERFORMANCE OPTIMIZATION: Fire notifications asynchronously without blocking response
       // This saves 2-5 seconds from response time
@@ -105,8 +116,8 @@ exports.toggleInterest = async (req, res) => {
           promises.push(
             sendEmail(
               admin.email,
-              'Hike Interest',
-              emailTemplates.hikeInterestAdminEmail(user.name, hike.name, hikeDate)
+              'Event Interest',
+              emailTemplates.hikeInterestAdminEmail(user.name, hike.name, hikeDate, eventType)
             ).catch(err => console.error('Email notification error:', err))
           );
         }
@@ -114,7 +125,7 @@ exports.toggleInterest = async (req, res) => {
           promises.push(
             sendWhatsApp(
               admin.phone,
-              `${user.name} is interested in ${hike.name} on ${hikeDate}.`
+              `${user.name} is interested in the ${eventLabel} "${hike.name}" on ${hikeDate}.`
             ).catch(err => console.error('WhatsApp notification error:', err))
           );
         }
@@ -218,7 +229,7 @@ exports.confirmAttendance = async (req, res) => {
 
       // PERFORMANCE OPTIMIZATION: Fetch data in parallel
       const [hikeResult, userResult, adminsResult] = await Promise.all([
-        pool.query('SELECT id, name, date FROM hikes WHERE id = $1', [id]),
+        pool.query('SELECT id, name, date, event_type FROM hikes WHERE id = $1', [id]),
         pool.query('SELECT name FROM users WHERE id = $1', [userId]),
         pool.query(
           'SELECT email, phone, notifications_email, notifications_whatsapp FROM users WHERE role = $1 AND status = $2',
@@ -229,8 +240,19 @@ exports.confirmAttendance = async (req, res) => {
       const hike = hikeResult.rows[0];
       const user = userResult.rows[0];
       const admins = adminsResult;
+      const eventType = hike.event_type || 'hiking';
 
       const hikeDate = new Date(hike.date).toLocaleDateString();
+
+      // Event type configuration for notifications
+      const eventTypeConfig = {
+        hiking: 'hike',
+        camping: 'camping trip',
+        cycling: 'ride',
+        '4x4': '4x4 trip',
+        outdoor: 'adventure'
+      };
+      const eventLabel = eventTypeConfig[eventType] || 'hike';
 
       // PERFORMANCE OPTIMIZATION: Send notifications asynchronously
       Promise.all(admins.rows.map(admin => {
@@ -239,8 +261,8 @@ exports.confirmAttendance = async (req, res) => {
           promises.push(
             sendEmail(
               admin.email,
-              'Hike Attendance Confirmed',
-              emailTemplates.attendanceConfirmedAdminEmail(user.name, hike.name, hikeDate)
+              'Event Attendance Confirmed',
+              emailTemplates.attendanceConfirmedAdminEmail(user.name, hike.name, hikeDate, eventType)
             ).catch(err => console.error('Email notification error:', err))
           );
         }
@@ -248,7 +270,7 @@ exports.confirmAttendance = async (req, res) => {
           promises.push(
             sendWhatsApp(
               admin.phone,
-              `${user.name} has confirmed attendance for ${hike.name} on ${hikeDate}.`
+              `${user.name} has confirmed attendance for the ${eventLabel} "${hike.name}" on ${hikeDate}.`
             ).catch(err => console.error('WhatsApp notification error:', err))
           );
         }

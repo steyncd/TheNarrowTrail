@@ -44,13 +44,24 @@ exports.submitSuggestion = async (req, res) => {
         ['admin']
       );
 
+      // Event type labels for suggestions
+      const suggestionTypeLabels = {
+        'hike': 'Hike',
+        'camping': 'Camping Trip',
+        'cycling': 'Cycling Event',
+        '4x4': '4x4 Adventure',
+        'outdoor': 'Outdoor Adventure',
+        'general': 'Event'
+      };
+      const suggestionLabel = suggestionTypeLabels[suggestion_type] || 'Event';
+
       for (const admin of adminsResult.rows) {
         await sendEmail(
           admin.email,
-          'New Hike Suggestion Received',
+          `New ${suggestionLabel} Suggestion Received`,
           `
-            <h2>New Hike Suggestion</h2>
-            <p>A new hike suggestion has been submitted by ${user.name}.</p>
+            <h2>New ${suggestionLabel} Suggestion</h2>
+            <p>A new ${suggestionLabel.toLowerCase()} suggestion has been submitted by ${user.name}.</p>
             <p><strong>Type:</strong> ${suggestion_type}</p>
             ${suggested_date ? `<p><strong>Suggested Date:</strong> ${suggested_date}</p>` : ''}
             ${destination_name ? `<p><strong>Destination:</strong> ${destination_name}</p>` : ''}

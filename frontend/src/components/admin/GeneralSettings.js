@@ -355,12 +355,12 @@ const GeneralSettings = () => {
 
         <h6 className="text-muted mb-3 mt-4">Notification Types</h6>
         <SettingToggle
-          label="New Hike Announcements"
+          label="New Event Announcements"
           value={getSetting('notifications_new_hike_enabled', true)}
           onChange={(val) => updateSetting('notifications_new_hike_enabled', val)}
         />
         <SettingToggle
-          label="Hike Updates"
+          label="Event Updates"
           value={getSetting('notifications_hike_update_enabled', true)}
           onChange={(val) => updateSetting('notifications_hike_update_enabled', val)}
         />

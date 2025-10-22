@@ -61,13 +61,13 @@ async function sendEmail(to, subject, html, userId = null, notificationType = nu
   // Check notification type settings
   if (notificationType) {
     if (notificationType === 'new_hike' && !globalSettings.new_hike_enabled) {
-      console.log(`Email to ${to} skipped - new hike notifications globally disabled`);
-      await logNotification('email', to, subject, html, 'skipped', 'New hike notifications globally disabled');
+      console.log(`Email to ${to} skipped - new event notifications globally disabled`);
+      await logNotification('email', to, subject, html, 'skipped', 'New event notifications globally disabled');
       return false;
     }
     if (notificationType === 'hike_update' && !globalSettings.hike_update_enabled) {
-      console.log(`Email to ${to} skipped - hike update notifications globally disabled`);
-      await logNotification('email', to, subject, html, 'skipped', 'Hike update notifications globally disabled');
+      console.log(`Email to ${to} skipped - event update notifications globally disabled`);
+      await logNotification('email', to, subject, html, 'skipped', 'Event update notifications globally disabled');
       return false;
     }
     if (notificationType === 'payment_reminder' && !globalSettings.payment_reminder_enabled) {
@@ -148,13 +148,13 @@ async function sendSMS(to, message, userId = null, notificationType = null) {
   // Check notification type settings
   if (notificationType) {
     if (notificationType === 'new_hike' && !globalSettings.new_hike_enabled) {
-      console.log(`SMS to ${to} skipped - new hike notifications globally disabled`);
-      await logNotification('sms', to, null, message, 'skipped', 'New hike notifications globally disabled');
+      console.log(`SMS to ${to} skipped - new event notifications globally disabled`);
+      await logNotification('sms', to, null, message, 'skipped', 'New event notifications globally disabled');
       return false;
     }
     if (notificationType === 'hike_update' && !globalSettings.hike_update_enabled) {
-      console.log(`SMS to ${to} skipped - hike update notifications globally disabled`);
-      await logNotification('sms', to, null, message, 'skipped', 'Hike update notifications globally disabled');
+      console.log(`SMS to ${to} skipped - event update notifications globally disabled`);
+      await logNotification('sms', to, null, message, 'skipped', 'Event update notifications globally disabled');
       return false;
     }
     if (notificationType === 'payment_reminder' && !globalSettings.payment_reminder_enabled) {
@@ -239,13 +239,13 @@ async function sendWhatsApp(to, message, userId = null, notificationType = null)
   // Check notification type settings
   if (notificationType) {
     if (notificationType === 'new_hike' && !globalSettings.new_hike_enabled) {
-      console.log(`WhatsApp to ${to} skipped - new hike notifications globally disabled`);
-      await logNotification('whatsapp', to, null, message, 'skipped', 'New hike notifications globally disabled');
+      console.log(`WhatsApp to ${to} skipped - new event notifications globally disabled`);
+      await logNotification('whatsapp', to, null, message, 'skipped', 'New event notifications globally disabled');
       return false;
     }
     if (notificationType === 'hike_update' && !globalSettings.hike_update_enabled) {
-      console.log(`WhatsApp to ${to} skipped - hike update notifications globally disabled`);
-      await logNotification('whatsapp', to, null, message, 'skipped', 'Hike update notifications globally disabled');
+      console.log(`WhatsApp to ${to} skipped - event update notifications globally disabled`);
+      await logNotification('whatsapp', to, null, message, 'skipped', 'Event update notifications globally disabled');
       return false;
     }
     if (notificationType === 'payment_reminder' && !globalSettings.payment_reminder_enabled) {
