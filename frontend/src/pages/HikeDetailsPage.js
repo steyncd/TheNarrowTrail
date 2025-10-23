@@ -482,11 +482,12 @@ const HikeDetailsPage = () => {
               {/* Event Type Badge & Tags */}
               <div className="d-flex flex-wrap gap-2 mb-4" data-tour="event-tags">
                 <span
-                  className="badge px-3 py-2"
+                  className="badge"
                   style={{
                     background: eventTypeColor,
                     fontSize: '0.85rem',
-                    fontWeight: '600'
+                    fontWeight: '600',
+                    padding: '0.5rem 0.75rem'
                   }}
                 >
                   <EventTypeIcon size={14} className="me-1" />
@@ -497,14 +498,15 @@ const HikeDetailsPage = () => {
                 {hike.tags && hike.tags.length > 0 && hike.tags.map(tag => (
                   <span
                     key={tag.id}
-                    className="badge px-2 py-1"
+                    className="badge"
                     style={{
                       backgroundColor: tag.color || '#6366F1',
-                      fontSize: '0.75rem',
-                      fontWeight: '500'
+                      fontSize: '0.85rem',
+                      fontWeight: '500',
+                      padding: '0.5rem 0.75rem'
                     }}
                   >
-                    <span style={{ opacity: 0.7, fontSize: '0.65rem', textTransform: 'uppercase', marginRight: '0.25rem' }}>
+                    <span style={{ opacity: 0.7, fontSize: '0.7rem', textTransform: 'uppercase', marginRight: '0.35rem' }}>
                       {tag.category}:
                     </span>
                     {tag.name}
@@ -513,15 +515,15 @@ const HikeDetailsPage = () => {
 
                 {/* Deadlines as inline badges */}
                 {hike.registration_deadline && (
-                  <span className={`badge px-2 py-1 ${isRegistrationClosed ? 'bg-danger' : isRegistrationClosingSoon ? 'bg-warning text-dark' : 'bg-success'}`} style={{ fontSize: '0.75rem', fontWeight: '600' }}>
-                    <Clock size={12} className="me-1" />
+                  <span className={`badge ${isRegistrationClosed ? 'bg-danger' : isRegistrationClosingSoon ? 'bg-warning text-dark' : 'bg-success'}`} style={{ fontSize: '0.85rem', fontWeight: '600', padding: '0.5rem 0.75rem' }}>
+                    <Clock size={14} className="me-1" />
                     Register by: {new Date(hike.registration_deadline).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
                     {isRegistrationClosed && ' (Closed)'}
                   </span>
                 )}
                 {hike.payment_deadline && (
-                  <span className={`badge px-2 py-1 ${isPaymentDueSoon ? 'bg-warning text-dark' : 'bg-info'}`} style={{ fontSize: '0.75rem', fontWeight: '600' }}>
-                    <DollarSign size={12} className="me-1" />
+                  <span className={`badge ${isPaymentDueSoon ? 'bg-warning text-dark' : 'bg-info'}`} style={{ fontSize: '0.85rem', fontWeight: '600', padding: '0.5rem 0.75rem' }}>
+                    <DollarSign size={14} className="me-1" />
                     Pay by: {new Date(hike.payment_deadline).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
                   </span>
                 )}
