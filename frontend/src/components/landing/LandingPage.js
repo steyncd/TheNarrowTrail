@@ -458,7 +458,7 @@ const LandingPage = ({ hideLoginButton = false }) => {
                 </div>
                 <h4 className="fw-bold mb-3">Fellowship</h4>
                 <p className="text-muted mb-0" style={{ fontSize: '0.95rem', lineHeight: '1.6' }}>
-                  "Where two or three gather in His name, hearts are strengthened and faith is shared." (Matthew 18:20)
+                  As iron sharpens iron, so a friend sharpens a friend. - Proverbs 27:17
                 </p>
               </div>
             </div>
@@ -481,7 +481,7 @@ const LandingPage = ({ hideLoginButton = false }) => {
                 </div>
                 <h4 className="fw-bold mb-3">Adventure</h4>
                 <p className="text-muted mb-0" style={{ fontSize: '0.95rem', lineHeight: '1.6' }}>
-                  "Step out in faith, discover God's creation, and find renewal away from the noise of the world."
+                  The earth is the Lord's, and everything in it - Psalm 24:1 - go and behold His majesty.
                 </p>
               </div>
             </div>
@@ -504,7 +504,7 @@ const LandingPage = ({ hideLoginButton = false }) => {
                 </div>
                 <h4 className="fw-bold mb-3">Growth</h4>
                 <p className="text-muted mb-0" style={{ fontSize: '0.95rem', lineHeight: '1.6' }}>
-                  "In the stillness of nature, draw near to God and let Him transform you from glory to glory." (2 Corinthians 3:18)
+                  Let the word of Christ dwell in you richly as you encourage one another. - Colossians 3:16
                 </p>
               </div>
             </div>
