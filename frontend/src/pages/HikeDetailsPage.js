@@ -448,32 +448,33 @@ const HikeDetailsPage = () => {
       <div className="row">
         {/* Main Content */}
         <div className="col-lg-8">
-          {/* Title and Key Info */}
+          {/* Event Info Card */}
           <div className="card mb-4" style={{ background: isDark ? 'var(--card-bg)' : 'white' }}>
             <div className="card-body">
-                  <div className="d-flex justify-content-between align-items-start mb-3">
-                    <h2 className="mb-0">{hike.name}</h2>
-                    {currentUser && currentUser.role === 'admin' && (
-                      <button
-                        className="btn btn-outline-primary"
-                        onClick={() => navigate(`/admin/hikes/edit/${hikeId}`, { state: { from: 'event-details' } })}
-                      >
-                        <Edit size={16} className="me-2" />
-                        Edit
-                      </button>
-                    )}
-                  </div>
+              {/* Admin Edit Button */}
+              {currentUser && currentUser.role === 'admin' && (
+                <div className="d-flex justify-content-end mb-2">
+                  <button
+                    className="btn btn-sm btn-outline-primary"
+                    onClick={() => navigate(`/admin/hikes/edit/${hikeId}`, { state: { from: 'event-details' } })}
+                  >
+                    <Edit size={14} className="me-1" />
+                    Edit
+                  </button>
+                </div>
+              )}
 
               {/* Event Type Badge & Tags */}
-              <div className="d-flex flex-wrap gap-2 mb-3" data-tour="event-tags">
+              <div className="d-flex flex-wrap gap-2 mb-4" data-tour="event-tags">
                 <span
                   className="badge px-3 py-2"
                   style={{
                     background: eventTypeColor,
-                    fontSize: '0.9rem'
+                    fontSize: '0.85rem',
+                    fontWeight: '600'
                   }}
                 >
-                  <EventTypeIcon size={16} className="me-1" />
+                  <EventTypeIcon size={14} className="me-1" />
                   {eventTypeLabel}
                 </span>
 
@@ -481,218 +482,85 @@ const HikeDetailsPage = () => {
                 {hike.tags && hike.tags.length > 0 && hike.tags.map(tag => (
                   <span
                     key={tag.id}
-                    className="badge px-3 py-2"
+                    className="badge px-2 py-1"
                     style={{
                       backgroundColor: tag.color || '#6366F1',
-                      fontSize: '0.85rem',
-                      fontWeight: '500',
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: '0.4rem'
+                      fontSize: '0.75rem',
+                      fontWeight: '500'
                     }}
                   >
-                    <span style={{ opacity: 0.7, fontSize: '0.7rem', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+                    <span style={{ opacity: 0.7, fontSize: '0.65rem', textTransform: 'uppercase', marginRight: '0.25rem' }}>
                       {tag.category}:
                     </span>
-                    <span>{tag.name}</span>
+                    {tag.name}
                   </span>
                 ))}
+
+                {/* Deadlines as inline badges */}
+                {hike.registration_deadline && (
+                  <span className={`badge px-2 py-1 ${isRegistrationClosed ? 'bg-danger' : isRegistrationClosingSoon ? 'bg-warning' : 'bg-success'}`} style={{ fontSize: '0.75rem' }}>
+                    <Clock size={12} className="me-1" />
+                    Reg: {new Date(hike.registration_deadline).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+                    {isRegistrationClosed && ' (Closed)'}
+                  </span>
+                )}
+                {hike.payment_deadline && (
+                  <span className={`badge px-2 py-1 ${isPaymentDueSoon ? 'bg-warning' : 'bg-info'}`} style={{ fontSize: '0.75rem' }}>
+                    <DollarSign size={12} className="me-1" />
+                    Pay: {new Date(hike.payment_deadline).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+                  </span>
+                )}
               </div>
 
-              <div className="row g-4 mb-4">
-                <div className="col-12 col-md-4">
-                  <div className="d-flex align-items-center">
-                    <div className="me-3 flex-shrink-0" style={{
-                      width: '48px',
-                      height: '48px',
-                      borderRadius: '12px',
-                      backgroundColor: 'rgba(13, 110, 253, 0.1)',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center'
-                    }}>
-                      <Calendar size={24} className="text-primary" />
-                    </div>
-                    <div className="flex-grow-1" style={{ minWidth: 0 }}>
-                      <small className="text-muted d-block text-uppercase" style={{ fontSize: '0.75rem', fontWeight: '600', letterSpacing: '0.5px' }}>Date</small>
-                      <strong className="d-block" style={{ fontSize: '0.95rem', lineHeight: '1.4' }}>
-                        {new Date(hike.date).toLocaleDateString('en-US', {
-                          weekday: 'long',
-                          year: 'numeric',
-                          month: 'long',
-                          day: 'numeric'
-                        })}
-                      </strong>
-                      {hike.date_is_estimate && <span className="badge bg-info mt-1" style={{ fontSize: '0.7rem' }}>Estimate</span>}
-                    </div>
+              {/* Quick Facts Grid - Mobile-Optimized */}
+              <div className="row g-3 mb-4">
+                <div className="col-6 col-lg-3">
+                  <div className="text-center p-3" style={{
+                    background: isDark ? 'rgba(13, 110, 253, 0.1)' : '#e7f3ff',
+                    borderRadius: '8px'
+                  }}>
+                    <Calendar size={20} className="text-primary mb-2" />
+                    <div style={{ fontSize: '0.7rem', textTransform: 'uppercase', letterSpacing: '0.5px', color: isDark ? '#aaa' : '#666', marginBottom: '0.25rem' }}>Date</div>
+                    <strong style={{ fontSize: '0.85rem', display: 'block', lineHeight: '1.2' }}>
+                      {new Date(hike.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+                    </strong>
+                    {hike.date_is_estimate && <span className="badge bg-info mt-1" style={{ fontSize: '0.6rem' }}>Est</span>}
                   </div>
                 </div>
-                <div className="col-12 col-md-4">
-                  <div className="d-flex align-items-center">
-                    <div className="me-3 flex-shrink-0" style={{
-                      width: '48px',
-                      height: '48px',
-                      borderRadius: '12px',
-                      backgroundColor: 'rgba(25, 135, 84, 0.1)',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center'
-                    }}>
-                      <MapPin size={24} className="text-success" />
-                    </div>
-                    <div className="flex-grow-1" style={{ minWidth: 0 }}>
-                      <small className="text-muted d-block text-uppercase" style={{ fontSize: '0.75rem', fontWeight: '600', letterSpacing: '0.5px' }}>Location</small>
-                      <strong className="d-block" style={{ fontSize: '0.95rem', lineHeight: '1.4', wordBreak: 'break-word' }}>{hike.location || 'TBA'}</strong>
-                    </div>
+                <div className="col-6 col-lg-3">
+                  <div className="text-center p-3" style={{
+                    background: isDark ? 'rgba(25, 135, 84, 0.1)' : '#e8f5e9',
+                    borderRadius: '8px'
+                  }}>
+                    <MapPin size={20} className="text-success mb-2" />
+                    <div style={{ fontSize: '0.7rem', textTransform: 'uppercase', letterSpacing: '0.5px', color: isDark ? '#aaa' : '#666', marginBottom: '0.25rem' }}>Location</div>
+                    <strong style={{ fontSize: '0.85rem', display: 'block', lineHeight: '1.2', wordBreak: 'break-word' }}>{hike.location || 'TBA'}</strong>
                   </div>
                 </div>
-                <div className="col-12 col-md-4">
-                  <div className="d-flex align-items-center">
-                    <div className="me-3 flex-shrink-0" style={{
-                      width: '48px',
-                      height: '48px',
-                      borderRadius: '12px',
-                      backgroundColor: 'rgba(255, 193, 7, 0.1)',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center'
-                    }}>
-                      <DollarSign size={24} className="text-warning" />
-                    </div>
-                    <div className="flex-grow-1" style={{ minWidth: 0 }}>
-                      <small className="text-muted d-block text-uppercase" style={{ fontSize: '0.75rem', fontWeight: '600', letterSpacing: '0.5px' }}>Cost</small>
-                      <strong className="d-block" style={{ fontSize: '0.95rem', lineHeight: '1.4' }}>R{parseFloat(hike.cost || 0).toFixed(2)}</strong>
-                      {hike.price_is_estimate && <span className="badge bg-info mt-1" style={{ fontSize: '0.7rem' }}>Estimate</span>}
-                    </div>
+                <div className="col-6 col-lg-3">
+                  <div className="text-center p-3" style={{
+                    background: isDark ? 'rgba(255, 193, 7, 0.1)' : '#fff8e1',
+                    borderRadius: '8px'
+                  }}>
+                    <DollarSign size={20} className="text-warning mb-2" />
+                    <div style={{ fontSize: '0.7rem', textTransform: 'uppercase', letterSpacing: '0.5px', color: isDark ? '#aaa' : '#666', marginBottom: '0.25rem' }}>Cost</div>
+                    <strong style={{ fontSize: '0.85rem', display: 'block', lineHeight: '1.2' }}>R{parseFloat(hike.cost || 0).toFixed(0)}</strong>
+                    {hike.price_is_estimate && <span className="badge bg-info mt-1" style={{ fontSize: '0.6rem' }}>Est</span>}
+                  </div>
+                </div>
+                <div className="col-6 col-lg-3">
+                  <div className="text-center p-3" style={{
+                    background: isDark ? 'rgba(139, 92, 246, 0.1)' : '#f3e5f5',
+                    borderRadius: '8px'
+                  }}>
+                    <Users size={20} className="text-primary mb-2" />
+                    <div style={{ fontSize: '0.7rem', textTransform: 'uppercase', letterSpacing: '0.5px', color: isDark ? '#aaa' : '#666', marginBottom: '0.25rem' }}>Confirmed</div>
+                    <strong style={{ fontSize: '0.85rem', display: 'block', lineHeight: '1.2' }}>{hike.confirmed_count || 0}</strong>
                   </div>
                 </div>
               </div>
 
-              {/* Registration & Payment Deadlines */}
-              {(hike.registration_deadline || hike.payment_deadline || hike.pay_at_venue) && (
-                <>
-                  <div style={{
-                    height: '1px',
-                    background: isDark ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.08)',
-                    margin: '2rem 0'
-                  }} />
-
-                  <div className="mb-4">
-                    <h5 className="mb-3">
-                      <Clock size={20} className="me-2" />
-                      Registration & Payment
-                    </h5>
-                    <div className="row g-3">
-                      {hike.registration_deadline && (
-                        <div className="col-md-6">
-                          <div className="p-3" style={{
-                            backgroundColor: isRegistrationClosed
-                              ? (isDark ? 'rgba(220, 53, 69, 0.2)' : 'rgba(220, 53, 69, 0.1)')
-                              : isRegistrationClosingSoon
-                                ? (isDark ? 'rgba(255, 193, 7, 0.2)' : 'rgba(255, 193, 7, 0.1)')
-                                : (isDark ? 'rgba(25, 135, 84, 0.2)' : 'rgba(25, 135, 84, 0.1)'),
-                            borderRadius: '8px',
-                            border: isRegistrationClosed
-                              ? '2px solid #dc3545'
-                              : isRegistrationClosingSoon
-                                ? '2px solid #ffc107'
-                                : '2px solid #198754'
-                          }}>
-                            <div className="d-flex align-items-start">
-                              {isRegistrationClosed ? (
-                                <XCircle size={20} className="me-2 mt-1 flex-shrink-0" style={{ color: '#dc3545' }} />
-                              ) : isRegistrationClosingSoon ? (
-                                <AlertCircle size={20} className="me-2 mt-1 flex-shrink-0" style={{ color: '#ffc107' }} />
-                              ) : (
-                                <CheckCircle size={20} className="me-2 mt-1 flex-shrink-0" style={{ color: '#198754' }} />
-                              )}
-                              <div>
-                                <small className="text-muted d-block text-uppercase" style={{ fontSize: '0.7rem', fontWeight: '600', letterSpacing: '0.5px' }}>
-                                  Registration Deadline
-                                </small>
-                                <strong className="d-block" style={{ fontSize: '0.95rem', lineHeight: '1.4' }}>
-                                  {new Date(hike.registration_deadline).toLocaleDateString('en-US', {
-                                    weekday: 'short',
-                                    month: 'short',
-                                    day: 'numeric',
-                                    year: 'numeric',
-                                    hour: '2-digit',
-                                    minute: '2-digit'
-                                  })}
-                                </strong>
-                                {isRegistrationClosed && (
-                                  <span className="badge bg-danger mt-1" style={{ fontSize: '0.7rem' }}>Closed</span>
-                                )}
-                                {isRegistrationClosingSoon && !isRegistrationClosed && (
-                                  <span className="badge bg-warning mt-1" style={{ fontSize: '0.7rem' }}>Closing Soon</span>
-                                )}
-                              </div>
-                            </div>
-                          </div>
-                        </div>
-                      )}
-
-                      {hike.payment_deadline && (
-                        <div className="col-md-6">
-                          <div className="p-3" style={{
-                            backgroundColor: isPaymentDueSoon
-                              ? (isDark ? 'rgba(255, 193, 7, 0.2)' : 'rgba(255, 193, 7, 0.1)')
-                              : (isDark ? 'rgba(13, 110, 253, 0.2)' : 'rgba(13, 110, 253, 0.1)'),
-                            borderRadius: '8px',
-                            border: isPaymentDueSoon ? '2px solid #ffc107' : '2px solid #0d6efd'
-                          }}>
-                            <div className="d-flex align-items-start">
-                              {isPaymentDueSoon ? (
-                                <AlertCircle size={20} className="me-2 mt-1 flex-shrink-0" style={{ color: '#ffc107' }} />
-                              ) : (
-                                <DollarSign size={20} className="me-2 mt-1 flex-shrink-0" style={{ color: '#0d6efd' }} />
-                              )}
-                              <div>
-                                <small className="text-muted d-block text-uppercase" style={{ fontSize: '0.7rem', fontWeight: '600', letterSpacing: '0.5px' }}>
-                                  Payment Deadline
-                                </small>
-                                <strong className="d-block" style={{ fontSize: '0.95rem', lineHeight: '1.4' }}>
-                                  {new Date(hike.payment_deadline).toLocaleDateString('en-US', {
-                                    weekday: 'short',
-                                    month: 'short',
-                                    day: 'numeric',
-                                    year: 'numeric',
-                                    hour: '2-digit',
-                                    minute: '2-digit'
-                                  })}
-                                </strong>
-                                {isPaymentDueSoon && (
-                                  <span className="badge bg-warning mt-1" style={{ fontSize: '0.7rem' }}>Due Soon</span>
-                                )}
-                              </div>
-                            </div>
-                          </div>
-                        </div>
-                      )}
-
-                      {hike.pay_at_venue && (
-                        <div className="col-12">
-                          <div className="alert alert-info mb-0 d-flex align-items-center" style={{ fontSize: '0.9rem' }}>
-                            <Info size={18} className="me-2 flex-shrink-0" />
-                            <span><strong>Payment at Venue:</strong> Payment will be collected directly at the destination</span>
-                          </div>
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                </>
-              )}
-
-              {/* Divider */}
-              {hike.event_type_data && (
-                <div style={{
-                  height: '1px',
-                  background: isDark ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.08)',
-                  margin: '2rem 0'
-                }} />
-              )}
-
-              {/* Event-Type-Specific Details */}
+              {/* Event-Type-Specific Details - Inline with Quick Facts */}
               {hike.event_type_data && (
                 <div className="mb-4">
                   {eventType === 'hiking' && <HikingDetailsDisplay data={hike.event_type_data} />}
@@ -703,61 +571,70 @@ const HikeDetailsPage = () => {
                 </div>
               )}
 
-              {/* Divider */}
+              {/* Pay at Venue Notice */}
+              {hike.pay_at_venue && (
+                <div className="alert alert-info mb-4 d-flex align-items-center" style={{ fontSize: '0.85rem', padding: '0.75rem 1rem' }}>
+                  <Info size={16} className="me-2 flex-shrink-0" />
+                  <span><strong>Payment at Venue</strong> - Payment will be collected at the destination</span>
+                </div>
+              )}
+
+              {/* Divider before description */}
               {hike.description && (
                 <div style={{
                   height: '1px',
                   background: isDark ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.08)',
-                  margin: '2rem 0'
+                  margin: '1.5rem 0'
                 }} />
               )}
 
               {hike.description && (
-                <div data-tour="event-description">
-                  <h5 className="mb-3">
-                    <Info size={20} className="me-2" />
-                    Description
-                  </h5>
-                  <p style={{ whiteSpace: 'pre-wrap' }}>{hike.description}</p>
+                <div data-tour="event-description" className="mb-4">
+                  <h6 className="text-uppercase mb-2" style={{ fontSize: '0.8rem', fontWeight: '700', letterSpacing: '0.5px', color: isDark ? '#aaa' : '#666' }}>
+                    About This Event
+                  </h6>
+                  <p style={{ whiteSpace: 'pre-wrap', fontSize: '0.95rem', lineHeight: '1.6' }}>{hike.description}</p>
                 </div>
               )}
 
-              {/* Link buttons */}
-              <div className="mt-3 d-flex flex-wrap gap-2">
-                {hike.destination_url && (
-                  <a
-                    href={hike.destination_url}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="btn btn-outline-primary"
-                  >
-                    <MapPin size={16} className="me-2" />
-                    View on Map
-                  </a>
-                )}
-                {hike.location_link && (
-                  <a
-                    href={hike.location_link}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="btn btn-outline-success"
-                  >
-                    <MapPin size={16} className="me-2" />
-                    Location
-                  </a>
-                )}
-                {hike.destination_website && (
-                  <a
-                    href={hike.destination_website}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="btn btn-outline-info"
-                  >
-                    <Info size={16} className="me-2" />
-                    Official Website
-                  </a>
-                )}
-              </div>
+              {/* Link buttons - Compact */}
+              {(hike.destination_url || hike.location_link || hike.destination_website) && (
+                <div className="d-flex flex-wrap gap-2">
+                  {hike.destination_url && (
+                    <a
+                      href={hike.destination_url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="btn btn-sm btn-outline-primary"
+                    >
+                      <MapPin size={14} className="me-1" />
+                      Map
+                    </a>
+                  )}
+                  {hike.location_link && (
+                    <a
+                      href={hike.location_link}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="btn btn-sm btn-outline-success"
+                    >
+                      <MapPin size={14} className="me-1" />
+                      Location
+                    </a>
+                  )}
+                  {hike.destination_website && (
+                    <a
+                      href={hike.destination_website}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="btn btn-sm btn-outline-info"
+                    >
+                      <Info size={14} className="me-1" />
+                      Website
+                    </a>
+                  )}
+                </div>
+              )}
             </div>
           </div>
 
