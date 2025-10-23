@@ -25,6 +25,7 @@ import { useVersionCheck } from './hooks/useVersionCheck';
 import PushNotificationPrompt from './components/common/PushNotificationPrompt';
 import useWelcomeTour from './hooks/useWelcomeTour';
 import MobileBottomNav from './components/layout/MobileBottomNav';
+import ThemeLoader from './components/theme/ThemeLoader';
 
 // Redirect component that properly handles route parameters
 function EventEditRedirect() {
@@ -217,6 +218,9 @@ function App() {
           <AuthProvider>
             <PermissionProvider>
               <SocketProvider>
+          {/* Load theme from backend settings */}
+          <ThemeLoader />
+
           {/* Show update notification banner when new version is available */}
           {updateAvailable && (
             <UpdateNotification

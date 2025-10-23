@@ -12,6 +12,7 @@ import SettingText from '../settings/SettingText';
 import SettingSelect from '../settings/SettingSelect';
 import SettingTime from '../settings/SettingTime';
 import SettingColor from '../settings/SettingColor';
+import { ThemeGrid } from '../theme/ThemePreview';
 
 const GeneralSettings = () => {
   const { token } = useAuth();
@@ -654,15 +655,52 @@ const GeneralSettings = () => {
           onChange={(val) => updateSetting('branding_secondary_color', val)}
         />
         <SettingSelect
-          label="Default Theme"
+          label="Default Light/Dark Mode"
+          description="Choose default mode for new users"
           value={getSetting('branding_default_theme', 'light')}
           onChange={(val) => updateSetting('branding_default_theme', val)}
           options={[
-            { value: 'light', label: 'Light Theme' },
-            { value: 'dark', label: 'Dark Theme' },
+            { value: 'light', label: 'Light Mode' },
+            { value: 'dark', label: 'Dark Mode' },
             { value: 'auto', label: 'Auto (System)' }
           ]}
         />
+        <div className="mb-4">
+          <label className="form-label text-muted small mb-3">
+            Portal Color Theme
+            <div className="text-muted" style={{ fontSize: '0.85rem', fontWeight: 'normal' }}>
+              Select a color scheme for your portal. Click on any theme below to preview and select it.
+            </div>
+          </label>
+
+          <ThemeGrid
+            currentTheme={getSetting('branding_color_theme', 'outdoor-classic')}
+            onSelectTheme={(themeId) => updateSetting('branding_color_theme', themeId)}
+          />
+
+          <SettingSelect
+            label="Or select from dropdown"
+            value={getSetting('branding_color_theme', 'outdoor-classic')}
+            onChange={(val) => updateSetting('branding_color_theme', val)}
+            options={[
+              { value: 'outdoor-classic', label: 'Outdoor Classic - Earthy greens and blues' },
+              { value: 'mountain-peak', label: 'Mountain Peak - Cool grays and blues' },
+              { value: 'forest-trail', label: 'Forest Trail - Deep forest greens' },
+              { value: 'desert-sunset', label: 'Desert Sunset - Warm desert colors' },
+              { value: 'coastal-blue', label: 'Coastal Blue - Ocean blues and teals' },
+              { value: 'alpine-meadow', label: 'Alpine Meadow - Purple wildflowers' },
+              { value: 'autumn-leaves', label: 'Autumn Leaves - Warm autumn colors' },
+              { value: 'nordic-fjord', label: 'Nordic Fjord - Cool Scandinavian' },
+              { value: 'tropical-paradise', label: 'Tropical Paradise - Vibrant tropics' },
+              { value: 'canyon-rock', label: 'Canyon Rock - Red rock sandstone' },
+              { value: 'minimalist-mono', label: 'Minimalist Mono - Clean monochrome' },
+              { value: 'faith-journey', label: 'Faith Journey - Warm golds and blues' },
+              { value: 'adventure-seeker', label: 'Adventure Seeker - Bold and energetic' },
+              { value: 'zen-nature', label: 'Zen Nature - Calming natural tones' },
+              { value: 'professional', label: 'Professional - Corporate blues' }
+            ]}
+          />
+        </div>
 
         <h6 className="text-muted mb-3 mt-4">Landing Page</h6>
         <SettingToggle

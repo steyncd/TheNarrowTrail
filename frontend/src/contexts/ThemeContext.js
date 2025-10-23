@@ -1,4 +1,5 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
+import { applyThemeColors, THEMES } from '../config/themes';
 
 const ThemeContext = createContext(null);
 
@@ -11,56 +12,53 @@ export const useTheme = () => {
 };
 
 export const ThemeProvider = ({ children }) => {
-  const [theme, setTheme] = useState(() => {
-    // Get theme from localStorage or default to 'light'
-    const savedTheme = localStorage.getItem('hiking-portal-theme');
-    return savedTheme || 'light';
+  // Light/Dark mode state
+  const [mode, setMode] = useState(() => {
+    const savedMode = localStorage.getItem('hiking-portal-mode');
+    return savedMode || 'light';
+  });
+
+  // Color theme state
+  const [colorTheme, setColorTheme] = useState(() => {
+    const savedColorTheme = localStorage.getItem('hiking-portal-color-theme');
+    return savedColorTheme || 'outdoor-classic';
   });
 
   useEffect(() => {
-    // Save theme to localStorage
-    localStorage.setItem('hiking-portal-theme', theme);
+    // Save mode to localStorage
+    localStorage.setItem('hiking-portal-mode', mode);
 
-    // Apply theme to document root
-    document.documentElement.setAttribute('data-theme', theme);
+    // Apply mode attribute to document root
+    document.documentElement.setAttribute('data-theme', mode);
+  }, [mode]);
 
-    // Update CSS variables based on theme
-    const root = document.documentElement;
-    if (theme === 'dark') {
-      root.style.setProperty('--bg-primary', '#1a1a1a');
-      root.style.setProperty('--bg-secondary', '#2d2d2d');
-      root.style.setProperty('--bg-tertiary', '#3a3a3a');
-      root.style.setProperty('--text-primary', '#ffffff');
-      root.style.setProperty('--text-secondary', '#b0b0b0');
-      root.style.setProperty('--text-muted', '#808080');
-      root.style.setProperty('--border-color', '#404040');
-      root.style.setProperty('--card-bg', '#2d2d2d');
-      root.style.setProperty('--card-hover-bg', '#3a3a3a');
-      root.style.setProperty('--gradient-start', '#1a1a1a');
-      root.style.setProperty('--gradient-end', '#2d2d2d');
-    } else {
-      root.style.setProperty('--bg-primary', '#ffffff');
-      root.style.setProperty('--bg-secondary', '#f8f9fa');
-      root.style.setProperty('--bg-tertiary', '#e9ecef');
-      root.style.setProperty('--text-primary', '#212529');
-      root.style.setProperty('--text-secondary', '#6c757d');
-      root.style.setProperty('--text-muted', '#adb5bd');
-      root.style.setProperty('--border-color', '#dee2e6');
-      root.style.setProperty('--card-bg', '#ffffff');
-      root.style.setProperty('--card-hover-bg', '#f8f9fa');
-      root.style.setProperty('--gradient-start', '#2d5a7c');
-      root.style.setProperty('--gradient-end', '#4a7c59');
+  useEffect(() => {
+    // Save color theme to localStorage
+    localStorage.setItem('hiking-portal-color-theme', colorTheme);
+
+    // Apply theme colors
+    applyThemeColors(colorTheme, mode);
+  }, [colorTheme, mode]);
+
+  const toggleMode = () => {
+    setMode(prevMode => prevMode === 'light' ? 'dark' : 'light');
+  };
+
+  const changeColorTheme = (themeId) => {
+    if (THEMES[themeId]) {
+      setColorTheme(themeId);
     }
-  }, [theme]);
-
-  const toggleTheme = () => {
-    setTheme(prevTheme => prevTheme === 'light' ? 'dark' : 'light');
   };
 
   const value = {
-    theme,
-    toggleTheme,
-    isDark: theme === 'dark'
+    mode,
+    colorTheme,
+    theme: mode, // Backward compatibility
+    toggleTheme: toggleMode, // Backward compatibility
+    toggleMode,
+    changeColorTheme,
+    isDark: mode === 'dark',
+    currentTheme: THEMES[colorTheme] || THEMES['outdoor-classic']
   };
 
   return (
