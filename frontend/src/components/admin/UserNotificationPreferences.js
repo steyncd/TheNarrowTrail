@@ -1,46 +1,103 @@
 import React, { useState, useEffect } from 'react';
-import { Bell, X as CloseIcon } from 'lucide-react';
+import { Bell, X as CloseIcon, Mail, MessageSquare, Clock } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
 import { api } from '../../services/api';
 import { useTheme } from '../../contexts/ThemeContext';
 
-// All notification types
-const NOTIFICATION_TYPES = [
-  { code: 'email_verification', name: 'Email Verification', critical: true },
-  { code: 'account_approved', name: 'Account Approval', critical: false },
-  { code: 'account_rejected', name: 'Account Rejection', critical: false },
-  { code: 'password_reset_request', name: 'Password Reset Request', critical: true },
-  { code: 'password_reset_confirmed', name: 'Password Reset Confirmation', critical: false },
-  { code: 'admin_password_reset', name: 'Admin Password Reset', critical: true },
-  { code: 'admin_promotion', name: 'Admin Promotion', critical: false },
-  { code: 'new_hike_added', name: 'New Event Added', critical: false },
-  { code: 'hike_announcement', name: 'Event Announcements', critical: false },
-  { code: 'new_registration', name: 'New Registration (Admin)', critical: false },
-  { code: 'hike_interest', name: 'Event Interest (Admin)', critical: false },
-  { code: 'attendance_confirmed', name: 'Attendance Confirmed (Admin)', critical: false },
-  { code: 'new_feedback', name: 'New Feedback (Admin)', critical: false },
-  { code: 'new_suggestion', name: 'New Suggestion (Admin)', critical: false }
-];
+// Notification categories with all types
+const NOTIFICATION_CATEGORIES = {
+  security: {
+    name: '🔒 Security',
+    types: [
+      { code: 'email_verification', name: 'Email Verification', critical: true },
+      { code: 'password_reset_request', name: 'Password Reset Request', critical: true },
+      { code: 'password_reset_confirmed', name: 'Password Reset Confirmation', critical: false },
+      { code: 'admin_password_reset', name: 'Admin Password Reset', critical: true }
+    ]
+  },
+  account: {
+    name: '👤 Account',
+    types: [
+      { code: 'account_approved', name: 'Account Approval', critical: false },
+      { code: 'account_rejected', name: 'Account Rejection', critical: false },
+      { code: 'admin_promotion', name: 'Admin Promotion', critical: false }
+    ]
+  },
+  events: {
+    name: '📅 Events',
+    types: [
+      { code: 'new_hike_added', name: 'New Event Added', critical: false },
+      { code: 'hike_announcement', name: 'Event Announcements', critical: false }
+    ]
+  },
+  admin: {
+    name: '⚙️ Admin Only',
+    types: [
+      { code: 'new_registration', name: 'New Registration', critical: false },
+      { code: 'hike_interest', name: 'Event Interest', critical: false },
+      { code: 'attendance_confirmed', name: 'Attendance Confirmed', critical: false },
+      { code: 'new_feedback', name: 'New Feedback', critical: false },
+      { code: 'new_suggestion', name: 'New Suggestion', critical: false }
+    ]
+  }
+};
 
 function UserNotificationPreferences({ user, onClose, onSave }) {
   const { token } = useAuth();
   const { theme } = useTheme();
   const [preferences, setPreferences] = useState({});
+  const [lastUpdated, setLastUpdated] = useState(null);
   const [saving, setSaving] = useState(false);
+  const [testingEmail, setTestingEmail] = useState(false);
+  const [testingSMS, setTestingSMS] = useState(false);
   const [error, setError] = useState('');
+  const [success, setSuccess] = useState('');
 
   useEffect(() => {
-    if (user && user.notification_preferences) {
+    loadUserPreferences();
+  }, [user]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  const loadUserPreferences = async () => {
+    if (user && user.id) {
+      try {
+        const data = await api.getUserNotificationPreferences(user.id, token);
+        if (data.preferences) {
+          setPreferences(data.preferences);
+          setLastUpdated(data.lastUpdated);
+        } else {
+          // Initialize with all enabled
+          const initial = {};
+          Object.values(NOTIFICATION_CATEGORIES).forEach(category => {
+            category.types.forEach(type => {
+              initial[type.code] = { email: true, whatsapp: true };
+            });
+          });
+          setPreferences(initial);
+        }
+      } catch (err) {
+        console.error('Error loading preferences:', err);
+        // Initialize with defaults on error
+        const initial = {};
+        Object.values(NOTIFICATION_CATEGORIES).forEach(category => {
+          category.types.forEach(type => {
+            initial[type.code] = { email: true, whatsapp: true };
+          });
+        });
+        setPreferences(initial);
+      }
+    } else if (user && user.notification_preferences) {
       setPreferences(user.notification_preferences);
     } else {
       // Initialize with all enabled
       const initial = {};
-      NOTIFICATION_TYPES.forEach(type => {
-        initial[type.code] = { email: true, whatsapp: true };
+      Object.values(NOTIFICATION_CATEGORIES).forEach(category => {
+        category.types.forEach(type => {
+          initial[type.code] = { email: true, whatsapp: true };
+        });
       });
       setPreferences(initial);
     }
-  }, [user]);
+  };
 
   const handleToggle = (notifCode, channel) => {
     setPreferences(prev => ({
@@ -54,16 +111,18 @@ function UserNotificationPreferences({ user, onClose, onSave }) {
 
   const handleBulkToggle = (channel, value) => {
     const updated = {};
-    NOTIFICATION_TYPES.forEach(type => {
-      if (!type.critical) {
-        updated[type.code] = {
-          ...preferences[type.code],
-          [channel]: value
-        };
-      } else {
-        // Keep critical notifications as-is
-        updated[type.code] = preferences[type.code] || { email: true, whatsapp: true };
-      }
+    Object.values(NOTIFICATION_CATEGORIES).forEach(category => {
+      category.types.forEach(type => {
+        if (!type.critical) {
+          updated[type.code] = {
+            ...preferences[type.code],
+            [channel]: value
+          };
+        } else {
+          // Keep critical notifications as-is
+          updated[type.code] = preferences[type.code] || { email: true, whatsapp: true };
+        }
+      });
     });
     setPreferences(updated);
   };
@@ -71,6 +130,7 @@ function UserNotificationPreferences({ user, onClose, onSave }) {
   const handleSave = async () => {
     setSaving(true);
     setError('');
+    setSuccess('');
 
     try {
       // Prepare the data in the format expected by the API
@@ -88,9 +148,12 @@ function UserNotificationPreferences({ user, onClose, onSave }) {
         token
       );
 
-      if (result.success && result.data) {
-        onSave?.();
-        onClose();
+      if (result.success) {
+        setSuccess('Preferences saved successfully!');
+        setTimeout(() => {
+          onSave?.();
+          onClose();
+        }, 1000);
       } else {
         setError(result.error || 'Failed to save notification preferences');
       }
@@ -101,10 +164,19 @@ function UserNotificationPreferences({ user, onClose, onSave }) {
       setSaving(false);
     }
   };
+
+  const formatLastUpdated = (timestamp) => {
+    if (!timestamp) return 'Never';
+    const date = new Date(timestamp);
+    return date.toLocaleString();
+  };
+
   const cardBg = theme === 'dark' ? '#2d2d2d' : '#fff';
   const textColor = theme === 'dark' ? '#fff' : '#212529';
   const mutedColor = theme === 'dark' ? '#adb5bd' : '#6c757d';
   const overlayBg = theme === 'dark' ? 'rgba(0, 0, 0, 0.8)' : 'rgba(0, 0, 0, 0.5)';
+  const borderColor = theme === 'dark' ? '#444' : '#dee2e6';
+  const sectionBg = theme === 'dark' ? '#1a1a1a' : '#f8f9fa';
 
   return (
     <div
@@ -128,7 +200,7 @@ function UserNotificationPreferences({ user, onClose, onSave }) {
           backgroundColor: cardBg,
           color: textColor,
           borderRadius: '12px',
-          maxWidth: '700px',
+          maxWidth: '900px',
           width: '100%',
           maxHeight: '90vh',
           overflow: 'auto',
@@ -139,7 +211,7 @@ function UserNotificationPreferences({ user, onClose, onSave }) {
         <div
           style={{
             padding: '20px',
-            borderBottom: `1px solid ${theme === 'dark' ? '#444' : '#dee2e6'}`,
+            borderBottom: `1px solid ${borderColor}`,
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'space-between'
@@ -169,23 +241,51 @@ function UserNotificationPreferences({ user, onClose, onSave }) {
         </div>
         <div style={{ padding: '24px' }}>
           {error && (
-            <div className="alert alert-danger" role="alert">
+            <div className="alert alert-danger alert-dismissible fade show" role="alert">
               {error}
+              <button type="button" className="btn-close" onClick={() => setError('')}></button>
             </div>
           )}
 
+          {success && (
+            <div className="alert alert-success alert-dismissible fade show" role="alert">
+              {success}
+              <button type="button" className="btn-close" onClick={() => setSuccess('')}></button>
+            </div>
+          )}
+
+          {/* Last Updated */}
+          <div
+            style={{
+              padding: '12px 16px',
+              backgroundColor: sectionBg,
+              borderRadius: '8px',
+              border: `1px solid ${borderColor}`,
+              marginBottom: '16px',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '10px'
+            }}
+          >
+            <Clock size={18} style={{ color: mutedColor }} />
+            <div style={{ flex: 1 }}>
+              <small style={{ color: mutedColor }}>Last Updated:</small>
+              <strong style={{ marginLeft: '8px' }}>{formatLastUpdated(lastUpdated)}</strong>
+            </div>
+          </div>
+
           <div className="mb-3">
             <p style={{ color: mutedColor, marginBottom: '16px', fontSize: '0.95rem' }}>
-              Configure notification preferences for each type. Critical notifications (marked with 🔒) cannot be disabled for security purposes.
+              Configure notification preferences for each type. Critical notifications (🔒) cannot be disabled for security purposes.
             </p>
-            
+
             {/* Bulk actions */}
-            <div 
-              style={{ 
+            <div
+              style={{
                 padding: '12px 16px',
-                backgroundColor: theme === 'dark' ? '#1a1a1a' : '#f8f9fa',
+                backgroundColor: sectionBg,
                 borderRadius: '8px',
-                border: `1px solid ${theme === 'dark' ? '#444' : '#dee2e6'}`,
+                border: `1px solid ${borderColor}`,
                 marginBottom: '12px'
               }}
             >
@@ -225,64 +325,86 @@ function UserNotificationPreferences({ user, onClose, onSave }) {
             </div>
           </div>
 
-          <div style={{ maxHeight: '450px', overflowY: 'auto', marginBottom: '16px', border: `1px solid ${theme === 'dark' ? '#444' : '#dee2e6'}`, borderRadius: '8px' }}>
-            <table className="table table-sm table-hover" style={{ marginBottom: 0 }}>
-              <thead style={{ position: 'sticky', top: 0, backgroundColor: theme === 'dark' ? '#2d2d2d' : '#f8f9fa', zIndex: 1 }}>
-                <tr>
-                  <th style={{ borderBottom: `2px solid ${theme === 'dark' ? '#444' : '#dee2e6'}`, padding: '12px', fontWeight: '600' }}>Notification Type</th>
-                  <th className="text-center" style={{ width: '100px', borderBottom: `2px solid ${theme === 'dark' ? '#444' : '#dee2e6'}`, padding: '12px', fontWeight: '600' }}>📧 Email</th>
-                  <th className="text-center" style={{ width: '100px', borderBottom: `2px solid ${theme === 'dark' ? '#444' : '#dee2e6'}`, padding: '12px', fontWeight: '600' }}>💬 SMS</th>
-                </tr>
-              </thead>
-              <tbody>
-                {NOTIFICATION_TYPES.map(notif => (
-                  <tr 
-                    key={notif.code}
-                    style={{
-                      backgroundColor: notif.critical ? (theme === 'dark' ? 'rgba(255, 193, 7, 0.1)' : 'rgba(255, 193, 7, 0.05)') : 'transparent'
-                    }}
-                  >
-                    <td style={{ padding: '10px 12px' }}>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                        {notif.critical && <span title="Critical - Always enabled" style={{ fontSize: '1rem' }}>🔒</span>}
-                        <span style={{ fontWeight: notif.critical ? '600' : '400' }}>{notif.name}</span>
-                      </div>
-                    </td>
-                    <td className="text-center" style={{ padding: '10px 12px' }}>
-                      {notif.critical ? (
-                        <span title="Always enabled for security" style={{ fontSize: '1.3rem', color: '#28a745' }}>✓</span>
-                      ) : (
-                        <input
-                          type="checkbox"
-                          className="form-check-input"
-                          checked={preferences[notif.code]?.email ?? true}
-                          onChange={() => handleToggle(notif.code, 'email')}
-                          style={{ cursor: 'pointer', width: '18px', height: '18px' }}
-                        />
-                      )}
-                    </td>
-                    <td className="text-center" style={{ padding: '10px 12px' }}>
-                      {notif.critical ? (
-                        <span title="Always enabled for security" style={{ fontSize: '1.3rem', color: '#28a745' }}>✓</span>
-                      ) : (
-                        <input
-                          type="checkbox"
-                          className="form-check-input"
-                          checked={preferences[notif.code]?.whatsapp ?? true}
-                          onChange={() => handleToggle(notif.code, 'whatsapp')}
-                          style={{ cursor: 'pointer', width: '18px', height: '18px' }}
-                        />
-                      )}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-          <div 
-            className="alert alert-info" 
-            style={{ 
-              fontSize: '0.875rem', 
+          {/* Notification Categories */}
+          {Object.entries(NOTIFICATION_CATEGORIES).map(([categoryKey, category]) => (
+            <div
+              key={categoryKey}
+              style={{
+                marginBottom: '20px',
+                border: `1px solid ${borderColor}`,
+                borderRadius: '8px',
+                overflow: 'hidden'
+              }}
+            >
+              <div style={{
+                padding: '12px 16px',
+                backgroundColor: sectionBg,
+                borderBottom: `1px solid ${borderColor}`,
+                fontWeight: '600'
+              }}>
+                {category.name}
+              </div>
+              <div style={{ maxHeight: '300px', overflowY: 'auto' }}>
+                <table className="table table-sm table-hover" style={{ marginBottom: 0 }}>
+                  <thead style={{ position: 'sticky', top: 0, backgroundColor: cardBg, zIndex: 1 }}>
+                    <tr>
+                      <th style={{ borderBottom: `2px solid ${borderColor}`, padding: '12px', fontWeight: '600' }}>Notification Type</th>
+                      <th className="text-center" style={{ width: '100px', borderBottom: `2px solid ${borderColor}`, padding: '12px', fontWeight: '600' }}>📧 Email</th>
+                      <th className="text-center" style={{ width: '100px', borderBottom: `2px solid ${borderColor}`, padding: '12px', fontWeight: '600' }}>💬 SMS</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {category.types.map(notif => (
+                      <tr
+                        key={notif.code}
+                        style={{
+                          backgroundColor: notif.critical ? (theme === 'dark' ? 'rgba(255, 193, 7, 0.1)' : 'rgba(255, 193, 7, 0.05)') : 'transparent'
+                        }}
+                      >
+                        <td style={{ padding: '10px 12px' }}>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                            {notif.critical && <span title="Critical - Always enabled" style={{ fontSize: '1rem' }}>🔒</span>}
+                            <span style={{ fontWeight: notif.critical ? '600' : '400' }}>{notif.name}</span>
+                          </div>
+                        </td>
+                        <td className="text-center" style={{ padding: '10px 12px' }}>
+                          {notif.critical ? (
+                            <span title="Always enabled for security" style={{ fontSize: '1.3rem', color: '#28a745' }}>✓</span>
+                          ) : (
+                            <input
+                              type="checkbox"
+                              className="form-check-input"
+                              checked={preferences[notif.code]?.email ?? true}
+                              onChange={() => handleToggle(notif.code, 'email')}
+                              style={{ cursor: 'pointer', width: '18px', height: '18px' }}
+                            />
+                          )}
+                        </td>
+                        <td className="text-center" style={{ padding: '10px 12px' }}>
+                          {notif.critical ? (
+                            <span title="Always enabled for security" style={{ fontSize: '1.3rem', color: '#28a745' }}>✓</span>
+                          ) : (
+                            <input
+                              type="checkbox"
+                              className="form-check-input"
+                              checked={preferences[notif.code]?.whatsapp ?? true}
+                              onChange={() => handleToggle(notif.code, 'whatsapp')}
+                              style={{ cursor: 'pointer', width: '18px', height: '18px' }}
+                            />
+                          )}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          ))}
+
+          <div
+            className="alert alert-info"
+            style={{
+              fontSize: '0.875rem',
               marginBottom: 0,
               borderRadius: '8px',
               display: 'flex',
@@ -300,7 +422,7 @@ function UserNotificationPreferences({ user, onClose, onSave }) {
         <div
           style={{
             padding: '20px',
-            borderTop: `1px solid ${theme === 'dark' ? '#444' : '#dee2e6'}`,
+            borderTop: `1px solid ${borderColor}`,
             display: 'flex',
             justifyContent: 'flex-end',
             gap: '12px'
@@ -318,7 +440,14 @@ function UserNotificationPreferences({ user, onClose, onSave }) {
             onClick={handleSave}
             disabled={saving}
           >
-            {saving ? 'Saving...' : 'Save Preferences'}
+            {saving ? (
+              <>
+                <span className="spinner-border spinner-border-sm me-2" role="status"></span>
+                Saving...
+              </>
+            ) : (
+              'Save Preferences'
+            )}
           </button>
         </div>
       </div>

@@ -10,6 +10,7 @@ import EditProfileModal from '../components/profile/EditProfileModal';
 import IntegrationTokens from '../components/profile/IntegrationTokens';
 import DataExport from '../components/profile/DataExport';
 import AccountDeletion from '../components/profile/AccountDeletion';
+import UserPreferences from '../components/profile/UserPreferences';
 
 const ProfilePage = () => {
   const { userId } = useParams();
@@ -357,6 +358,13 @@ const ProfilePage = () => {
               </div>
             </div>
           )}
+        </div>
+      )}
+
+      {/* User Preferences (only show for own profile) */}
+      {isOwnProfile && (
+        <div className="mt-4">
+          <UserPreferences />
         </div>
       )}
 

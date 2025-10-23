@@ -34,6 +34,9 @@ router.get('/:id/carpool-offers', authenticateToken, hikeController.getCarpoolOf
 // POST /api/hikes/:id/carpool-offers - Create carpool offer
 router.post('/:id/carpool-offers', authenticateToken, hikeController.createCarpoolOffer);
 
+// PUT /api/hikes/:hikeId/carpool-offers/:offerId - Update carpool offer
+router.put('/:hikeId/carpool-offers/:offerId', authenticateToken, hikeController.updateCarpoolOffer);
+
 // DELETE /api/hikes/:hikeId/carpool-offers/:offerId - Delete carpool offer
 router.delete('/:hikeId/carpool-offers/:offerId', authenticateToken, hikeController.deleteCarpoolOffer);
 

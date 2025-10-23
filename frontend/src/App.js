@@ -22,6 +22,9 @@ import PWAInstallPrompt from './components/common/PWAInstallPrompt';
 import PWAUtilities from './components/common/PWAUtilities';
 import UpdateNotification from './components/common/UpdateNotification';
 import { useVersionCheck } from './hooks/useVersionCheck';
+import PushNotificationPrompt from './components/common/PushNotificationPrompt';
+import useWelcomeTour from './hooks/useWelcomeTour';
+import MobileBottomNav from './components/layout/MobileBottomNav';
 
 // Redirect component that properly handles route parameters
 function EventEditRedirect() {
@@ -101,6 +104,9 @@ function PublicRouteWrapper({ children }) {
       <OfflineIndicator />
       <PWAInstallPrompt />
       <PWAUtilities />
+
+      {/* Mobile Bottom Navigation - only show if user is logged in */}
+      {currentUser && <MobileBottomNav />}
     </div>
   );
 }
@@ -108,6 +114,49 @@ function PublicRouteWrapper({ children }) {
 // Private Route Wrapper (requires authentication)
 function PrivateRouteWrapper({ children }) {
   const { theme } = useTheme();
+  const { currentUser, token } = useAuth();
+
+  // Check if user should see welcome tour (first login after sign-up)
+  const [showWelcomeTour, setShowWelcomeTour] = React.useState(false);
+
+  React.useEffect(() => {
+    const checkWelcomeTourSetting = async () => {
+      if (currentUser) {
+        // Check if welcome tour is enabled in portal settings
+        try {
+          const settings = await fetch(`${process.env.REACT_APP_API_URL || 'http://localhost:5000'}/api/settings/registration_show_onboarding_tour`, {
+            headers: {
+              'Authorization': `Bearer ${token}`
+            }
+          });
+
+          if (settings.ok) {
+            const data = await settings.json();
+            const tourEnabled = data.setting_value === 'true' || data.setting_value === true;
+
+            if (!tourEnabled) {
+              return; // Tour disabled in settings
+            }
+          }
+        } catch (err) {
+          console.log('Could not fetch tour setting, defaulting to enabled');
+        }
+
+        const tourCompleted = localStorage.getItem('welcome_tour_completed');
+        const sessionCount = parseInt(localStorage.getItem('session_count') || '0');
+
+        // Show tour on first session after login
+        if (!tourCompleted && sessionCount === 1) {
+          setTimeout(() => setShowWelcomeTour(true), 1000);
+        }
+      }
+    };
+
+    checkWelcomeTourSetting();
+  }, [currentUser, token]);
+
+  // Activate welcome tour
+  useWelcomeTour(showWelcomeTour);
 
   return (
     <div
@@ -127,11 +176,17 @@ function PrivateRouteWrapper({ children }) {
 
       <FeedbackButton />
       <SuggestHikeButton />
-      
+
+      {/* Push Notification Prompt */}
+      <PushNotificationPrompt />
+
       {/* PWA enhancements - show for all users */}
       <OfflineIndicator />
       <PWAInstallPrompt />
       <PWAUtilities />
+
+      {/* Mobile Bottom Navigation */}
+      <MobileBottomNav />
     </div>
   );
 }

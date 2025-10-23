@@ -1,14 +1,16 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { Skeleton } from '../common/Skeleton';
 
 /**
  * LazyImage Component - Optimized image loading with Intersection Observer
  *
  * Features:
  * - Lazy loads images only when they enter viewport
- * - Shows loading placeholder while image loads
+ * - Shows animated skeleton placeholder while image loads
  * - Handles loading and error states
  * - Reduces initial page load time
  * - Saves bandwidth by not loading off-screen images
+ * - Smooth fade-in animation when image loads
  */
 function LazyImage({ src, alt, className, style, placeholder }) {
   const [imageSrc, setImageSrc] = useState(placeholder || null);
@@ -72,15 +74,9 @@ function LazyImage({ src, alt, className, style, placeholder }) {
             left: 0,
             width: '100%',
             height: '100%',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            backgroundColor: '#e0e0e0',
           }}
         >
-          <div className="spinner-border text-secondary" role="status">
-            <span className="visually-hidden">Loading...</span>
-          </div>
+          <Skeleton width="100%" height="100%" borderRadius={style?.borderRadius || '0'} />
         </div>
       )}
 

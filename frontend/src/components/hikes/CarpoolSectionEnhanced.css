@@ -1,0 +1,357 @@
+/* CarpoolSectionEnhanced.css */
+
+.carpool-section-enhanced {
+  /* Removed margin since we're now inside a card */
+}
+
+.carpool-header {
+  margin-bottom: 16px;
+}
+
+.carpool-header h5 {
+  color: inherit;
+}
+
+/* Calculator Section */
+.calculator-section {
+  margin-bottom: 24px;
+}
+
+.calculator-results {
+  background: #f8f9fa;
+  border-radius: 8px;
+  padding: 16px;
+}
+
+.carpool-section-enhanced[data-theme="dark"] .calculator-results {
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.result-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 0;
+  border-bottom: 1px solid #e0e0e0;
+}
+
+.carpool-section-enhanced[data-theme="dark"] .result-row {
+  border-color: rgba(255, 255, 255, 0.1);
+}
+
+.result-row:last-child {
+  border-bottom: none;
+}
+
+.result-row.highlight {
+  font-weight: 600;
+  font-size: 1.1rem;
+  margin-top: 8px;
+  padding-top: 12px;
+  border-top: 2px solid #4a7c7c;
+}
+
+.result-label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: #666;
+}
+
+.carpool-section-enhanced[data-theme="dark"] .result-label {
+  color: #aaa;
+}
+
+.result-value {
+  font-weight: 600;
+  color: #333;
+}
+
+.carpool-section-enhanced[data-theme="dark"] .result-value {
+  color: #fff;
+}
+
+/* Subsections */
+.carpool-subsection {
+  margin-bottom: 32px;
+}
+
+.subsection-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+  padding-bottom: 12px;
+  border-bottom: 2px solid #4a7c7c;
+}
+
+.subsection-header h6 {
+  display: flex;
+  align-items: center;
+  margin: 0;
+}
+
+/* Carpool Form */
+.carpool-form {
+  background: white;
+  border: 1px solid #dee2e6;
+  border-radius: 12px;
+  padding: 24px;
+  margin-bottom: 20px;
+}
+
+.carpool-section-enhanced[data-theme="dark"] .carpool-form {
+  background: var(--card-bg);
+  border-color: var(--border-color);
+}
+
+.form-section {
+  margin-bottom: 20px;
+}
+
+.form-section:last-of-type {
+  margin-bottom: 0;
+}
+
+.form-section-title {
+  font-size: 0.95rem;
+  font-weight: 600;
+  margin-bottom: 12px;
+  color: #4a7c7c;
+}
+
+.cost-estimate {
+  padding: 8px 12px;
+  background: #e8f5e9;
+  border-radius: 6px;
+}
+
+.carpool-section-enhanced[data-theme="dark"] .cost-estimate {
+  background: rgba(76, 175, 80, 0.1);
+}
+
+.form-actions {
+  display: flex;
+  gap: 12px;
+  margin-top: 20px;
+}
+
+/* Carpool Cards */
+.carpool-cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 16px;
+}
+
+@media (max-width: 768px) {
+  .carpool-cards {
+    grid-template-columns: 1fr;
+  }
+}
+
+.carpool-card {
+  background: white;
+  border: 1px solid #dee2e6;
+  border-radius: 12px;
+  padding: 16px;
+  transition: all 0.2s;
+}
+
+.carpool-section-enhanced[data-theme="dark"] .carpool-card {
+  background: var(--card-bg);
+  border-color: var(--border-color);
+}
+
+.carpool-card:hover {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  transform: translateY(-2px);
+}
+
+.offer-card {
+  border-left: 4px solid #28a745;
+}
+
+.request-card {
+  border-left: 4px solid #17a2b8;
+}
+
+/* Card Header */
+.card-header-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 12px;
+}
+
+.driver-info {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.driver-avatar {
+  width: 42px;
+  height: 42px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #4a7c7c, #2d5a7c);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-weight: 700;
+  font-size: 1.2rem;
+}
+
+.seats-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  background: #28a745;
+  color: white;
+  border-radius: 20px;
+  font-size: 0.875rem;
+  font-weight: 600;
+}
+
+.match-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  background: #17a2b8;
+  color: white;
+  border-radius: 20px;
+  font-size: 0.875rem;
+  font-weight: 600;
+}
+
+/* Card Details */
+.card-details {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.detail-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.875rem;
+  color: #666;
+}
+
+.carpool-section-enhanced[data-theme="dark"] .detail-item {
+  color: #aaa;
+}
+
+.detail-item.highlight {
+  color: #28a745;
+  font-weight: 600;
+}
+
+.carpool-section-enhanced[data-theme="dark"] .detail-item.highlight {
+  color: #4caf50;
+}
+
+/* Card Notes */
+.card-notes {
+  padding: 10px;
+  background: #f8f9fa;
+  border-radius: 6px;
+  font-size: 0.875rem;
+  margin-bottom: 12px;
+  color: #555;
+}
+
+.carpool-section-enhanced[data-theme="dark"] .card-notes {
+  background: rgba(255, 255, 255, 0.05);
+  color: #ccc;
+}
+
+/* Contact Info */
+.card-contact {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  padding-top: 12px;
+  border-top: 1px solid #e0e0e0;
+}
+
+.carpool-section-enhanced[data-theme="dark"] .card-contact {
+  border-color: rgba(255, 255, 255, 0.1);
+}
+
+.contact-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  background: #e8f5e9;
+  border-radius: 6px;
+  font-size: 0.875rem;
+  text-decoration: none;
+  color: #2e7d32;
+  transition: all 0.2s;
+}
+
+.carpool-section-enhanced[data-theme="dark"] .contact-link {
+  background: rgba(46, 125, 50, 0.2);
+  color: #81c784;
+}
+
+.contact-link:hover {
+  background: #c8e6c9;
+  transform: translateX(2px);
+}
+
+.carpool-section-enhanced[data-theme="dark"] .contact-link:hover {
+  background: rgba(46, 125, 50, 0.3);
+}
+
+/* Matched Offers */
+.matched-offers {
+  margin-top: 12px;
+  padding-top: 12px;
+  border-top: 1px solid #e0e0e0;
+}
+
+.carpool-section-enhanced[data-theme="dark"] .matched-offers {
+  border-color: rgba(255, 255, 255, 0.1);
+}
+
+/* Responsive Adjustments */
+@media (max-width: 768px) {
+  .carpool-form {
+    padding: 16px;
+  }
+
+  .subsection-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
+  }
+
+  .subsection-header button {
+    width: 100%;
+  }
+
+  .form-actions {
+    flex-direction: column;
+  }
+
+  .form-actions button {
+    width: 100%;
+  }
+
+  .card-header-row {
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .seats-badge,
+  .match-badge {
+    align-self: flex-start;
+  }
+}

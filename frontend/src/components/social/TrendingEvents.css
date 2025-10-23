@@ -1,0 +1,258 @@
+/* TrendingEvents.css */
+
+.trending-events {
+  margin-bottom: 24px;
+}
+
+.trending-events-loading,
+.trending-events-empty {
+  text-align: center;
+  padding: 40px 20px;
+}
+
+.trending-header {
+  margin-bottom: 20px;
+}
+
+.trending-header h4 {
+  color: inherit;
+}
+
+.trending-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.trending-event-card {
+  position: relative;
+  background: white;
+  border: 1px solid #dee2e6;
+  border-radius: 12px;
+  padding: 16px;
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  gap: 16px;
+  align-items: center;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.trending-events[data-theme="dark"] .trending-event-card {
+  background: var(--card-bg);
+  border-color: var(--border-color);
+}
+
+.trending-event-card:hover {
+  transform: translateX(4px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  border-color: #4a7c7c;
+}
+
+/* Trending Badge */
+.trending-badge {
+  position: absolute;
+  top: -8px;
+  right: 16px;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 12px;
+  border-radius: 12px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: white;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+}
+
+/* Rank */
+.trending-rank {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  min-width: 48px;
+}
+
+.rank-number {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: #999;
+  line-height: 1;
+}
+
+.trending-event-card:nth-child(1) .rank-number {
+  background: linear-gradient(135deg, #FFD700, #FFA500);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.trending-event-card:nth-child(2) .rank-number {
+  color: #C0C0C0;
+}
+
+.trending-event-card:nth-child(3) .rank-number {
+  color: #CD7F32;
+}
+
+/* Event Content */
+.trending-event-content {
+  flex: 1;
+  min-width: 0;
+}
+
+.event-title-row {
+  margin-bottom: 8px;
+}
+
+.event-title {
+  font-size: 1rem;
+  font-weight: 600;
+  margin: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.event-details-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-bottom: 8px;
+}
+
+.detail-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 0.875rem;
+  color: #666;
+}
+
+.trending-events[data-theme="dark"] .detail-item {
+  color: #aaa;
+}
+
+/* Capacity Progress */
+.capacity-progress {
+  height: 4px;
+  background: #e0e0e0;
+  border-radius: 2px;
+  overflow: hidden;
+  margin-bottom: 8px;
+}
+
+.trending-events[data-theme="dark"] .capacity-progress {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.capacity-fill {
+  height: 100%;
+  transition: width 0.3s ease;
+}
+
+/* Trending Reasons */
+.trending-reasons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.reason-badge {
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: 10px;
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+
+.reason-badge.new {
+  background: #E3F2FD;
+  color: #1976D2;
+}
+
+.reason-badge.urgent {
+  background: #FFF3E0;
+  color: #F57C00;
+}
+
+.reason-badge.popular {
+  background: #E8F5E9;
+  color: #388E3C;
+}
+
+.reason-badge.confirmed {
+  background: #F3E5F5;
+  color: #7B1FA2;
+}
+
+.trending-events[data-theme="dark"] .reason-badge.new {
+  background: rgba(25, 118, 210, 0.2);
+  color: #64B5F6;
+}
+
+.trending-events[data-theme="dark"] .reason-badge.urgent {
+  background: rgba(245, 124, 0, 0.2);
+  color: #FFB74D;
+}
+
+.trending-events[data-theme="dark"] .reason-badge.popular {
+  background: rgba(56, 142, 60, 0.2);
+  color: #81C784;
+}
+
+.trending-events[data-theme="dark"] .reason-badge.confirmed {
+  background: rgba(123, 31, 162, 0.2);
+  color: #BA68C8;
+}
+
+/* Action Icon */
+.trending-event-action {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #999;
+}
+
+.trending-event-card:hover .trending-event-action {
+  color: #4a7c7c;
+}
+
+/* Footer */
+.trending-footer {
+  margin-top: 16px;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .trending-event-card {
+    grid-template-columns: auto 1fr auto;
+    padding: 12px;
+  }
+
+  .trending-rank {
+    min-width: 40px;
+  }
+
+  .rank-number {
+    font-size: 1.25rem;
+  }
+
+  .event-title {
+    font-size: 0.95rem;
+  }
+
+  .event-details-row {
+    gap: 8px;
+  }
+
+  .detail-item {
+    font-size: 0.8rem;
+  }
+
+  .trending-badge {
+    font-size: 0.7rem;
+    padding: 3px 8px;
+  }
+}

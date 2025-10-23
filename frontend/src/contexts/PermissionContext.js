@@ -91,12 +91,6 @@ export const PermissionProvider = ({ children }) => {
   const hasPermission = (permission) => {
     if (!permission) return false;
     const result = permissions.some(p => p.name === permission);
-    console.log('🔍 hasPermission check:', { 
-      permission, 
-      result, 
-      permissionsCount: permissions.length,
-      availablePermissions: permissions.map(p => p.name).slice(0, 5) 
-    });
     return result;
   };
 

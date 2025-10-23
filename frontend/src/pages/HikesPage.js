@@ -1,6 +1,6 @@
 import React from 'react';
 import { Mountain } from 'lucide-react';
-import HikesList from '../components/hikes/HikesList';
+import HikesListEnhanced from '../components/hikes/HikesListEnhanced';
 import PageHeader from '../components/common/PageHeader';
 
 const HikesPage = () => {
@@ -12,7 +12,7 @@ const HikesPage = () => {
         subtitle="Browse and express interest in upcoming outdoor adventures"
       />
 
-      <HikesList />
+      <HikesListEnhanced />
     </div>
   );
 };

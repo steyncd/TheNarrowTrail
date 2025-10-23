@@ -88,6 +88,7 @@ const PWAUtilities = () => {
       {/* PWA Utilities Button */}
       <button
         onClick={() => setShowUtilities(!showUtilities)}
+        className="d-none d-md-flex"
         style={buttonStyle}
         onMouseEnter={(e) => {
           e.target.style.transform = 'scale(1.1)';

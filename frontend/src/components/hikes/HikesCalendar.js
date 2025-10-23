@@ -202,34 +202,74 @@ const HikesCalendar = ({ hikes, onDateClick, onHikeClick }) => {
       }}
     >
       {/* Calendar Header */}
-      <div className="d-flex justify-content-between align-items-center mb-4">
-        <h3
-          style={{
-            margin: 0,
-            color: theme === 'dark' ? 'var(--text-primary)' : '#212529'
-          }}
-        >
-          {monthNames[month]} {year}
-        </h3>
-        <div className="d-flex gap-2">
-          <button
-            onClick={goToPreviousMonth}
-            className="btn btn-outline-primary btn-sm"
+      <div className="mb-3">
+        {/* Mobile: Stack title and controls */}
+        <div className="d-md-none">
+          <h4
+            className="text-center mb-2"
+            style={{
+              margin: 0,
+              color: theme === 'dark' ? 'var(--text-primary)' : '#212529',
+              fontSize: '1.25rem'
+            }}
           >
-            <ChevronLeft size={18} />
-          </button>
-          <button
-            onClick={goToToday}
-            className="btn btn-primary btn-sm"
+            {monthNames[month]} {year}
+          </h4>
+          <div className="d-flex justify-content-center gap-2">
+            <button
+              onClick={goToPreviousMonth}
+              className="btn btn-outline-primary btn-sm"
+              aria-label="Previous month"
+            >
+              <ChevronLeft size={16} />
+            </button>
+            <button
+              onClick={goToToday}
+              className="btn btn-primary btn-sm"
+              style={{ minWidth: '65px' }}
+            >
+              Today
+            </button>
+            <button
+              onClick={goToNextMonth}
+              className="btn btn-outline-primary btn-sm"
+              aria-label="Next month"
+            >
+              <ChevronRight size={16} />
+            </button>
+          </div>
+        </div>
+
+        {/* Desktop: Side by side */}
+        <div className="d-none d-md-flex justify-content-between align-items-center">
+          <h3
+            style={{
+              margin: 0,
+              color: theme === 'dark' ? 'var(--text-primary)' : '#212529'
+            }}
           >
-            Today
-          </button>
-          <button
-            onClick={goToNextMonth}
-            className="btn btn-outline-primary btn-sm"
-          >
-            <ChevronRight size={18} />
-          </button>
+            {monthNames[month]} {year}
+          </h3>
+          <div className="d-flex gap-2">
+            <button
+              onClick={goToPreviousMonth}
+              className="btn btn-outline-primary btn-sm"
+            >
+              <ChevronLeft size={18} />
+            </button>
+            <button
+              onClick={goToToday}
+              className="btn btn-primary btn-sm"
+            >
+              Today
+            </button>
+            <button
+              onClick={goToNextMonth}
+              className="btn btn-outline-primary btn-sm"
+            >
+              <ChevronRight size={18} />
+            </button>
+          </div>
         </div>
       </div>
 
@@ -252,8 +292,8 @@ const HikesCalendar = ({ hikes, onDateClick, onHikeClick }) => {
               overflow: 'hidden'
             }}
           >
-            <span className="d-none d-md-inline">{day}</span>
-            <span className="d-md-none">{day.substring(0, 1)}</span>
+            <span className="d-none d-lg-inline">{day}</span>
+            <span className="d-lg-none">{day.substring(0, 3)}</span>
           </div>
         ))}
       </div>
@@ -271,27 +311,27 @@ const HikesCalendar = ({ hikes, onDateClick, onHikeClick }) => {
       </div>
 
       {/* Legend */}
-      <div className="mt-4 pt-3" style={{ borderTop: `1px solid ${theme === 'dark' ? 'var(--border-color)' : '#dee2e6'}` }}>
-        <div className="row g-3">
+      <div className="mt-3 mt-md-4 pt-3" style={{ borderTop: `1px solid ${theme === 'dark' ? 'var(--border-color)' : '#dee2e6'}` }}>
+        <div className="row g-2 g-md-3">
           {/* Difficulty Legend */}
-          <div className="col-md-4">
-            <div className="small fw-bold mb-2" style={{ color: theme === 'dark' ? 'var(--text-secondary)' : '#6c757d' }}>
+          <div className="col-12 col-md-4">
+            <div className="small fw-bold mb-2" style={{ color: theme === 'dark' ? 'var(--text-secondary)' : '#6c757d', fontSize: 'clamp(0.75rem, 2vw, 0.875rem)' }}>
               Difficulty:
             </div>
-            <div className="d-flex flex-wrap gap-2">
-              <span className="badge" style={{ background: getDifficultyColor('easy') }}>Easy</span>
-              <span className="badge" style={{ background: getDifficultyColor('moderate') }}>Moderate</span>
-              <span className="badge" style={{ background: getDifficultyColor('hard') }}>Hard</span>
-              <span className="badge" style={{ background: getDifficultyColor('expert') }}>Expert</span>
+            <div className="d-flex flex-wrap gap-1 gap-md-2">
+              <span className="badge" style={{ background: getDifficultyColor('easy'), fontSize: 'clamp(0.7rem, 1.8vw, 0.8rem)' }}>Easy</span>
+              <span className="badge" style={{ background: getDifficultyColor('moderate'), fontSize: 'clamp(0.7rem, 1.8vw, 0.8rem)' }}>Moderate</span>
+              <span className="badge" style={{ background: getDifficultyColor('hard'), fontSize: 'clamp(0.7rem, 1.8vw, 0.8rem)' }}>Hard</span>
+              <span className="badge" style={{ background: getDifficultyColor('expert'), fontSize: 'clamp(0.7rem, 1.8vw, 0.8rem)' }}>Expert</span>
             </div>
           </div>
 
           {/* Event Type Legend */}
-          <div className="col-md-4">
-            <div className="small fw-bold mb-2" style={{ color: theme === 'dark' ? 'var(--text-secondary)' : '#6c757d' }}>
+          <div className="col-12 col-md-4">
+            <div className="small fw-bold mb-2" style={{ color: theme === 'dark' ? 'var(--text-secondary)' : '#6c757d', fontSize: 'clamp(0.75rem, 2vw, 0.875rem)' }}>
               Event Types:
             </div>
-            <div className="d-flex flex-wrap gap-2" style={{ fontSize: '0.85rem' }}>
+            <div className="d-flex flex-wrap gap-1 gap-md-2" style={{ fontSize: 'clamp(0.7rem, 1.8vw, 0.85rem)' }}>
               <span>{getEventTypeEmoji('hiking')} Hiking</span>
               <span>{getEventTypeEmoji('camping')} Camping</span>
               <span>{getEventTypeEmoji('cycling')} Cycling</span>
@@ -301,11 +341,11 @@ const HikesCalendar = ({ hikes, onDateClick, onHikeClick }) => {
           </div>
 
           {/* Status Legend */}
-          <div className="col-md-4">
-            <div className="small fw-bold mb-2" style={{ color: theme === 'dark' ? 'var(--text-secondary)' : '#6c757d' }}>
+          <div className="col-12 col-md-4">
+            <div className="small fw-bold mb-2" style={{ color: theme === 'dark' ? 'var(--text-secondary)' : '#6c757d', fontSize: 'clamp(0.75rem, 2vw, 0.875rem)' }}>
               Status:
             </div>
-            <div className="d-flex flex-wrap gap-2" style={{ fontSize: '0.85rem' }}>
+            <div className="d-flex flex-wrap gap-1 gap-md-2" style={{ fontSize: 'clamp(0.7rem, 1.8vw, 0.85rem)' }}>
               <span>{getStatusEmoji('gathering_interest')} Interest</span>
               <span>{getStatusEmoji('pre_planning')} Pre-Plan</span>
               <span>{getStatusEmoji('final_planning')} Planning</span>

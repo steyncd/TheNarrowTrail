@@ -31,16 +31,6 @@ const usePermission = () => {
     getCategories
   } = usePermissions();
 
-  // Debug logging
-  console.log('🔑 usePermission hook called', {
-    permissionsCount: permissions?.length || 0,
-    rolesCount: roles?.length || 0,
-    loading,
-    error,
-    isAdmin: isAdmin(),
-    permissions: permissions?.map(p => p.name)
-  });
-
   /**
    * Shorthand for hasPermission
    */

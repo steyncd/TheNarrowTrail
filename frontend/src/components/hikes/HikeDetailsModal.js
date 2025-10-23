@@ -5,7 +5,7 @@ import { api } from '../../services/api';
 import { useAuth } from '../../contexts/AuthContext';
 import { useTheme } from '../../contexts/ThemeContext';
 import CommentsSection from './CommentsSection';
-import CarpoolSection from './CarpoolSection';
+import CarpoolSectionEnhanced from './CarpoolSectionEnhanced';
 import PackingList from './PackingList';
 import ShareButtons from '../common/ShareButtons';
 import HikePrintView from './HikePrintView';
@@ -380,7 +380,7 @@ const HikeDetailsModal = ({ hike, onClose }) => {
 
                 {/* Carpool Tab */}
                 {activeTab === 'carpool' && (
-                  <CarpoolSection hikeId={hike.id} />
+                  <CarpoolSectionEnhanced hikeId={hike.id} hikeLocation={hike.location} />
                 )}
 
                 {/* Packing List Tab */}

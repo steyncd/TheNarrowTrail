@@ -28,20 +28,7 @@ const Header = () => {
   // Keep backward compatibility with old isAdmin check - recalculate when permissions change
   const isAdmin = useMemo(() => {
     return currentUser?.role === 'admin' || hasAdminRole();
-  }, [currentUser, hasAdminRole]);
-
-  // Debug logging
-  useEffect(() => {
-    console.log('🎯 Header: State check', {
-      hasCurrentUser: !!currentUser,
-      userRole: currentUser?.role,
-      hasAdminRole: hasAdminRole(),
-      isAdmin,
-      hasToken: !!token,
-      filteredAdminLinksCount: filteredAdminLinks.length
-    });
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [currentUser, isAdmin, token]);
+  }, [currentUser?.role, hasAdminRole]);
 
   // Fetch public branding settings (no auth required)
   const fetchBrandingSettings = async () => {
@@ -147,15 +134,29 @@ const Header = () => {
                   src={brandingSettings.branding_logo_url || '/hiking-logo.png'}
                   alt={brandingSettings.branding_portal_name || 'The Narrow Trail'}
                   style={{
+                    width: '60px',
+                    height: '60px',
+                    borderRadius: '50%',
+                    border: '2px solid #4a7c7c',
+                    objectFit: 'cover'
+                  }}
+                  className="me-2 flex-shrink-0 d-none d-md-block"
+                  onError={(e) => {
+                    e.target.src = '/hiking-logo.png';
+                  }}
+                />
+                <img
+                  src={brandingSettings.branding_logo_url || '/hiking-logo.png'}
+                  alt={brandingSettings.branding_portal_name || 'The Narrow Trail'}
+                  style={{
                     width: '40px',
                     height: '40px',
                     borderRadius: '50%',
                     border: '2px solid #4a7c7c',
                     objectFit: 'cover'
                   }}
-                  className="me-2 flex-shrink-0"
+                  className="me-2 flex-shrink-0 d-md-none"
                   onError={(e) => {
-                    // Fallback to default logo if custom logo fails to load
                     e.target.src = '/hiking-logo.png';
                   }}
                 />
@@ -196,7 +197,6 @@ const Header = () => {
                 );
               })}
 
-              {console.log('🔍 Rendering check:', { isAdmin, filteredAdminLinksCount: filteredAdminLinks.length, filteredAdminLinks })}
               {filteredAdminLinks.map(link => {
                 const Icon = link.icon;
                 let badgeCount = 0;
@@ -239,6 +239,7 @@ const Header = () => {
               {/* User Profile Dropdown */}
               <div className="position-relative">
                 <button
+                  id="user-profile-button"
                   ref={profileButtonRef}
                   className="btn d-flex align-items-center justify-content-center"
                   onClick={() => setShowProfileDropdown(!showProfileDropdown)}

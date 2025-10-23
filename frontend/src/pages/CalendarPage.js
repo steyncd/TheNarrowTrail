@@ -6,6 +6,8 @@ import HikesCalendar from '../components/hikes/HikesCalendar';
 import HikeDetailsModal from '../components/hikes/HikeDetailsModal';
 import LoadingSpinner from '../components/common/LoadingSpinner';
 import PageHeader from '../components/common/PageHeader';
+import usePullToRefresh from '../hooks/usePullToRefresh';
+import PullToRefreshIndicator from '../components/hikes/PullToRefreshIndicator';
 
 // PERFORMANCE OPTIMIZATION: Smart refetching pattern
 const CalendarPage = () => {
@@ -27,6 +29,12 @@ const CalendarPage = () => {
     }
   }, [token]);
 
+  // Pull-to-refresh for mobile
+  const { containerRef, isPulling, pullDistance, isRefreshing, isReady } = usePullToRefresh(
+    fetchHikes,
+    { enabled: true }
+  );
+
   useEffect(() => {
     fetchHikes();
   }, [fetchHikes]);
@@ -37,7 +45,12 @@ const CalendarPage = () => {
   };
 
   const handleDateClick = (date, dayHikes) => {
+    const isMobile = window.innerWidth <= 767;
+
     if (dayHikes.length === 1) {
+      handleHikeClick(dayHikes[0]);
+    } else if (isMobile && dayHikes.length > 0) {
+      // On mobile, just open the first hike when clicking the day
       handleHikeClick(dayHikes[0]);
     } else {
       // Could show a list modal here if multiple hikes on same day
@@ -62,7 +75,14 @@ const CalendarPage = () => {
   }
 
   return (
-    <>
+    <div ref={containerRef}>
+      <PullToRefreshIndicator
+        isPulling={isPulling}
+        pullDistance={pullDistance}
+        isRefreshing={isRefreshing}
+        isReady={isReady}
+      />
+
       <PageHeader
         icon={CalendarIcon}
         title="Events Calendar"
@@ -81,7 +101,7 @@ const CalendarPage = () => {
           onClose={handleModalClose}
         />
       )}
-    </>
+    </div>
   );
 };
 

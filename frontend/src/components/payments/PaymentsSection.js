@@ -1,10 +1,10 @@
 import React, { useState, useEffect } from 'react';
-import { DollarSign, CheckCircle, Clock, XCircle, Plus, Trash2, Edit2, Users } from 'lucide-react';
+import { DollarSign, CheckCircle, Clock, XCircle, Plus, Trash2, Edit2, Users, ChevronDown, ChevronUp } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
 import { useTheme } from '../../contexts/ThemeContext';
 import api from '../../services/api';
 
-function PaymentsSection({ hikeId, hikeCost, isAdmin }) {
+function PaymentsSection({ hikeId, hikeCost, isAdmin, collapsed, onToggleCollapse }) {
   const { token } = useAuth();
   const { theme } = useTheme();
   const isDark = theme === 'dark';
@@ -280,11 +280,22 @@ function PaymentsSection({ hikeId, hikeCost, isAdmin }) {
     <div className="card" style={{ background: isDark ? 'var(--card-bg)' : 'white' }}>
       <div className="card-body">
         <div className="d-flex justify-content-between align-items-center mb-3">
-          <h5 className="mb-0">
-            <DollarSign size={20} className="me-2" />
-            Payment Tracking
-          </h5>
-          {isAdmin && (
+          <div
+            className="d-flex align-items-center"
+            style={{ cursor: onToggleCollapse ? 'pointer' : 'default' }}
+            onClick={onToggleCollapse}
+          >
+            <h5 className="mb-0">
+              <DollarSign size={20} className="me-2" />
+              Payment Tracking
+            </h5>
+            {onToggleCollapse && (
+              <span className="ms-2">
+                {collapsed ? <ChevronDown size={20} /> : <ChevronUp size={20} />}
+              </span>
+            )}
+          </div>
+          {isAdmin && !collapsed && (
             <div>
               <button
                 className="btn btn-sm btn-outline-primary me-2"
@@ -315,9 +326,11 @@ function PaymentsSection({ hikeId, hikeCost, isAdmin }) {
           )}
         </div>
 
-        {/* Payment Statistics */}
-        {stats && (
-          <div className="row mb-4">
+        {!collapsed && (
+          <>
+            {/* Payment Statistics */}
+            {stats && (
+              <div className="row mb-4">
             <div className="col-md-3 col-6 mb-2">
               <div className={`card ${isDark ? 'bg-dark' : 'bg-light'}`}>
                 <div className="card-body py-2 px-3">
@@ -414,6 +427,8 @@ function PaymentsSection({ hikeId, hikeCost, isAdmin }) {
               <p className="small">Click "Add Payment" or "Bulk Create" to start tracking payments</p>
             )}
           </div>
+        )}
+          </>
         )}
 
         {/* Add/Edit Payment Modal */}

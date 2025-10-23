@@ -1,5 +1,5 @@
 import React, { memo, useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { Calendar, CheckCircle, Heart, AlertCircle, XCircle, Sparkles, Mountain, Tent, Truck, Bike, Compass } from 'lucide-react';
 import useFavorites from '../../hooks/useFavorites';
 import { useTheme } from '../../contexts/ThemeContext';
@@ -45,6 +45,10 @@ const HikeCard = memo(({ hike, isPast, onViewDetails, onToggleInterest, loading,
   const { isFavorite, toggleFavorite } = useFavorites();
   const { theme } = useTheme();
   const { on, off } = useSocket();
+  const navigate = useNavigate();
+
+  // Detect mobile view
+  const isMobile = window.innerWidth <= 767;
 
   // Local state for real-time interest counts
   // eslint-disable-next-line no-unused-vars
@@ -99,6 +103,16 @@ const HikeCard = memo(({ hike, isPast, onViewDetails, onToggleInterest, loading,
     toggleFavorite(hike.id);
   };
 
+  const handleCardClick = () => {
+    // On mobile, navigate directly to detail page
+    // On desktop, show modal
+    if (isMobile) {
+      navigate(`/hikes/${hike.id}`);
+    } else {
+      onViewDetails(hike);
+    }
+  };
+
   return (
     <div className="col-md-6 col-lg-4">
       <div
@@ -110,7 +124,7 @@ const HikeCard = memo(({ hike, isPast, onViewDetails, onToggleInterest, loading,
           transition: 'all 0.3s ease',
           cursor: 'pointer'
         }}
-        onClick={() => onViewDetails(hike)}
+        onClick={handleCardClick}
         onMouseEnter={(e) => {
           e.currentTarget.style.transform = 'translateY(-4px)';
           e.currentTarget.style.boxShadow = theme === 'dark'

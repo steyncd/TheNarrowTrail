@@ -13,6 +13,9 @@ router.get('/', authenticateToken, notificationPreferencesController.getPreferen
 // Update user's notification preferences
 router.put('/', authenticateToken, notificationPreferencesController.updatePreferences);
 
+// Send test notification
+router.post('/test', authenticateToken, notificationPreferencesController.sendTestNotification);
+
 // Admin: Get another user's notification preferences
 router.get('/user/:userId', authenticateToken, notificationPreferencesController.getUserPreferences);
 

@@ -1,0 +1,216 @@
+/* Swipeable Photo Modal - Full-screen photo viewer with touch gestures */
+
+.swipeable-photo-modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.95);
+  z-index: 9999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  animation: fadeIn 0.2s ease-in-out;
+}
+
+.swipeable-photo-modal-content {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.swipeable-photo-modal-close {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  background: rgba(255, 255, 255, 0.2);
+  border: none;
+  color: white;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: background 0.2s ease;
+  z-index: 10001;
+  backdrop-filter: blur(10px);
+}
+
+.swipeable-photo-modal-close:hover {
+  background: rgba(255, 255, 255, 0.3);
+}
+
+.swipeable-photo-modal-counter {
+  position: fixed;
+  top: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(255, 255, 255, 0.2);
+  color: white;
+  padding: 8px 16px;
+  border-radius: 20px;
+  font-size: 0.875rem;
+  font-weight: 500;
+  z-index: 10001;
+  backdrop-filter: blur(10px);
+}
+
+.swipeable-photo-modal-nav {
+  position: fixed;
+  top: 50%;
+  transform: translateY(-50%);
+  background: rgba(255, 255, 255, 0.2);
+  border: none;
+  color: white;
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: background 0.2s ease, transform 0.2s ease;
+  z-index: 10001;
+  backdrop-filter: blur(10px);
+}
+
+.swipeable-photo-modal-nav:hover {
+  background: rgba(255, 255, 255, 0.3);
+  transform: translateY(-50%) scale(1.1);
+}
+
+.swipeable-photo-modal-nav:active {
+  transform: translateY(-50%) scale(0.95);
+}
+
+.swipeable-photo-modal-nav-prev {
+  left: 20px;
+}
+
+.swipeable-photo-modal-nav-next {
+  right: 20px;
+}
+
+/* Hide nav buttons on mobile - rely on swipe gestures */
+@media (max-width: 767px) {
+  .swipeable-photo-modal-nav {
+    display: none;
+  }
+}
+
+.swipeable-photo-modal-image-container {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 80px 20px 120px;
+  touch-action: pan-y pinch-zoom; /* Allow vertical scroll and pinch-to-zoom */
+}
+
+.swipeable-photo-modal-image-container.transitioning {
+  opacity: 0.7;
+}
+
+.swipeable-photo-modal-image {
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
+  border-radius: 8px;
+  transition: opacity 0.3s ease;
+  user-select: none;
+  -webkit-user-drag: none;
+}
+
+.swipeable-photo-modal-info {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: linear-gradient(to top, rgba(0, 0, 0, 0.9), rgba(0, 0, 0, 0));
+  color: white;
+  padding: 40px 20px 20px;
+  text-align: center;
+  z-index: 10001;
+}
+
+.swipeable-photo-modal-info h5 {
+  font-size: clamp(1rem, 3vw, 1.25rem);
+  margin-bottom: 0.5rem;
+}
+
+.swipeable-photo-modal-info .text-muted {
+  color: rgba(255, 255, 255, 0.7) !important;
+}
+
+.swipeable-photo-modal-hint {
+  position: fixed;
+  bottom: 120px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(255, 255, 255, 0.2);
+  color: white;
+  padding: 8px 16px;
+  border-radius: 20px;
+  font-size: 0.75rem;
+  z-index: 10001;
+  backdrop-filter: blur(10px);
+  animation: fadeInOut 3s ease-in-out;
+  pointer-events: none;
+}
+
+/* Animations */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes fadeInOut {
+  0%, 100% {
+    opacity: 0;
+  }
+  10%, 90% {
+    opacity: 1;
+  }
+}
+
+/* Mobile optimizations */
+@media (max-width: 767px) {
+  .swipeable-photo-modal-close {
+    top: 10px;
+    right: 10px;
+    width: 40px;
+    height: 40px;
+  }
+
+  .swipeable-photo-modal-counter {
+    top: 10px;
+    font-size: 0.75rem;
+    padding: 6px 12px;
+  }
+
+  .swipeable-photo-modal-image-container {
+    padding: 60px 10px 100px;
+  }
+
+  .swipeable-photo-modal-info {
+    padding: 30px 15px 80px; /* Extra padding for mobile bottom nav */
+  }
+}
+
+/* Dark mode support */
+@media (prefers-color-scheme: dark) {
+  .swipeable-photo-modal {
+    background-color: rgba(0, 0, 0, 0.98);
+  }
+}

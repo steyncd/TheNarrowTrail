@@ -4,6 +4,7 @@ import { Info, ArrowLeft } from 'lucide-react';
 import { API_URL } from '../../services/api';
 import LoginForm from '../auth/LoginForm';
 import SignUpForm from '../auth/SignUpForm';
+import LazyImage from '../photos/LazyImage';
 
 const PublicHeader = ({ hideLoginButton = false }) => {
   const navigate = useNavigate();
@@ -112,14 +113,11 @@ const PublicHeader = ({ hideLoginButton = false }) => {
               style={{cursor: 'pointer'}}
               onClick={() => navigate('/')}
             >
-              <img
+              <LazyImage
                 src={brandingSettings.branding_logo_url || '/hiking-logo.png'}
                 alt={brandingSettings.branding_portal_name || 'Portal Logo'}
                 style={{width: '50px', height: '50px', borderRadius: '50%', marginRight: '15px', objectFit: 'cover', border: '2px solid #4a7c7c'}}
-                onError={(e) => {
-                  // Fallback to default logo if custom logo fails to load
-                  e.target.src = '/hiking-logo.png';
-                }}
+                placeholder="/hiking-logo.png"
               />
               <div>
                 <span className="navbar-brand mb-0 text-white" style={{fontWeight: '700', letterSpacing: '1px', fontSize: '1.5rem', fontFamily: "'Russo One', sans-serif", textTransform: 'uppercase'}}>

@@ -1,7 +1,7 @@
 // pages/HikeDetailsPage.js - Shareable Event Details Page (OPTIMIZED)
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate, useLocation, Link } from 'react-router-dom';
-import { Calendar, MapPin, Users, DollarSign, Info, Mountain, Tent, Truck, Bike, Compass, Clock, LogIn, ArrowLeft, MessageSquare, Package, Car, Send, Trash2, Edit, Share2, XCircle, AlertCircle, CheckCircle } from 'lucide-react';
+import { Calendar, MapPin, Users, DollarSign, Info, Mountain, Tent, Truck, Bike, Compass, Clock, LogIn, ArrowLeft, MessageSquare, Package, Car, Send, Trash2, Edit, Share2, XCircle, AlertCircle, CheckCircle, ChevronDown, ChevronUp } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { useTheme } from '../contexts/ThemeContext';
 import api from '../services/api';
@@ -14,6 +14,9 @@ import CampingDetailsDisplay from '../components/events/eventTypes/CampingDetail
 import FourWheelDriveDetailsDisplay from '../components/events/eventTypes/FourWheelDriveDetailsDisplay';
 import CyclingDetailsDisplay from '../components/events/eventTypes/CyclingDetailsDisplay';
 import OutdoorDetailsDisplay from '../components/events/eventTypes/OutdoorDetailsDisplay';
+import StickyActionButtons from '../components/hikes/StickyActionButtons';
+import CarpoolSectionEnhanced from '../components/hikes/CarpoolSectionEnhanced';
+import useEventDetailTour from '../hooks/useEventDetailTour';
 
 const HikeDetailsPage = () => {
   const { hikeId } = useParams();
@@ -30,21 +33,11 @@ const HikeDetailsPage = () => {
   const [comments, setComments] = useState([]);
   const [newComment, setNewComment] = useState('');
   const [packingList, setPackingList] = useState({ items: [] });
-  const [carpoolOffers, setCarpoolOffers] = useState([]);
-  const [carpoolRequests, setCarpoolRequests] = useState([]);
-  const [showOfferRideModal, setShowOfferRideModal] = useState(false);
-  const [showRequestRideModal, setShowRequestRideModal] = useState(false);
-  const [offerFormData, setOfferFormData] = useState({
-    departure_location: '',
-    available_seats: 1,
-    departure_time: '',
-    notes: ''
-  });
-  const [requestFormData, setRequestFormData] = useState({
-    pickup_location: '',
-    notes: ''
-  });
-  const [submittingCarpool, setSubmittingCarpool] = useState(false);
+  const [packingListCollapsed, setPackingListCollapsed] = useState(false);
+  const [paymentsCollapsed, setPaymentsCollapsed] = useState(false);
+
+  // Activate event detail tour (first visit only)
+  useEventDetailTour(!!hike && !!currentUser, hike);
 
   useEffect(() => {
     fetchHikeDetails();
@@ -66,16 +59,12 @@ const HikeDetailsPage = () => {
           statusResult,
           usersResult,
           commentsResult,
-          packingResult,
-          carpoolOffersResult,
-          carpoolRequestsResult
+          packingResult
         ] = await Promise.allSettled([
           api.getHikeStatus(hikeId, token),
           api.getInterestedUsers(hikeId, token),
           api.getComments(hikeId, token),
-          api.getPackingList(hikeId, token),
-          api.getCarpoolOffers(hikeId, token),
-          api.getCarpoolRequests(hikeId, token)
+          api.getPackingList(hikeId, token)
         ]);
 
         // Process results - only update state if successful
@@ -103,14 +92,6 @@ const HikeDetailsPage = () => {
           } else {
             setPackingList(packingData);
           }
-        }
-
-        if (carpoolOffersResult.status === 'fulfilled') {
-          setCarpoolOffers(carpoolOffersResult.value);
-        }
-
-        if (carpoolRequestsResult.status === 'fulfilled') {
-          setCarpoolRequests(carpoolRequestsResult.value);
         }
       }
     } catch (err) {
@@ -200,54 +181,6 @@ const HikeDetailsPage = () => {
       await api.updatePackingList(hikeId, { items: updatedItems }, token);
     } catch (err) {
       console.error('Error updating packing list:', err);
-    }
-  };
-
-  const handleSubmitOfferRide = async (e) => {
-    e.preventDefault();
-    setSubmittingCarpool(true);
-    try {
-      await api.submitCarpoolOffer(hikeId, offerFormData, token);
-      // Refresh carpool data
-      const offers = await api.getCarpoolOffers(hikeId, token);
-      setCarpoolOffers(offers);
-      // Reset form and close modal
-      setOfferFormData({
-        departure_location: '',
-        available_seats: 1,
-        departure_time: '',
-        notes: ''
-      });
-      setShowOfferRideModal(false);
-      alert('Ride offer submitted successfully!');
-    } catch (err) {
-      console.error('Error submitting ride offer:', err);
-      alert(err.response?.data?.error || 'Failed to submit ride offer');
-    } finally {
-      setSubmittingCarpool(false);
-    }
-  };
-
-  const handleSubmitRequestRide = async (e) => {
-    e.preventDefault();
-    setSubmittingCarpool(true);
-    try {
-      await api.submitCarpoolRequest(hikeId, requestFormData, token);
-      // Refresh carpool data
-      const requests = await api.getCarpoolRequests(hikeId, token);
-      setCarpoolRequests(requests);
-      // Reset form and close modal
-      setRequestFormData({
-        pickup_location: '',
-        notes: ''
-      });
-      setShowRequestRideModal(false);
-      alert('Ride request submitted successfully!');
-    } catch (err) {
-      console.error('Error submitting ride request:', err);
-      alert(err.response?.data?.error || 'Failed to submit ride request');
-    } finally {
-      setSubmittingCarpool(false);
     }
   };
 
@@ -466,7 +399,7 @@ const HikeDetailsPage = () => {
               </div>
 
               {/* Event Type Badge & Tags */}
-              <div className="d-flex flex-wrap gap-2 mb-3">
+              <div className="d-flex flex-wrap gap-2 mb-3" data-tour="event-tags">
                 <span
                   className="badge px-3 py-2"
                   style={{
@@ -714,7 +647,7 @@ const HikeDetailsPage = () => {
               )}
 
               {hike.description && (
-                <div>
+                <div data-tour="event-description">
                   <h5 className="mb-3">
                     <Info size={20} className="me-2" />
                     Description
@@ -848,39 +781,48 @@ const HikeDetailsPage = () => {
               borderColor: isDark ? 'var(--border-color)' : '#dee2e6'
             }}>
               <div className="card-body">
-                <h5 className="mb-3" style={{ color: isDark ? 'var(--text-primary)' : '#212529' }}>
-                  <Package size={20} className="me-2" />
-                  Packing List
-                </h5>
-                <div className="list-group list-group-flush">
-                  {packingList.items.map((item, index) => (
-                    <div key={index} className="list-group-item bg-transparent border-0 px-0 py-2">
-                      <div className="form-check">
-                        <input
-                          className="form-check-input"
-                          type="checkbox"
-                          checked={item.checked || false}
-                          onChange={() => handlePackingItemToggle(index)}
-                          id={`packing-${index}`}
-                        />
-                        <label
-                          className="form-check-label"
-                          htmlFor={`packing-${index}`}
-                          style={{
-                            textDecoration: item.checked ? 'line-through' : 'none',
-                            color: isDark ? '#ffffff' : '#212529',
-                            cursor: 'pointer'
-                          }}
-                        >
-                          {item.name}
-                          {item.category && (
-                            <span className="badge bg-secondary ms-2 small">{item.category}</span>
-                          )}
-                        </label>
-                      </div>
-                    </div>
-                  ))}
+                <div
+                  className="d-flex justify-content-between align-items-center mb-3"
+                  style={{ cursor: 'pointer' }}
+                  onClick={() => setPackingListCollapsed(!packingListCollapsed)}
+                >
+                  <h5 className="mb-0" style={{ color: isDark ? 'var(--text-primary)' : '#212529' }}>
+                    <Package size={20} className="me-2" />
+                    Packing List
+                  </h5>
+                  {packingListCollapsed ? <ChevronDown size={20} /> : <ChevronUp size={20} />}
                 </div>
+                {!packingListCollapsed && (
+                  <div className="list-group list-group-flush">
+                    {packingList.items.map((item, index) => (
+                      <div key={index} className="list-group-item bg-transparent border-0 px-0 py-2">
+                        <div className="form-check">
+                          <input
+                            className="form-check-input"
+                            type="checkbox"
+                            checked={item.checked || false}
+                            onChange={() => handlePackingItemToggle(index)}
+                            id={`packing-${index}`}
+                          />
+                          <label
+                            className="form-check-label"
+                            htmlFor={`packing-${index}`}
+                            style={{
+                              textDecoration: item.checked ? 'line-through' : 'none',
+                              color: isDark ? '#ffffff' : '#212529',
+                              cursor: 'pointer'
+                            }}
+                          >
+                            {item.name}
+                            {item.category && (
+                              <span className="badge bg-secondary ms-2 small">{item.category}</span>
+                            )}
+                          </label>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
               </div>
             </div>
           )}
@@ -892,123 +834,15 @@ const HikeDetailsPage = () => {
                 hikeId={hikeId}
                 hikeCost={hike.cost}
                 isAdmin={currentUser?.role === 'admin'}
+                collapsed={paymentsCollapsed}
+                onToggleCollapse={() => setPaymentsCollapsed(!paymentsCollapsed)}
               />
             </div>
           )}
 
-          {/* Lift Club Section */}
+          {/* Lift Club Section - Enhanced */}
           {token && (
-            <div className="card mb-4" style={{
-              background: isDark ? 'var(--card-bg)' : 'white',
-              borderColor: isDark ? 'var(--border-color)' : '#dee2e6'
-            }}>
-              <div className="card-body">
-                <h5 className="mb-3" style={{ color: isDark ? 'var(--text-primary)' : '#212529' }}>
-                  <Car size={20} className="me-2" />
-                  Lift Club
-                </h5>
-
-                {/* Carpool Offers */}
-                <div className="mb-4">
-                  <div className="d-flex justify-content-between align-items-center mb-3">
-                    <h6 className="mb-0 text-success">Offering Rides</h6>
-                    <button
-                      className="btn btn-sm btn-success"
-                      onClick={() => setShowOfferRideModal(true)}
-                    >
-                      Offer a Ride
-                    </button>
-                  </div>
-
-                  {carpoolOffers.length === 0 ? (
-                    <p className="text-muted small">No ride offers yet.</p>
-                  ) : (
-                    carpoolOffers.map(offer => (
-                      <div key={offer.id} className="mb-3 p-3 border rounded" style={{
-                        borderColor: isDark ? 'var(--border-color)' : '#dee2e6',
-                        backgroundColor: isDark ? 'rgba(255,255,255,0.05)' : '#f8f9fa'
-                      }}>
-                        <div>
-                          <span className="fw-bold d-block mb-2" style={{ color: isDark ? '#8ab4f8' : '#1a73e8' }}>
-                            {offer.driver_name}
-                          </span>
-                          <div className="mb-1">
-                            <small style={{ color: isDark ? '#b0b0b0' : '#6c757d' }}>
-                              <MapPin size={14} className="me-1" />
-                              From: {offer.departure_location}
-                            </small>
-                          </div>
-                          <div className="mb-1">
-                            <small style={{ color: isDark ? '#b0b0b0' : '#6c757d' }}>
-                              Available Seats: <strong style={{ color: isDark ? '#ffffff' : '#212529' }}>{offer.available_seats}</strong>
-                            </small>
-                          </div>
-                          {offer.departure_time && (
-                            <div className="mb-1">
-                              <small style={{ color: isDark ? '#b0b0b0' : '#6c757d' }}>
-                                <Clock size={14} className="me-1" />
-                                Departure: {offer.departure_time}
-                              </small>
-                            </div>
-                          )}
-                          {offer.driver_phone && (
-                            <div className="mb-1">
-                              <small style={{ color: isDark ? '#b0b0b0' : '#6c757d' }}>
-                                📞 {offer.driver_phone}
-                              </small>
-                            </div>
-                          )}
-                          {offer.notes && (
-                            <p className="mb-0 mt-2 small" style={{ color: isDark ? '#ffffff' : '#212529' }}>
-                              {offer.notes}
-                            </p>
-                          )}
-                        </div>
-                      </div>
-                    ))
-                  )}
-                </div>
-
-                {/* Carpool Requests */}
-                <div>
-                  <div className="d-flex justify-content-between align-items-center mb-3">
-                    <h6 className="mb-0 text-info">Looking for Rides</h6>
-                    <button
-                      className="btn btn-sm btn-info"
-                      onClick={() => setShowRequestRideModal(true)}
-                    >
-                      Request a Ride
-                    </button>
-                  </div>
-
-                  {carpoolRequests.length === 0 ? (
-                    <p className="text-muted small">No ride requests yet.</p>
-                  ) : (
-                    carpoolRequests.map(request => (
-                      <div key={request.id} className="mb-3 p-3 border rounded" style={{
-                        borderColor: isDark ? 'var(--border-color)' : '#dee2e6',
-                        backgroundColor: isDark ? 'rgba(255,255,255,0.05)' : '#f8f9fa'
-                      }}>
-                        <span className="fw-bold d-block mb-2" style={{ color: isDark ? '#8ab4f8' : '#1a73e8' }}>
-                          {request.requester_name || request.user_name}
-                        </span>
-                        <div className="mb-1">
-                          <small style={{ color: isDark ? '#b0b0b0' : '#6c757d' }}>
-                            <MapPin size={14} className="me-1" />
-                            Pickup: {request.pickup_location || request.departure_location}
-                          </small>
-                        </div>
-                        {request.notes && (
-                          <p className="mb-0 mt-2 small" style={{ color: isDark ? '#ffffff' : '#212529' }}>
-                            {request.notes}
-                          </p>
-                        )}
-                      </div>
-                    ))
-                  )}
-                </div>
-              </div>
-            </div>
+            <CarpoolSectionEnhanced hikeId={hikeId} hikeLocation={hike.location} />
           )}
         </div>
 
@@ -1076,6 +910,7 @@ const HikeDetailsPage = () => {
                       onClick={handleInterestToggle}
                       disabled={isRegistrationClosed}
                       title={isRegistrationClosed ? 'Registration is closed for this event' : 'Express your interest in this event'}
+                      data-tour="interest-button"
                     >
                       {isRegistrationClosed ? 'Registration Closed' : 'Express Interest'}
                     </button>
@@ -1176,7 +1011,7 @@ const HikeDetailsPage = () => {
 
           {/* Interest Stats */}
           <div className="card" style={{ background: isDark ? 'var(--card-bg)' : 'white' }}>
-            <div className="card-body">
+            <div className="card-body" data-tour="participant-count">
               <h5 className="mb-3">
                 <Users size={20} className="me-2" />
                 Participation
@@ -1243,183 +1078,16 @@ const HikeDetailsPage = () => {
         </button>
       </div>
 
-      {/* Offer Ride Modal */}
-      {showOfferRideModal && (
-        <div className="modal show d-block" style={{ backgroundColor: 'rgba(0,0,0,0.5)', overflowY: 'auto', paddingTop: '80px' }} onClick={() => setShowOfferRideModal(false)}>
-          <div className="modal-dialog my-3" onClick={(e) => e.stopPropagation()}>
-            <div className="modal-content" style={{ background: isDark ? 'var(--card-bg)' : 'white', color: isDark ? 'var(--text-primary)' : '#212529' }}>
-              <div className="modal-header" style={{ borderColor: isDark ? 'var(--border-color)' : '#dee2e6' }}>
-                <h5 className="modal-title">
-                  <Car size={20} className="me-2" />
-                  Offer a Ride
-                </h5>
-                <button
-                  type="button"
-                  className="btn-close"
-                  onClick={() => setShowOfferRideModal(false)}
-                  style={{ filter: isDark ? 'invert(1)' : 'none' }}
-                ></button>
-              </div>
-              <form onSubmit={handleSubmitOfferRide}>
-                <div className="modal-body">
-                  <div className="mb-3">
-                    <label className="form-label">Departure Location *</label>
-                    <input
-                      type="text"
-                      className="form-control"
-                      placeholder="e.g., Pretoria CBD, Centurion Mall"
-                      value={offerFormData.departure_location}
-                      onChange={(e) => setOfferFormData({ ...offerFormData, departure_location: e.target.value })}
-                      required
-                      style={{
-                        backgroundColor: isDark ? 'rgba(255,255,255,0.1)' : 'white',
-                        color: isDark ? 'white' : '#212529',
-                        borderColor: isDark ? 'var(--border-color)' : '#ced4da'
-                      }}
-                    />
-                  </div>
-                  <div className="mb-3">
-                    <label className="form-label">Available Seats *</label>
-                    <input
-                      type="number"
-                      className="form-control"
-                      min="1"
-                      max="10"
-                      value={offerFormData.available_seats}
-                      onChange={(e) => setOfferFormData({ ...offerFormData, available_seats: parseInt(e.target.value) })}
-                      required
-                      style={{
-                        backgroundColor: isDark ? 'rgba(255,255,255,0.1)' : 'white',
-                        color: isDark ? 'white' : '#212529',
-                        borderColor: isDark ? 'var(--border-color)' : '#ced4da'
-                      }}
-                    />
-                  </div>
-                  <div className="mb-3">
-                    <label className="form-label">Departure Time (optional)</label>
-                    <input
-                      type="time"
-                      className="form-control"
-                      value={offerFormData.departure_time}
-                      onChange={(e) => setOfferFormData({ ...offerFormData, departure_time: e.target.value })}
-                      style={{
-                        backgroundColor: isDark ? 'rgba(255,255,255,0.1)' : 'white',
-                        color: isDark ? 'white' : '#212529',
-                        borderColor: isDark ? 'var(--border-color)' : '#ced4da'
-                      }}
-                    />
-                  </div>
-                  <div className="mb-3">
-                    <label className="form-label">Notes (optional)</label>
-                    <textarea
-                      className="form-control"
-                      rows="3"
-                      placeholder="Any additional information..."
-                      value={offerFormData.notes}
-                      onChange={(e) => setOfferFormData({ ...offerFormData, notes: e.target.value })}
-                      style={{
-                        backgroundColor: isDark ? 'rgba(255,255,255,0.1)' : 'white',
-                        color: isDark ? 'white' : '#212529',
-                        borderColor: isDark ? 'var(--border-color)' : '#ced4da'
-                      }}
-                    />
-                  </div>
-                </div>
-                <div className="modal-footer" style={{ borderColor: isDark ? 'var(--border-color)' : '#dee2e6' }}>
-                  <button
-                    type="button"
-                    className="btn btn-secondary"
-                    onClick={() => setShowOfferRideModal(false)}
-                    disabled={submittingCarpool}
-                  >
-                    Cancel
-                  </button>
-                  <button
-                    type="submit"
-                    className="btn btn-success"
-                    disabled={submittingCarpool}
-                  >
-                    {submittingCarpool ? 'Submitting...' : 'Submit Offer'}
-                  </button>
-                </div>
-              </form>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Request Ride Modal */}
-      {showRequestRideModal && (
-        <div className="modal show d-block" style={{ backgroundColor: 'rgba(0,0,0,0.5)', overflowY: 'auto', paddingTop: '80px' }} onClick={() => setShowRequestRideModal(false)}>
-          <div className="modal-dialog my-3" onClick={(e) => e.stopPropagation()}>
-            <div className="modal-content" style={{ background: isDark ? 'var(--card-bg)' : 'white', color: isDark ? 'var(--text-primary)' : '#212529' }}>
-              <div className="modal-header" style={{ borderColor: isDark ? 'var(--border-color)' : '#dee2e6' }}>
-                <h5 className="modal-title">
-                  <Car size={20} className="me-2" />
-                  Request a Ride
-                </h5>
-                <button
-                  type="button"
-                  className="btn-close"
-                  onClick={() => setShowRequestRideModal(false)}
-                  style={{ filter: isDark ? 'invert(1)' : 'none' }}
-                ></button>
-              </div>
-              <form onSubmit={handleSubmitRequestRide}>
-                <div className="modal-body">
-                  <div className="mb-3">
-                    <label className="form-label">Pickup Location *</label>
-                    <input
-                      type="text"
-                      className="form-control"
-                      placeholder="e.g., Pretoria CBD, Centurion Mall"
-                      value={requestFormData.pickup_location}
-                      onChange={(e) => setRequestFormData({ ...requestFormData, pickup_location: e.target.value })}
-                      required
-                      style={{
-                        backgroundColor: isDark ? 'rgba(255,255,255,0.1)' : 'white',
-                        color: isDark ? 'white' : '#212529',
-                        borderColor: isDark ? 'var(--border-color)' : '#ced4da'
-                      }}
-                    />
-                  </div>
-                  <div className="mb-3">
-                    <label className="form-label">Notes (optional)</label>
-                    <textarea
-                      className="form-control"
-                      rows="3"
-                      placeholder="Any additional information (e.g., preferred pickup time)..."
-                      value={requestFormData.notes}
-                      onChange={(e) => setRequestFormData({ ...requestFormData, notes: e.target.value })}
-                      style={{
-                        backgroundColor: isDark ? 'rgba(255,255,255,0.1)' : 'white',
-                        color: isDark ? 'white' : '#212529',
-                        borderColor: isDark ? 'var(--border-color)' : '#ced4da'
-                      }}
-                    />
-                  </div>
-                </div>
-                <div className="modal-footer" style={{ borderColor: isDark ? 'var(--border-color)' : '#dee2e6' }}>
-                  <button
-                    type="button"
-                    className="btn btn-secondary"
-                    onClick={() => setShowRequestRideModal(false)}
-                    disabled={submittingCarpool}
-                  >
-                    Cancel
-                  </button>
-                  <button
-                    type="submit"
-                    className="btn btn-info"
-                    disabled={submittingCarpool}
-                  >
-                    {submittingCarpool ? 'Submitting...' : 'Submit Request'}
-                  </button>
-                </div>
-              </form>
-            </div>
-          </div>
-        </div>
+      {/* Sticky Action Buttons for Mobile */}
+      {token && currentUser && (
+        <StickyActionButtons
+          userStatus={userStatus}
+          isRegistrationClosed={isRegistrationClosed}
+          onInterestToggle={handleInterestToggle}
+          onConfirmAttendance={handleConfirmAttendance}
+          onCancelAttendance={handleCancelAttendance}
+          theme={theme}
+        />
       )}
     </div>
   );

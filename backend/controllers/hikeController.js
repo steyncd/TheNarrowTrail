@@ -562,29 +562,117 @@ exports.getCarpoolOffers = async (req, res) => {
 exports.createCarpoolOffer = async (req, res) => {
   try {
     const { id } = req.params;
-    const { departure_location, available_seats, departure_time, notes } = req.body;
+    const {
+      departure_location, available_seats, departure_time, notes,
+      estimated_distance_km, fuel_cost_per_liter, vehicle_consumption,
+      contact_phone, contact_email
+    } = req.body;
     const userId = req.user.id;
 
     if (!departure_location || available_seats === undefined) {
       return res.status(400).json({ error: 'Departure location and available seats are required' });
     }
 
+    // Calculate estimated cost per person if distance and fuel details provided
+    let estimated_cost_per_person = null;
+    if (estimated_distance_km && fuel_cost_per_liter && vehicle_consumption) {
+      const fuelCost = (estimated_distance_km / 100) * vehicle_consumption * fuel_cost_per_liter;
+      estimated_cost_per_person = fuelCost / (available_seats + 1); // +1 for driver
+    }
+
     const result = await pool.query(
-      `INSERT INTO carpool_offers (hike_id, user_id, departure_location, available_seats, departure_time, notes, created_at)
-       VALUES ($1, $2, $3, $4, $5, $6, NOW())
+      `INSERT INTO carpool_offers (
+        hike_id, user_id, departure_location, available_seats, departure_time, notes,
+        estimated_distance_km, fuel_cost_per_liter, vehicle_consumption, estimated_cost_per_person,
+        contact_phone, contact_email, created_at
+      )
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, NOW())
        RETURNING *`,
-      [id, userId, departure_location, available_seats, departure_time, notes]
+      [
+        id, userId, departure_location, available_seats, departure_time, notes,
+        estimated_distance_km, fuel_cost_per_liter, vehicle_consumption, estimated_cost_per_person,
+        contact_phone, contact_email
+      ]
     );
 
     const userResult = await pool.query('SELECT name, phone FROM users WHERE id = $1', [userId]);
     res.json({
-      ...result.rows[0],
-      driver_name: userResult.rows[0].name,
-      driver_phone: userResult.rows[0].phone
+      success: true,
+      offer: {
+        ...result.rows[0],
+        driver_name: userResult.rows[0].name,
+        driver_phone: userResult.rows[0].phone
+      }
     });
   } catch (error) {
     console.error('Create carpool offer error:', error);
     res.status(500).json({ error: 'Failed to create carpool offer' });
+  }
+};
+
+// Update carpool offer
+exports.updateCarpoolOffer = async (req, res) => {
+  try {
+    const { offerId } = req.params;
+    const {
+      departure_location, available_seats, departure_time, notes,
+      estimated_distance_km, fuel_cost_per_liter, vehicle_consumption,
+      contact_phone, contact_email
+    } = req.body;
+    const userId = req.user.id;
+
+    // Check if offer exists and user owns it
+    const offer = await pool.query(
+      'SELECT user_id FROM carpool_offers WHERE id = $1',
+      [offerId]
+    );
+
+    if (offer.rows.length === 0) {
+      return res.status(404).json({ error: 'Offer not found' });
+    }
+
+    if (offer.rows[0].user_id !== userId && req.user.role !== 'admin') {
+      return res.status(403).json({ error: 'Not authorized' });
+    }
+
+    if (!departure_location || available_seats === undefined) {
+      return res.status(400).json({ error: 'Departure location and available seats are required' });
+    }
+
+    // Calculate estimated cost per person if distance and fuel details provided
+    let estimated_cost_per_person = null;
+    if (estimated_distance_km && fuel_cost_per_liter && vehicle_consumption) {
+      const fuelCost = (estimated_distance_km / 100) * vehicle_consumption * fuel_cost_per_liter;
+      estimated_cost_per_person = fuelCost / (available_seats + 1); // +1 for driver
+    }
+
+    const result = await pool.query(
+      `UPDATE carpool_offers
+       SET departure_location = $1, available_seats = $2, departure_time = $3,
+           notes = $4, estimated_distance_km = $5, fuel_cost_per_liter = $6,
+           vehicle_consumption = $7, estimated_cost_per_person = $8,
+           contact_phone = $9, contact_email = $10, updated_at = CURRENT_TIMESTAMP
+       WHERE id = $11
+       RETURNING *`,
+      [
+        departure_location, available_seats, departure_time, notes,
+        estimated_distance_km, fuel_cost_per_liter, vehicle_consumption,
+        estimated_cost_per_person, contact_phone, contact_email, offerId
+      ]
+    );
+
+    const userResult = await pool.query('SELECT name, phone FROM users WHERE id = $1', [userId]);
+    res.json({
+      success: true,
+      offer: {
+        ...result.rows[0],
+        driver_name: userResult.rows[0].name,
+        driver_phone: userResult.rows[0].phone
+      }
+    });
+  } catch (error) {
+    console.error('Update carpool offer error:', error);
+    res.status(500).json({ error: 'Failed to update carpool offer' });
   }
 };
 
@@ -638,7 +726,7 @@ exports.getCarpoolRequests = async (req, res) => {
 exports.createCarpoolRequest = async (req, res) => {
   try {
     const { id } = req.params;
-    const { pickup_location, notes } = req.body;
+    const { pickup_location, notes, contact_phone, contact_email } = req.body;
     const userId = req.user.id;
 
     if (!pickup_location) {
@@ -646,19 +734,22 @@ exports.createCarpoolRequest = async (req, res) => {
     }
 
     const result = await pool.query(
-      `INSERT INTO carpool_requests (hike_id, user_id, pickup_location, notes, created_at)
-       VALUES ($1, $2, $3, $4, NOW())
+      `INSERT INTO carpool_requests (hike_id, user_id, pickup_location, notes, contact_phone, contact_email, created_at)
+       VALUES ($1, $2, $3, $4, $5, $6, NOW())
        ON CONFLICT (hike_id, user_id) DO UPDATE
-       SET pickup_location = $3, notes = $4
+       SET pickup_location = $3, notes = $4, contact_phone = $5, contact_email = $6
        RETURNING *`,
-      [id, userId, pickup_location, notes]
+      [id, userId, pickup_location, notes, contact_phone, contact_email]
     );
 
     const userResult = await pool.query('SELECT name, phone FROM users WHERE id = $1', [userId]);
     res.json({
-      ...result.rows[0],
-      requester_name: userResult.rows[0].name,
-      requester_phone: userResult.rows[0].phone
+      success: true,
+      request: {
+        ...result.rows[0],
+        requester_name: userResult.rows[0].name,
+        requester_phone: userResult.rows[0].phone
+      }
     });
   } catch (error) {
     console.error('Create carpool request error:', error);

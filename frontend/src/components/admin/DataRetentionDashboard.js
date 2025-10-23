@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { API_URL } from '../../services/api';
 
 /**
  * Data Retention Dashboard for POPIA Compliance Management
@@ -16,7 +17,7 @@ const DataRetentionDashboard = () => {
   const fetchStatistics = async () => {
     try {
       const token = localStorage.getItem('token');
-      const response = await fetch('/api/admin/retention/statistics', {
+      const response = await fetch(`${API_URL}/api/admin/retention/statistics`, {
         headers: {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json'
@@ -24,7 +25,7 @@ const DataRetentionDashboard = () => {
       });
 
       if (!response.ok) throw new Error('Failed to fetch statistics');
-      
+
       const data = await response.json();
       setStatistics(data);
     } catch (err) {
@@ -36,7 +37,7 @@ const DataRetentionDashboard = () => {
   const fetchLogs = async () => {
     try {
       const token = localStorage.getItem('token');
-      const response = await fetch('/api/admin/retention/logs?limit=20', {
+      const response = await fetch(`${API_URL}/api/admin/retention/logs?limit=20`, {
         headers: {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json'
@@ -44,7 +45,7 @@ const DataRetentionDashboard = () => {
       });
 
       if (!response.ok) throw new Error('Failed to fetch logs');
-      
+
       const data = await response.json();
       setLogs(data.logs);
     } catch (err) {
@@ -57,7 +58,7 @@ const DataRetentionDashboard = () => {
     setRunningCheck(true);
     try {
       const token = localStorage.getItem('token');
-      const response = await fetch('/api/admin/retention/run-check', {
+      const response = await fetch(`${API_URL}/api/admin/retention/run-check`, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -66,10 +67,10 @@ const DataRetentionDashboard = () => {
       });
 
       if (!response.ok) throw new Error('Failed to run retention check');
-      
+
       const data = await response.json();
       alert(`Retention check completed successfully!\n\nStatistics:\n${JSON.stringify(data.statistics, null, 2)}`);
-      
+
       // Refresh data
       await fetchStatistics();
       await fetchLogs();

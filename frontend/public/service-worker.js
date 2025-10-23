@@ -4,11 +4,18 @@
 // Provides offline capabilities, smart caching, and background sync
 
 // Version management for cache busting
-const CACHE_VERSION = '2.0.0';
+const CACHE_VERSION = '2.2.0'; // Fixed POST request caching error
 const CACHE_NAME = `hiking-portal-v${CACHE_VERSION}`;
 const API_CACHE = `hiking-api-v${CACHE_VERSION}`;
 const IMAGE_CACHE = `hiking-images-v${CACHE_VERSION}`;
 const OFFLINE_CACHE = `hiking-offline-v${CACHE_VERSION}`;
+
+// Cache size limits to prevent excessive storage usage
+const CACHE_LIMITS = {
+  images: 100, // Max 100 images
+  api: 50,     // Max 50 API responses
+  static: 100  // Max 100 static assets
+};
 
 // Precache important assets
 const urlsToCache = [
@@ -220,16 +227,54 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
+  // Images - Cache with size management
+  if (request.destination === 'image') {
+    event.respondWith(
+      caches.open(IMAGE_CACHE).then((cache) => {
+        return cache.match(request).then((cachedResponse) => {
+          if (cachedResponse) {
+            return cachedResponse;
+          }
+
+          // Not in cache - fetch and cache
+          return fetch(request).then((response) => {
+            if (response.status === 200) {
+              // Clone and cache the image
+              const responseToCache = response.clone();
+              cache.put(request, responseToCache).then(() => {
+                // Trim cache if it exceeds limit
+                trimCache(IMAGE_CACHE, CACHE_LIMITS.images);
+              });
+            }
+            return response;
+          }).catch(() => {
+            // Could return a fallback placeholder image here
+            return new Response('', { status: 404, statusText: 'Image not found' });
+          });
+        });
+      })
+    );
+    return;
+  }
+
   // Static assets - Cache first, fallback to network
+  // ONLY cache GET requests to avoid "Request method 'POST' is unsupported" errors
+  if (request.method !== 'GET') {
+    event.respondWith(fetch(request));
+    return;
+  }
+
   event.respondWith(
     caches.match(request)
       .then((cachedResponse) => {
         if (cachedResponse) {
-          // Return cached version and update cache in background
+          // Return cached version and update cache in background (stale-while-revalidate)
           fetch(request).then((response) => {
-            if (response.status === 200) {
+            if (response.status === 200 && request.method === 'GET') {
               caches.open(CACHE_NAME).then((cache) => {
-                cache.put(request, response);
+                cache.put(request, response).catch((err) => {
+                  console.warn('[Service Worker] Failed to cache:', request.url, err);
+                });
               });
             }
           }).catch(() => {
@@ -250,10 +295,18 @@ self.addEventListener('fetch', (event) => {
             // Clone the response
             const responseToCache = response.clone();
 
-            caches.open(CACHE_NAME)
-              .then((cache) => {
-                cache.put(request, responseToCache);
-              });
+            // Only cache GET requests
+            if (request.method === 'GET') {
+              caches.open(CACHE_NAME)
+                .then((cache) => {
+                  cache.put(request, responseToCache).then(() => {
+                    // Trim cache if needed
+                    trimCache(CACHE_NAME, CACHE_LIMITS.static);
+                  }).catch((err) => {
+                    console.warn('[Service Worker] Failed to cache:', request.url, err);
+                  });
+                });
+            }
 
             return response;
           })
@@ -267,10 +320,46 @@ self.addEventListener('fetch', (event) => {
   );
 });
 
+// Trim cache to prevent unlimited growth
+async function trimCache(cacheName, maxItems) {
+  try {
+    const cache = await caches.open(cacheName);
+    const keys = await cache.keys();
+
+    if (keys.length > maxItems) {
+      // Delete oldest items (FIFO)
+      const itemsToDelete = keys.length - maxItems;
+      for (let i = 0; i < itemsToDelete; i++) {
+        await cache.delete(keys[i]);
+      }
+      console.log(`[Service Worker] Trimmed ${itemsToDelete} items from ${cacheName}`);
+    }
+  } catch (error) {
+    console.warn('[Service Worker] Failed to trim cache:', cacheName, error);
+  }
+}
+
 // Handle messages from the client
 self.addEventListener('message', (event) => {
   if (event.data && event.data.type === 'SKIP_WAITING') {
     self.skipWaiting();
+  }
+
+  // Allow manual cache clearing
+  if (event.data && event.data.type === 'CLEAR_CACHE') {
+    event.waitUntil(
+      caches.keys().then((cacheNames) => {
+        return Promise.all(
+          cacheNames.map((cacheName) => {
+            if (cacheName.includes('hiking-')) {
+              console.log('[Service Worker] Clearing cache:', cacheName);
+              return caches.delete(cacheName);
+            }
+            return Promise.resolve();
+          })
+        );
+      })
+    );
   }
 });
 

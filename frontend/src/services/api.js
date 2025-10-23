@@ -294,6 +294,25 @@ class ApiService {
     }, token);
   }
 
+  async updateCarpoolOffer(hikeId, offerId, offerData, token) {
+    return this.request(`/api/hikes/${hikeId}/carpool-offers/${offerId}`, {
+      method: 'PUT',
+      body: JSON.stringify(offerData)
+    }, token);
+  }
+
+  async deleteCarpoolOffer(hikeId, offerId, token) {
+    return this.request(`/api/hikes/${hikeId}/carpool-offers/${offerId}`, {
+      method: 'DELETE'
+    }, token);
+  }
+
+  async deleteCarpoolRequest(hikeId, requestId, token) {
+    return this.request(`/api/hikes/${hikeId}/carpool-requests/${requestId}`, {
+      method: 'DELETE'
+    }, token);
+  }
+
   // Packing List
   async getPackingList(hikeId, token) {
     const response = await fetch(`${this.baseURL}/api/hikes/${hikeId}/packing-list`, {
@@ -999,6 +1018,36 @@ class ApiService {
   async updateEventTags(eventId, tagIds, token) {
     // Replace all tags for an event
     return this.put(`/api/tags/events/${eventId}`, { tag_ids: tagIds }, token);
+  }
+
+  // Push Notifications
+  async updateNotificationPermission(channel, enabled, token) {
+    return this.put('/api/notification-preferences/permission', { channel, enabled }, token);
+  }
+
+  async savePushSubscription(subscription, token) {
+    return this.post('/api/push-notifications/subscribe', { subscription }, token);
+  }
+
+  async removePushSubscription(token) {
+    return this.delete('/api/push-notifications/unsubscribe', token);
+  }
+
+  async sendTestPushNotification(token) {
+    return this.post('/api/push-notifications/test', {}, token);
+  }
+
+  // User Preferences
+  async getUserPreferences(token) {
+    return this.get('/api/preferences', token);
+  }
+
+  async updateUserPreferences(preferences, token) {
+    return this.put('/api/preferences', preferences, token);
+  }
+
+  async deleteUserPreferences(token) {
+    return this.delete('/api/preferences', token);
   }
 }
 

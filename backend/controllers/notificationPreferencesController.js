@@ -12,7 +12,8 @@ const NOTIFICATION_TYPES = {
     'password_reset_confirmed',
     'admin_password_reset',
     'admin_promotion',
-    'new_hike_added'
+    'new_hike_added',
+    'hike_announcement'
   ],
   ADMIN_NOTIFICATIONS: [
     'new_registration',
@@ -71,17 +72,22 @@ exports.getPreferences = async (req, res) => {
 
     // Get user's specific notification preferences
     const preferencesResult = await pool.query(
-      'SELECT notification_type, email_enabled, whatsapp_enabled FROM notification_preferences WHERE user_id = $1',
+      'SELECT notification_type, email_enabled, whatsapp_enabled, updated_at FROM notification_preferences WHERE user_id = $1',
       [userId]
     );
 
-    // Build preferences object
+    // Build preferences object and find most recent update
     const preferences = {};
+    let lastUpdated = null;
     preferencesResult.rows.forEach(pref => {
       preferences[pref.notification_type] = {
         email: pref.email_enabled,
         whatsapp: pref.whatsapp_enabled
       };
+      // Track the most recent update
+      if (!lastUpdated || new Date(pref.updated_at) > new Date(lastUpdated)) {
+        lastUpdated = pref.updated_at;
+      }
     });
 
     // Fill in defaults for notification types that don't have explicit preferences
@@ -105,7 +111,8 @@ exports.getPreferences = async (req, res) => {
         email: user.notifications_email,
         whatsapp: user.notifications_whatsapp
       },
-      preferences
+      preferences,
+      lastUpdated
     });
   } catch (error) {
     console.error('Get preferences error:', error);
@@ -228,17 +235,22 @@ exports.getUserPreferences = async (req, res) => {
 
     // Get user's specific notification preferences
     const preferencesResult = await pool.query(
-      'SELECT notification_type, email_enabled, whatsapp_enabled FROM notification_preferences WHERE user_id = $1',
+      'SELECT notification_type, email_enabled, whatsapp_enabled, updated_at FROM notification_preferences WHERE user_id = $1',
       [targetUserId]
     );
 
-    // Build preferences object
+    // Build preferences object and find most recent update
     const preferences = {};
+    let lastUpdated = null;
     preferencesResult.rows.forEach(pref => {
       preferences[pref.notification_type] = {
         email: pref.email_enabled,
         whatsapp: pref.whatsapp_enabled
       };
+      // Track the most recent update
+      if (!lastUpdated || new Date(pref.updated_at) > new Date(lastUpdated)) {
+        lastUpdated = pref.updated_at;
+      }
     });
 
     // Fill in defaults for notification types that don't have explicit preferences
@@ -268,7 +280,8 @@ exports.getUserPreferences = async (req, res) => {
         email: user.notifications_email,
         whatsapp: user.notifications_whatsapp
       },
-      preferences
+      preferences,
+      lastUpdated
     });
   } catch (error) {
     console.error('Get user preferences error:', error);
@@ -375,6 +388,79 @@ exports.updateUserPreferences = async (req, res) => {
   } catch (error) {
     console.error('Update user preferences error:', error);
     res.status(500).json({ error: 'Failed to update user notification preferences' });
+  }
+};
+
+// Send test notification
+exports.sendTestNotification = async (req, res) => {
+  try {
+    const userId = req.user.id;
+    const { channel } = req.body; // 'email' or 'whatsapp'
+
+    if (!channel || !['email', 'whatsapp'].includes(channel)) {
+      return res.status(400).json({ error: 'Valid channel (email or whatsapp) is required' });
+    }
+
+    // Get user info
+    const userResult = await pool.query(
+      'SELECT name, email, phone FROM users WHERE id = $1',
+      [userId]
+    );
+
+    if (userResult.rows.length === 0) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+
+    const user = userResult.rows[0];
+
+    // Import notification service
+    const notificationService = require('../services/notificationService');
+
+    if (channel === 'email') {
+      if (!user.email) {
+        return res.status(400).json({ error: 'No email address on file' });
+      }
+
+      const subject = 'Test Notification - The Narrow Trail';
+      const html = `
+        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+          <h2>Test Notification</h2>
+          <p>Hi ${user.name},</p>
+          <p>This is a test notification to verify your notification settings are working correctly.</p>
+          <p>If you received this email, your email notifications are configured properly!</p>
+          <hr style="margin: 20px 0; border: none; border-top: 1px solid #ddd;">
+          <p style="color: #666; font-size: 12px;">
+            This is a test message from The Narrow Trail notification system.
+          </p>
+        </div>
+      `;
+
+      await notificationService.sendEmail(user.email, subject, html);
+
+      return res.json({
+        success: true,
+        message: `Test email sent to ${user.email}`
+      });
+    } else if (channel === 'whatsapp') {
+      if (!user.phone) {
+        return res.status(400).json({ error: 'No phone number on file' });
+      }
+
+      const message = `Hi ${user.name}, this is a test notification from The Narrow Trail. If you received this message, your SMS notifications are working correctly!`;
+
+      await notificationService.sendWhatsApp(user.phone, message);
+
+      return res.json({
+        success: true,
+        message: `Test SMS sent to ${user.phone}`
+      });
+    }
+  } catch (error) {
+    console.error('Send test notification error:', error);
+    res.status(500).json({
+      error: 'Failed to send test notification',
+      details: error.message
+    });
   }
 };
 

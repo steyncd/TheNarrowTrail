@@ -32,6 +32,8 @@ const permissionRoutes = require('./routes/permissions');
 const settingsRoutes = require('./routes/settings');
 const eventTypesRoutes = require('./routes/eventTypes');
 const tagsRoutes = require('./routes/tags');
+const reviewsRoutes = require('./routes/reviews');
+const userPreferencesRoutes = require('./routes/userPreferences');
 
 // Import controllers for special routes
 const hikeController = require('./controllers/hikeController');
@@ -109,6 +111,8 @@ app.use('/api/notification-preferences', notificationPreferencesRoutes);
 app.use('/api/settings', settingsRoutes); // System settings (admin only)
 app.use('/api/event-types', eventTypesRoutes); // Event types (hiking, camping, 4x4, etc.)
 app.use('/api/tags', tagsRoutes); // Tags system for events
+app.use('/api', reviewsRoutes); // Reviews and ratings system
+app.use('/api', userPreferencesRoutes); // User preferences for recommendations
 app.use('/api/public-content', publicContentRoutes); // Public content API - NO AUTH (must be before /api)
 app.use('/api/content', contentRoutes);
 app.use('/api', expenseRoutes); // Expenses routes

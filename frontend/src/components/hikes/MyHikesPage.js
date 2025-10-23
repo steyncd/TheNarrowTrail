@@ -4,6 +4,9 @@ import { Calendar, CheckCircle, AlertCircle, MapPin, Heart, Mountain, Tent, Truc
 import { useAuth } from '../../contexts/AuthContext';
 import { api } from '../../services/api';
 import PageHeader from '../common/PageHeader';
+import SmartRecommendationsEnhanced from '../recommendations/SmartRecommendationsEnhanced';
+import QuickActions from '../dashboard/QuickActions';
+import TrendingEvents from '../social/TrendingEvents';
 
 // Event type configuration
 const EVENT_TYPE_CONFIG = {
@@ -75,6 +78,19 @@ function MyHikesPage() {
     fetchMyHikes();
     fetchEmergencyContact();
   }, [fetchMyHikes, fetchEmergencyContact]);
+
+  // Handle hash navigation for smooth scrolling
+  useEffect(() => {
+    const hash = window.location.hash;
+    if (hash) {
+      setTimeout(() => {
+        const element = document.querySelector(hash);
+        if (element) {
+          element.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+      }, 500); // Wait for content to render
+    }
+  }, [myHikes]);
 
   const handleUpdateEmergencyContact = async () => {
     setLoading(true);
@@ -296,6 +312,22 @@ function MyHikesPage() {
         </div>
       </div>
 
+      {/* Quick Actions Dashboard */}
+      <div className="mb-4">
+        <h4 className="mb-3">Quick Actions</h4>
+        <QuickActions />
+      </div>
+
+      {/* Trending Events */}
+      <div className="mb-4">
+        <TrendingEvents limit={5} showDetails={true} />
+      </div>
+
+      {/* Smart Recommendations */}
+      <div className="mb-4">
+        <SmartRecommendationsEnhanced limit={6} showTrending={false} showNew={true} />
+      </div>
+
       {/* Emergency Contact Section */}
       <div className="card mb-4" style={{borderLeft: '4px solid #dc3545'}}>
         <div className="card-body">
@@ -365,7 +397,7 @@ function MyHikesPage() {
 
       {/* Confirmed Hikes */}
       {confirmedSoon.length > 0 && (
-        <div className="mb-4">
+        <div className="mb-4" id="confirmed-events">
           <h4 className="mb-3">
             <CheckCircle size={20} className="me-2 text-success" />
             Confirmed - Next 2 Months
@@ -402,7 +434,7 @@ function MyHikesPage() {
 
       {/* Interested Hikes */}
       {interestedSoon.length > 0 && (
-        <div className="mb-4">
+        <div className="mb-4" id="interested-events">
           <h4 className="mb-3">
             <Heart size={20} className="me-2 text-info" />
             Interested - Next 2 Months

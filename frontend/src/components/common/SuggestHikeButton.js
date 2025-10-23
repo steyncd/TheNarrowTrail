@@ -56,7 +56,7 @@ const SuggestHikeButton = () => {
       {/* Floating Button - Small and Subtle */}
       <button
         onClick={() => setShowModal(true)}
-        className="btn btn-outline-secondary shadow-sm"
+        className="btn btn-outline-secondary shadow-sm d-none d-md-flex"
         style={{
           position: 'fixed',
           bottom: '78px',
@@ -65,7 +65,7 @@ const SuggestHikeButton = () => {
           width: '48px',
           height: '48px',
           padding: '0',
-          zIndex: 1000,
+          zIndex: 999,
           border: '1px solid rgba(108, 117, 125, 0.3)',
           background: theme === 'dark' ? 'rgba(45, 45, 45, 0.95)' : 'rgba(255, 255, 255, 0.95)',
           backdropFilter: 'blur(10px)',

@@ -7,6 +7,8 @@ import UserNotificationPreferences from './UserNotificationPreferences';
 import usePermission from '../../hooks/usePermission';
 import PermissionService from '../../services/permissionApi';
 import PermissionGate from '../PermissionGate';
+import usePullToRefresh from '../../hooks/usePullToRefresh';
+import PullToRefreshIndicator from '../hikes/PullToRefreshIndicator';
 
 function UserManagement() {
   const { currentUser, token } = useAuth();
@@ -69,6 +71,16 @@ function UserManagement() {
       console.error('Error fetching users:', err);
     }
   };
+
+  const refreshAll = async () => {
+    await Promise.all([fetchUsers(), fetchPendingUsers()]);
+  };
+
+  // Pull-to-refresh for mobile
+  const { containerRef, isPulling, pullDistance, isRefreshing, isReady } = usePullToRefresh(
+    refreshAll,
+    { enabled: true }
+  );
 
   const fetchPendingUsers = async () => {
     try {
@@ -357,7 +369,14 @@ function UserManagement() {
   const totalPages = Math.ceil(filteredUsers.length / usersPerPage);
 
   return (
-    <div className="container-fluid">
+    <div className="container-fluid" ref={containerRef}>
+      <PullToRefreshIndicator
+        isPulling={isPulling}
+        pullDistance={pullDistance}
+        isRefreshing={isRefreshing}
+        isReady={isReady}
+      />
+
       {/* Add User Button */}
       {can('users.create') && (
         <div className="mb-3 text-end">
@@ -434,8 +453,8 @@ function UserManagement() {
         </div>
         <div className="card-body p-2 p-md-3">
           {/* Filters */}
-          <div className="row g-3 mb-3">
-            <div className="col-md-6">
+          <div className="row g-2 mb-3">
+            <div className="col-12 col-md-6">
               <input
                 type="text"
                 className="form-control"
@@ -445,9 +464,10 @@ function UserManagement() {
                   setUserSearchTerm(e.target.value);
                   setUserCurrentPage(1);
                 }}
+                style={{fontSize: 'clamp(0.875rem, 2.5vw, 1rem)'}}
               />
             </div>
-            <div className="col-md-3">
+            <div className="col-12 col-md-3">
               <select
                 className="form-select"
                 value={userRoleFilter}
@@ -455,6 +475,7 @@ function UserManagement() {
                   setUserRoleFilter(e.target.value);
                   setUserCurrentPage(1);
                 }}
+                style={{fontSize: 'clamp(0.875rem, 2.5vw, 1rem)'}}
               >
                 <option value="all">All Roles</option>
                 <option value="admin">Admin</option>
@@ -577,81 +598,94 @@ function UserManagement() {
           <div className="d-md-none">
             {currentUsers.map(user => (
               <div key={user.id} className="card mb-3 shadow-sm">
-                <div className="card-body p-2">
-                  <div className="d-flex justify-content-between align-items-start mb-2">
+                <div className="card-body p-3">
+                  <div className="d-flex justify-content-between align-items-start mb-3">
                     <div style={{minWidth: 0, flex: 1}}>
-                      <h6 className="mb-1 text-truncate">
+                      <h6 className="mb-1">
                         <Link to={`/profile/${user.id}`} className="text-decoration-none">
                           {user.name}
                         </Link>
                       </h6>
-                      <small className="text-muted d-block text-truncate" style={{fontSize: '0.75rem'}}>
+                      <div className="d-flex align-items-center gap-2 mb-1">
+                        <span className={'badge ' + (user.role === 'admin' ? 'bg-primary' : 'bg-secondary')}>
+                          {user.role}
+                        </span>
+                      </div>
+                      <small className="text-muted d-block text-break" style={{fontSize: '0.8rem'}}>
                         {user.email}
                       </small>
-                      <small className="text-muted d-block" style={{fontSize: '0.75rem'}}>{user.phone}</small>
+                      <small className="text-muted d-block" style={{fontSize: '0.8rem'}}>{user.phone}</small>
                     </div>
-                    <span className={'badge ' + (user.role === 'admin' ? 'bg-primary' : 'bg-secondary')}>
-                      {user.role}
-                    </span>
                   </div>
+
                   {/* Show assigned roles */}
                   {user.roles && user.roles.length > 0 && (
-                    <div className="mb-2">
-                      <small className="text-muted d-block mb-1" style={{fontSize: '0.7rem'}}>Assigned Roles:</small>
+                    <div className="mb-3 pb-3 border-bottom">
+                      <small className="text-muted d-block mb-2" style={{fontSize: '0.75rem', fontWeight: 600}}>Assigned Roles:</small>
                       <div className="d-flex flex-wrap gap-1">
                         {user.roles.map(role => (
-                          <span key={role.id} className="badge bg-info" style={{fontSize: '0.65rem'}}>
+                          <span key={role.id} className="badge bg-info" style={{fontSize: '0.7rem', padding: '0.35em 0.65em'}}>
                             {role.name}
                           </span>
                         ))}
                       </div>
                     </div>
                   )}
-                  <div className="d-flex flex-wrap gap-1 mt-2">
+
+                  {/* Primary actions - larger buttons */}
+                  <div className="d-grid gap-2">
                     <PermissionGate permission="users.edit">
                       <button
-                        className="btn btn-sm btn-info"
-                        style={{fontSize: '0.75rem', flex: '1 1 45%'}}
+                        className="btn btn-info"
+                        style={{fontSize: '0.875rem', padding: '0.5rem 1rem'}}
                         onClick={() => handleOpenEditUser(user)}
                         disabled={loading}
                       >
-                        Edit
+                        Edit User Details
                       </button>
                     </PermissionGate>
-                    <button
-                      className="btn btn-sm btn-secondary"
-                      style={{fontSize: '0.75rem', flex: '1 1 45%'}}
-                      onClick={() => handleOpenNotificationPreferences(user)}
-                      disabled={loading}
-                    >
-                      Notifications
-                    </button>
+
                     <PermissionGate permission="users.manage_roles">
                       <button
-                        className="btn btn-sm btn-primary"
-                        style={{fontSize: '0.75rem', flex: '1 1 100%'}}
+                        className="btn btn-primary"
+                        style={{fontSize: '0.875rem', padding: '0.5rem 1rem'}}
                         onClick={() => handleOpenRoleManagement(user)}
                         disabled={loading}
                       >
-                        <UserCog size={12} className="me-1" />
-                        Manage Roles
+                        <UserCog size={14} className="me-2" />
+                        Manage Roles & Permissions
                       </button>
                     </PermissionGate>
-                    <PermissionGate permission="users.reset_password">
+
+                    {/* Secondary actions in a row */}
+                    <div className="d-flex gap-2">
                       <button
-                        className="btn btn-sm btn-warning"
-                        style={{fontSize: '0.75rem', flex: '1 1 45%'}}
-                        onClick={() => handleOpenResetPassword(user)}
+                        className="btn btn-outline-secondary flex-fill"
+                        style={{fontSize: '0.8rem'}}
+                        onClick={() => handleOpenNotificationPreferences(user)}
                         disabled={loading}
                       >
-                        Reset PW
+                        Notifications
                       </button>
-                    </PermissionGate>
+
+                      <PermissionGate permission="users.reset_password">
+                        <button
+                          className="btn btn-outline-warning flex-fill"
+                          style={{fontSize: '0.8rem'}}
+                          onClick={() => handleOpenResetPassword(user)}
+                          disabled={loading}
+                        >
+                          Reset Password
+                        </button>
+                      </PermissionGate>
+                    </div>
+
+                    {/* Admin promotion */}
                     {user.role === 'hiker' && (
                       <PermissionGate permission="users.edit">
                         <button
-                          className="btn btn-sm btn-primary"
-                          style={{fontSize: '0.75rem', flex: '1 1 100%'}}
+                          className="btn btn-outline-primary"
+                          style={{fontSize: '0.875rem'}}
                           onClick={() => handlePromoteToAdmin(user.id)}
                           disabled={loading}
                         >
@@ -659,15 +693,17 @@ function UserManagement() {
                         </button>
                       </PermissionGate>
                     )}
+
+                    {/* Delete button */}
                     {user.id !== currentUser.id && (
                       <PermissionGate permission="users.delete">
                         <button
-                          className="btn btn-sm btn-danger"
-                          style={{fontSize: '0.75rem', flex: '1 1 100%'}}
+                          className="btn btn-outline-danger"
+                          style={{fontSize: '0.875rem'}}
                           onClick={() => handleDeleteUser(user.id)}
                           disabled={loading}
                         >
-                          Delete
+                          Delete User
                         </button>
                       </PermissionGate>
                     )}
@@ -679,8 +715,8 @@ function UserManagement() {
 
           {/* Pagination Controls - Always show user count, pagination buttons only if > 1 page */}
           {filteredUsers.length > 0 && (
-            <div className="d-flex flex-column flex-md-row justify-content-between align-items-center mt-3 gap-2">
-              <div className="d-flex align-items-center gap-3">
+            <div className="d-flex flex-column flex-md-row justify-content-between align-items-center mt-3 gap-2 pb-5 pb-md-0">
+              <div className="d-flex flex-column flex-md-row align-items-center gap-2 gap-md-3 w-100 w-md-auto">
                 <div className="text-muted small">
                   Showing {indexOfFirstUser + 1}-{Math.min(indexOfLastUser, filteredUsers.length)} of {filteredUsers.length} users
                 </div>
@@ -688,7 +724,7 @@ function UserManagement() {
                   <label className="text-muted small mb-0">Per page:</label>
                   <select
                     className="form-select form-select-sm"
-                    style={{width: 'auto'}}
+                    style={{width: 'auto', fontSize: 'clamp(0.75rem, 2vw, 0.875rem)'}}
                     value={usersPerPage}
                     onChange={(e) => {
                       setUsersPerPage(Number(e.target.value));
@@ -704,7 +740,7 @@ function UserManagement() {
                 </div>
               </div>
             {totalPages > 1 && (
-              <div className="btn-group flex-wrap">
+              <div className="btn-group flex-wrap" style={{fontSize: 'clamp(0.75rem, 2vw, 0.875rem)'}}>
                 <button
                   className="btn btn-sm btn-outline-primary"
                   onClick={() => setUserCurrentPage(prev => Math.max(prev - 1, 1))}

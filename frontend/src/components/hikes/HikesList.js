@@ -6,6 +6,8 @@ import { useTheme } from '../../contexts/ThemeContext';
 import HikeCard from './HikeCard';
 import HikeDetailsModal from './HikeDetailsModal';
 import { HikeCardSkeleton } from '../common/Skeleton';
+import usePullToRefresh from '../../hooks/usePullToRefresh';
+import PullToRefreshIndicator from './PullToRefreshIndicator';
 
 // PERFORMANCE OPTIMIZATION: Memoized filtering logic
 const HikesList = () => {
@@ -22,11 +24,6 @@ const HikesList = () => {
   const [statusFilter, setStatusFilter] = useState('all');
   const [dateRangeFilter, setDateRangeFilter] = useState('all');
 
-  useEffect(() => {
-    fetchHikes();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-
   const fetchHikes = async () => {
     setLoading(true);
     try {
@@ -38,6 +35,17 @@ const HikesList = () => {
       setLoading(false);
     }
   };
+
+  // Pull-to-refresh for mobile
+  const { containerRef, isPulling, pullDistance, isRefreshing, isReady } = usePullToRefresh(
+    fetchHikes,
+    { enabled: true }
+  );
+
+  useEffect(() => {
+    fetchHikes();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const handleViewDetails = (hike) => {
     setSelectedHike(hike);
@@ -303,7 +311,14 @@ const HikesList = () => {
   }
 
   return (
-    <>
+    <div ref={containerRef} style={{ minHeight: '100vh' }}>
+      {/* Pull to Refresh Indicator */}
+      <PullToRefreshIndicator
+        pullDistance={pullDistance}
+        isReady={isReady}
+        isRefreshing={isRefreshing || (isPulling && loading)}
+      />
+
       {renderFilters()}
 
       {upcomingSoon.length > 0 && (
@@ -382,7 +397,7 @@ const HikesList = () => {
           }}
         />
       )}
-    </>
+    </div>
   );
 };
 

@@ -7,6 +7,7 @@ import LoginForm from '../auth/LoginForm';
 import SignUpForm from '../auth/SignUpForm';
 import { getContent } from '../../services/contentApi';
 import ReactMarkdown from 'react-markdown';
+import LazyImage from '../photos/LazyImage';
 
 // Event type configuration with generic images
 const EVENT_TYPE_CONFIG = {
@@ -212,14 +213,11 @@ const LandingPage = ({ hideLoginButton = false }) => {
             >
           <div className="landing-nav-content">
             <div className="d-flex align-items-center landing-nav-logo">
-              <img
+              <LazyImage
                 src={brandingSettings.branding_logo_url || '/hiking-logo.png'}
                 alt={brandingSettings.branding_portal_name || 'Portal Logo'}
                 style={{width: '50px', height: '50px', borderRadius: '50%', marginRight: '15px', objectFit: 'cover', border: '2px solid #4a7c7c'}}
-                onError={(e) => {
-                  // Fallback to default logo if custom logo fails to load
-                  e.target.src = '/hiking-logo.png';
-                }}
+                placeholder="/hiking-logo.png"
               />
               <div>
                 <span className="navbar-brand mb-0 text-white" style={{fontWeight: '700', letterSpacing: '1px', fontSize: '1.5rem', fontFamily: "'Russo One', sans-serif", textTransform: 'uppercase'}}>
@@ -383,28 +381,12 @@ const LandingPage = ({ hideLoginButton = false }) => {
                   <div className="card h-100 shadow-lg border-0 d-flex flex-column" style={{borderRadius: '15px', overflow: 'hidden'}}>
                     {/* Image with Event Type Badge Overlay */}
                     <div style={{position: 'relative'}}>
-                      <img
+                      <LazyImage
                         src={hike.image_url || EVENT_TYPE_CONFIG[hike.event_type || 'hiking']?.genericImage}
                         alt={hike.name}
                         className="card-img-top"
                         style={{height: '200px', objectFit: 'cover'}}
-                        onError={(e) => {
-                          // If image fails to load, show a colored placeholder
-                          const eventType = hike.event_type || 'hiking';
-                          const config = EVENT_TYPE_CONFIG[eventType];
-                          e.target.style.display = 'none';
-                          const placeholder = document.createElement('div');
-                          placeholder.style.cssText = `
-                            height: 200px;
-                            display: flex;
-                            align-items: center;
-                            justify-content: center;
-                            background: linear-gradient(135deg, ${config.color}dd 0%, ${config.color}88 100%);
-                            color: white;
-                          `;
-                          placeholder.innerHTML = `<div style="text-align: center;"><div style="font-size: 3rem; margin-bottom: 0.5rem;">🏔️</div><div style="font-size: 1rem; font-weight: 600;">${config.label}</div></div>`;
-                          e.target.parentElement.appendChild(placeholder);
-                        }}
+                        placeholder={EVENT_TYPE_CONFIG[hike.event_type || 'hiking']?.genericImage}
                       />
                       {/* Event Type Badge - Top Left */}
                       {hike.event_type && EVENT_TYPE_CONFIG[hike.event_type] && (() => {
