@@ -325,24 +325,39 @@ const HikeDetailsPage = () => {
         </div>
       )}
 
-      {isRegistrationClosingSoon && (
-        <div className="alert alert-warning d-flex align-items-center mb-4" style={{
+      {isRegistrationClosingSoon && !isRegistrationClosed && (
+        <div className="alert mb-4 d-flex align-items-center" style={{
           borderRadius: '12px',
-          border: '2px solid #ffc107',
-          backgroundColor: isDark ? 'rgba(255, 193, 7, 0.2)' : 'rgba(255, 193, 7, 0.1)',
-          padding: '1rem 1.5rem'
+          border: '3px solid #ff6b35',
+          backgroundColor: isDark ? 'rgba(255, 107, 53, 0.25)' : '#fff3e0',
+          padding: '1.25rem 1.5rem',
+          boxShadow: '0 4px 12px rgba(255, 107, 53, 0.3)'
         }}>
-          <AlertCircle size={24} className="me-3 flex-shrink-0" />
-          <div>
-            <h5 className="mb-1" style={{ fontWeight: '700', color: '#856404' }}>Registration Closing Soon!</h5>
-            <p className="mb-0" style={{ fontSize: '0.9rem' }}>
-              Register by {new Date(hike.registration_deadline).toLocaleDateString('en-US', {
+          <div style={{
+            width: '50px',
+            height: '50px',
+            borderRadius: '50%',
+            backgroundColor: '#ff6b35',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            marginRight: '1rem',
+            flexShrink: 0
+          }}>
+            <AlertCircle size={28} style={{ color: 'white' }} />
+          </div>
+          <div style={{ flex: 1 }}>
+            <h5 className="mb-1" style={{ fontWeight: '700', color: isDark ? '#ffb74d' : '#e65100', fontSize: '1.1rem' }}>
+              ⏰ Registration Closing Soon!
+            </h5>
+            <p className="mb-0" style={{ fontSize: '0.95rem', color: isDark ? '#fff' : '#333', fontWeight: '500' }}>
+              Register by <strong>{new Date(hike.registration_deadline).toLocaleDateString('en-US', {
                 month: 'long',
                 day: 'numeric',
                 year: 'numeric',
                 hour: '2-digit',
                 minute: '2-digit'
-              })}
+              })}</strong>
             </p>
           </div>
         </div>
@@ -498,16 +513,16 @@ const HikeDetailsPage = () => {
 
                 {/* Deadlines as inline badges */}
                 {hike.registration_deadline && (
-                  <span className={`badge px-2 py-1 ${isRegistrationClosed ? 'bg-danger' : isRegistrationClosingSoon ? 'bg-warning' : 'bg-success'}`} style={{ fontSize: '0.75rem' }}>
+                  <span className={`badge px-2 py-1 ${isRegistrationClosed ? 'bg-danger' : isRegistrationClosingSoon ? 'bg-warning text-dark' : 'bg-success'}`} style={{ fontSize: '0.75rem', fontWeight: '600' }}>
                     <Clock size={12} className="me-1" />
-                    Reg: {new Date(hike.registration_deadline).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+                    Register by: {new Date(hike.registration_deadline).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
                     {isRegistrationClosed && ' (Closed)'}
                   </span>
                 )}
                 {hike.payment_deadline && (
-                  <span className={`badge px-2 py-1 ${isPaymentDueSoon ? 'bg-warning' : 'bg-info'}`} style={{ fontSize: '0.75rem' }}>
+                  <span className={`badge px-2 py-1 ${isPaymentDueSoon ? 'bg-warning text-dark' : 'bg-info'}`} style={{ fontSize: '0.75rem', fontWeight: '600' }}>
                     <DollarSign size={12} className="me-1" />
-                    Pay: {new Date(hike.payment_deadline).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+                    Pay by: {new Date(hike.payment_deadline).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
                   </span>
                 )}
               </div>
