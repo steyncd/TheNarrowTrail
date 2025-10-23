@@ -456,9 +456,9 @@ const LandingPage = ({ hideLoginButton = false }) => {
                 }}>
                   <Users size={32} style={{ color: 'white' }} />
                 </div>
-                <h4 className="fw-bold mb-3">Community</h4>
-                <p className="text-muted mb-0">
-                  Connect with fellow believers who share your passion for the outdoors and faith
+                <h4 className="fw-bold mb-3">Fellowship</h4>
+                <p className="text-muted mb-0" style={{ fontSize: '0.95rem', lineHeight: '1.6' }}>
+                  "Where two or three gather in His name, hearts are strengthened and faith is shared." (Matthew 18:20)
                 </p>
               </div>
             </div>
@@ -480,8 +480,8 @@ const LandingPage = ({ hideLoginButton = false }) => {
                   <Mountain size={32} style={{ color: 'white' }} />
                 </div>
                 <h4 className="fw-bold mb-3">Adventure</h4>
-                <p className="text-muted mb-0">
-                  Experience God's creation through hiking, camping, cycling, and outdoor activities
+                <p className="text-muted mb-0" style={{ fontSize: '0.95rem', lineHeight: '1.6' }}>
+                  "Step out in faith, discover God's creation, and find renewal away from the noise of the world."
                 </p>
               </div>
             </div>
@@ -503,8 +503,8 @@ const LandingPage = ({ hideLoginButton = false }) => {
                   <Award size={32} style={{ color: 'white' }} />
                 </div>
                 <h4 className="fw-bold mb-3">Growth</h4>
-                <p className="text-muted mb-0">
-                  Build character, deepen your faith, and create lasting memories on the trail
+                <p className="text-muted mb-0" style={{ fontSize: '0.95rem', lineHeight: '1.6' }}>
+                  "In the stillness of nature, draw near to God and let Him transform you from glory to glory." (2 Corinthians 3:18)
                 </p>
               </div>
             </div>
