@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Calendar, MapPin, ArrowLeft, Info, Mountain, Tent, Truck, Bike, Compass } from 'lucide-react';
+import { Calendar, MapPin, ArrowLeft, Info, Mountain, Tent, Truck, Bike, Compass, Users, TrendingUp, Award, CheckCircle, ArrowRight, Clock, Star } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { API_URL } from '../../services/api';
 import { useAuth } from '../../contexts/AuthContext';
@@ -262,95 +262,266 @@ const LandingPage = ({ hideLoginButton = false }) => {
           </div>
         )}
 
-      <div className="container pb-5 pt-0">
-        {/* Hero Section */}
-        <div className="text-center mb-4 pt-3">
-          <h1 className="display-6 fw-bold text-white mb-3">Join Us on The Narrow Trail</h1>
-          <p className="lead text-white-50 mb-4">
-            Experience the beauty of God's creation together with fellow believers. It's a wonderful opportunity to get outdoors, enjoy meaningful fellowship, and talk about what truly matters — away from the noise of everyday life.
-          </p>
-        </div>
+      {/* Modern Hero Section */}
+      <div className="position-relative" style={{
+        minHeight: '600px',
+        background: 'linear-gradient(135deg, rgba(45, 90, 124, 0.95) 0%, rgba(74, 124, 89, 0.95) 100%)',
+        overflow: 'hidden'
+      }}>
+        {/* Hero Background Pattern */}
+        <div style={{
+          position: 'absolute',
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          backgroundImage: 'url("https://images.unsplash.com/photo-1464207687429-7505649dae38?w=1920&h=1080&fit=crop")',
+          backgroundSize: 'cover',
+          backgroundPosition: 'center',
+          opacity: 0.15,
+          zIndex: 0
+        }} />
 
-        {/* Quote Box */}
+        <div className="container position-relative" style={{ zIndex: 1, paddingTop: '4rem', paddingBottom: '4rem' }}>
+          <div className="row align-items-center">
+            <div className="col-lg-7 text-center text-lg-start mb-4 mb-lg-0">
+              {/* Main Headline */}
+              <h1 className="display-4 fw-bold text-white mb-3" style={{ lineHeight: '1.2', fontSize: 'clamp(2rem, 5vw, 3.5rem)' }}>
+                Adventure Awaits.<br />
+                <span style={{ color: '#ffd700' }}>Faith Connects Us.</span>
+              </h1>
+
+              {/* Value Proposition */}
+              <p className="lead text-white mb-4" style={{ fontSize: 'clamp(1rem, 2vw, 1.25rem)', opacity: 0.95 }}>
+                Join a community of believers exploring God's creation together. Faith-based outdoor adventures for all skill levels.
+              </p>
+
+              {/* Statistics Ticker */}
+              {statistics && (
+                <div className="d-flex flex-wrap gap-4 mb-4 justify-content-center justify-content-lg-start">
+                  <div className="text-white">
+                    <div style={{ fontSize: '2rem', fontWeight: 'bold', lineHeight: 1 }}>{statistics.total_hikers}+</div>
+                    <div style={{ fontSize: '0.85rem', opacity: 0.9 }}>Hikers</div>
+                  </div>
+                  <div className="text-white">
+                    <div style={{ fontSize: '2rem', fontWeight: 'bold', lineHeight: 1 }}>{statistics.completed_hikes}</div>
+                    <div style={{ fontSize: '0.85rem', opacity: 0.9 }}>Adventures</div>
+                  </div>
+                  <div className="text-white">
+                    <div style={{ fontSize: '2rem', fontWeight: 'bold', lineHeight: 1 }}>{statistics.total_distance_km}</div>
+                    <div style={{ fontSize: '0.85rem', opacity: 0.9 }}>KM Hiked</div>
+                  </div>
+                </div>
+              )}
+
+              {/* CTA Buttons */}
+              <div className="d-flex flex-column flex-sm-row gap-3 justify-content-center justify-content-lg-start">
+                <button
+                  className="btn btn-lg btn-light fw-bold shadow-lg"
+                  style={{ padding: '1rem 2.5rem', borderRadius: '50px', fontSize: '1.1rem' }}
+                  onClick={() => {
+                    if (currentUser) {
+                      navigate('/hikes');
+                    } else {
+                      const hikesSection = document.getElementById('upcoming-events');
+                      if (hikesSection) hikesSection.scrollIntoView({ behavior: 'smooth' });
+                    }
+                  }}
+                >
+                  <Calendar size={20} className="me-2" />
+                  Browse Adventures
+                </button>
+                {!currentUser && (
+                  <button
+                    className="btn btn-lg btn-outline-light fw-bold"
+                    style={{ padding: '1rem 2.5rem', borderRadius: '50px', fontSize: '1.1rem', borderWidth: '2px' }}
+                    onClick={() => setShowLoginModal(true)}
+                  >
+                    Join Community
+                  </button>
+                )}
+              </div>
+
+              {/* Trust Badge */}
+              <div className="mt-4 text-white d-flex align-items-center gap-2 justify-content-center justify-content-lg-start" style={{ opacity: 0.9 }}>
+                <CheckCircle size={18} style={{ color: '#ffd700' }} />
+                <span style={{ fontSize: '0.9rem' }}>Join {statistics?.total_hikers || 500}+ outdoor enthusiasts</span>
+              </div>
+            </div>
+
+            {/* Hero Visual - Next Event Preview Card */}
+            <div className="col-lg-5">
+              {hikes.length > 0 && (() => {
+                const nextHike = hikes.find(h => new Date(h.date) > new Date()) || hikes[0];
+                const EventIcon = EVENT_TYPE_CONFIG[nextHike.event_type || 'hiking']?.icon || Mountain;
+
+                return (
+                  <div className="card border-0 shadow-lg" style={{ borderRadius: '20px', overflow: 'hidden' }}>
+                    {/* Next Adventure Badge */}
+                    <div className="position-absolute top-0 start-0 m-3" style={{ zIndex: 2 }}>
+                      <span className="badge bg-warning text-dark px-3 py-2 fw-bold" style={{ fontSize: '0.85rem' }}>
+                        <TrendingUp size={14} className="me-1" />
+                        NEXT ADVENTURE
+                      </span>
+                    </div>
+
+                    <div style={{ position: 'relative' }}>
+                      <LazyImage
+                        src={nextHike.image_url || EVENT_TYPE_CONFIG[nextHike.event_type || 'hiking']?.genericImage}
+                        alt={nextHike.name}
+                        style={{ height: '250px', width: '100%', objectFit: 'cover' }}
+                        placeholder={EVENT_TYPE_CONFIG[nextHike.event_type || 'hiking']?.genericImage}
+                      />
+                    </div>
+
+                    <div className="card-body p-4">
+                      <div className="d-flex align-items-center gap-2 mb-2">
+                        <span className="badge" style={{ background: EVENT_TYPE_CONFIG[nextHike.event_type || 'hiking']?.color }}>
+                          <EventIcon size={14} className="me-1" />
+                          {EVENT_TYPE_CONFIG[nextHike.event_type || 'hiking']?.label}
+                        </span>
+                        {nextHike.event_type_data?.difficulty && (
+                          <span className={`badge ${
+                            nextHike.event_type_data.difficulty === 'Easy' ? 'bg-success' :
+                            nextHike.event_type_data.difficulty === 'Moderate' ? 'bg-warning text-dark' :
+                            'bg-danger'
+                          }`}>{nextHike.event_type_data.difficulty}</span>
+                        )}
+                      </div>
+
+                      <h4 className="mb-3 fw-bold">{nextHike.name}</h4>
+
+                      <div className="d-flex flex-column gap-2 mb-3">
+                        <div className="d-flex align-items-center text-muted">
+                          <Calendar size={16} className="me-2" />
+                          <span style={{ fontSize: '0.95rem' }}>
+                            {new Date(nextHike.date).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}
+                          </span>
+                        </div>
+                        {nextHike.location && (
+                          <div className="d-flex align-items-center text-muted">
+                            <MapPin size={16} className="me-2" />
+                            <span style={{ fontSize: '0.95rem' }}>{nextHike.location}</span>
+                          </div>
+                        )}
+                        {nextHike.confirmed_count > 0 && (
+                          <div className="d-flex align-items-center text-success fw-bold">
+                            <Users size={16} className="me-2" />
+                            <span style={{ fontSize: '0.95rem' }}>{nextHike.confirmed_count} confirmed</span>
+                          </div>
+                        )}
+                      </div>
+
+                      <button
+                        className="btn btn-primary w-100 fw-bold"
+                        style={{ padding: '0.75rem', borderRadius: '10px' }}
+                        onClick={() => navigate(`/hikes/${nextHike.id}`)}
+                      >
+                        View Details
+                        <ArrowRight size={18} className="ms-2" />
+                      </button>
+                    </div>
+                  </div>
+                );
+              })()}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div className="container pb-5 pt-5">
+        {/* Why Join Us Section */}
         <div className="row mb-5">
-          <div className="col-12">
-            <div className="card border-0" style={{
-              borderRadius: '15px',
-              background: 'rgba(255, 255, 255, 0.12)',
-              backdropFilter: 'blur(10px)',
-              boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)'
-            }}>
-              <div className="card-body p-4">
-                <div className="text-center">
-                  <p className="mb-1" style={{
-                    fontStyle: 'italic',
-                    color: 'rgba(255, 255, 255, 0.95)',
-                    fontWeight: '500',
-                    fontSize: '1.1rem'
-                  }}>
-                    "Dit bou karakter" - Jan
-                  </p>
-                  <small style={{color: 'rgba(255, 255, 255, 0.7)', fontSize: '0.85rem'}}>
-                    Remember: Dit is maklikker as wat dit lyk
-                  </small>
+          <div className="col-12 text-center mb-4">
+            <h2 className="fw-bold text-white" style={{ fontSize: 'clamp(1.75rem, 4vw, 2.5rem)' }}>
+              Why Join The Narrow Trail?
+            </h2>
+            <p className="text-white-50" style={{ fontSize: '1.1rem' }}>
+              More than just outdoor adventures
+            </p>
+          </div>
+
+          <div className="col-md-4 mb-4 mb-md-0">
+            <div className="card border-0 h-100 shadow" style={{ borderRadius: '15px', background: 'rgba(255, 255, 255, 0.95)' }}>
+              <div className="card-body text-center p-4">
+                <div className="mb-3" style={{
+                  width: '70px',
+                  height: '70px',
+                  borderRadius: '50%',
+                  background: 'linear-gradient(135deg, #4a7c7c 0%, #2d5a7c 100%)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  margin: '0 auto'
+                }}>
+                  <Users size={32} style={{ color: 'white' }} />
                 </div>
+                <h4 className="fw-bold mb-3">Community</h4>
+                <p className="text-muted mb-0">
+                  Connect with fellow believers who share your passion for the outdoors and faith
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <div className="col-md-4 mb-4 mb-md-0">
+            <div className="card border-0 h-100 shadow" style={{ borderRadius: '15px', background: 'rgba(255, 255, 255, 0.95)' }}>
+              <div className="card-body text-center p-4">
+                <div className="mb-3" style={{
+                  width: '70px',
+                  height: '70px',
+                  borderRadius: '50%',
+                  background: 'linear-gradient(135deg, #4a7c59 0%, #2d5a7c 100%)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  margin: '0 auto'
+                }}>
+                  <Mountain size={32} style={{ color: 'white' }} />
+                </div>
+                <h4 className="fw-bold mb-3">Adventure</h4>
+                <p className="text-muted mb-0">
+                  Experience God's creation through hiking, camping, cycling, and outdoor activities
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <div className="col-md-4">
+            <div className="card border-0 h-100 shadow" style={{ borderRadius: '15px', background: 'rgba(255, 255, 255, 0.95)' }}>
+              <div className="card-body text-center p-4">
+                <div className="mb-3" style={{
+                  width: '70px',
+                  height: '70px',
+                  borderRadius: '50%',
+                  background: 'linear-gradient(135deg, #7c6a4a 0%, #2d5a7c 100%)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  margin: '0 auto'
+                }}>
+                  <Award size={32} style={{ color: 'white' }} />
+                </div>
+                <h4 className="fw-bold mb-3">Growth</h4>
+                <p className="text-muted mb-0">
+                  Build character, deepen your faith, and create lasting memories on the trail
+                </p>
               </div>
             </div>
           </div>
         </div>
 
-        {/* Statistics Section */}
-        {settings.show_statistics && statistics && (
-          <div className="row mb-5">
-            <div className="col-12">
-              <h2 className="text-white mb-4 text-center">Our Journey So Far</h2>
-              <div className="row g-4">
-                <div className="col-md-3 col-6">
-                  <div className="card border-0 shadow-lg h-100" style={{borderRadius: '15px', background: 'linear-gradient(135deg, #4a7c7c 0%, #2d5a7c 100%)'}}>
-                    <div className="card-body text-center text-white p-4">
-                      <div style={{fontSize: '2.5rem', fontWeight: 'bold'}}>{statistics.total_hikers}</div>
-                      <div style={{fontSize: '0.9rem', opacity: 0.9}}>Hikers</div>
-                    </div>
-                  </div>
-                </div>
-                <div className="col-md-3 col-6">
-                  <div className="card border-0 shadow-lg h-100" style={{borderRadius: '15px', background: 'linear-gradient(135deg, #4a7c59 0%, #2d5a7c 100%)'}}>
-                    <div className="card-body text-center text-white p-4">
-                      <div style={{fontSize: '2.5rem', fontWeight: 'bold'}}>{statistics.completed_hikes}</div>
-                      <div style={{fontSize: '0.9rem', opacity: 0.9}}>Completed Hikes</div>
-                    </div>
-                  </div>
-                </div>
-                <div className="col-md-3 col-6">
-                  <div className="card border-0 shadow-lg h-100" style={{borderRadius: '15px', background: 'linear-gradient(135deg, #7c6a4a 0%, #2d5a7c 100%)'}}>
-                    <div className="card-body text-center text-white p-4">
-                      <div style={{fontSize: '2.5rem', fontWeight: 'bold'}}>{statistics.upcoming_hikes}</div>
-                      <div style={{fontSize: '0.9rem', opacity: 0.9}}>Upcoming Adventures</div>
-                    </div>
-                  </div>
-                </div>
-                <div className="col-md-3 col-6">
-                  <div className="card border-0 shadow-lg h-100" style={{borderRadius: '15px', background: 'linear-gradient(135deg, #7c4a59 0%, #2d5a7c 100%)'}}>
-                    <div className="card-body text-center text-white p-4">
-                      <div style={{fontSize: '2.5rem', fontWeight: 'bold'}}>{statistics.total_distance_km}</div>
-                      <div style={{fontSize: '0.9rem', opacity: 0.9}}>KM Hiked</div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* Upcoming Hikes */}
+        {/* Upcoming Adventures Section */}
         {settings.show_upcoming_hikes && (
           <>
-            <div className="row mb-3">
-              <div className="col-12">
-                <h2 className="text-white mb-4">
-                  <Calendar size={28} className="me-2" />
+            <div className="row mb-4" id="upcoming-events">
+              <div className="col-12 text-center">
+                <h2 className="fw-bold text-white mb-2" style={{ fontSize: 'clamp(1.75rem, 4vw, 2.5rem)' }}>
                   Upcoming Adventures
                 </h2>
+                <p className="text-white-50" style={{ fontSize: '1.1rem' }}>
+                  Join us on the trail
+                </p>
               </div>
             </div>
 
@@ -367,228 +538,189 @@ const LandingPage = ({ hideLoginButton = false }) => {
                 </div>
               </div>
             ) : (
-              <div className="row g-4">
-                {hikes.slice(0, 6).map(hike => {
-              const hikeDate = new Date(hike.date);
-              const isPast = hikeDate < new Date();
-              if (isPast) return null;
+              <>
+                <div className="row g-4">
+                  {hikes.slice(0, 6).map(hike => {
+                const hikeDate = new Date(hike.date);
+                const isPast = hikeDate < new Date();
+                if (isPast) return null;
 
-              // Get target audience tag
-              const targetAudienceTag = hike.tags?.find(tag => tag.category === 'target_audience');
+                const EventIcon = EVENT_TYPE_CONFIG[hike.event_type || 'hiking']?.icon || Mountain;
+                const targetAudienceTag = hike.tags?.find(tag => tag.category === 'target_audience');
 
-              return (
-                <div key={hike.id} className="col-md-6 col-lg-4">
-                  <div className="card h-100 shadow-lg border-0 d-flex flex-column" style={{borderRadius: '15px', overflow: 'hidden'}}>
-                    {/* Image with Event Type Badge Overlay */}
-                    <div style={{position: 'relative'}}>
-                      <LazyImage
-                        src={hike.image_url || EVENT_TYPE_CONFIG[hike.event_type || 'hiking']?.genericImage}
-                        alt={hike.name}
-                        className="card-img-top"
-                        style={{height: '200px', objectFit: 'cover'}}
-                        placeholder={EVENT_TYPE_CONFIG[hike.event_type || 'hiking']?.genericImage}
-                      />
-                      {/* Event Type Badge - Top Left */}
-                      {hike.event_type && EVENT_TYPE_CONFIG[hike.event_type] && (() => {
-                        const EventIcon = EVENT_TYPE_CONFIG[hike.event_type].icon;
-                        return (
-                          <div className="position-absolute top-0 start-0 m-2">
-                            <span
-                              className="badge d-inline-flex align-items-center gap-1 shadow"
-                              style={{
-                                backgroundColor: EVENT_TYPE_CONFIG[hike.event_type].color,
-                                fontSize: '0.85rem',
-                                padding: '6px 10px'
-                              }}
-                            >
-                              <EventIcon size={16} />
-                              {EVENT_TYPE_CONFIG[hike.event_type].label}
-                            </span>
-                          </div>
-                        );
-                      })()}
-                      {/* Target Audience Tag - Top Right */}
-                      {targetAudienceTag && (
-                        <div className="position-absolute top-0 end-0 m-2">
-                          <span
-                            className="badge shadow"
-                            style={{
+                return (
+                  <div key={hike.id} className="col-md-6 col-lg-4">
+                    <div className="card h-100 shadow border-0 d-flex flex-column" style={{borderRadius: '20px', overflow: 'hidden', background: 'rgba(255, 255, 255, 0.98)'}}>
+                      {/* Simplified Image */}
+                      <div style={{position: 'relative'}}>
+                        <LazyImage
+                          src={hike.image_url || EVENT_TYPE_CONFIG[hike.event_type || 'hiking']?.genericImage}
+                          alt={hike.name}
+                          style={{height: '220px', width: '100%', objectFit: 'cover'}}
+                          placeholder={EVENT_TYPE_CONFIG[hike.event_type || 'hiking']?.genericImage}
+                        />
+                        {/* Event Type Badge */}
+                        <div className="position-absolute top-0 start-0 m-2">
+                          <span className="badge d-inline-flex align-items-center gap-1 shadow" style={{
+                            backgroundColor: EVENT_TYPE_CONFIG[hike.event_type || 'hiking'].color,
+                            fontSize: '0.8rem',
+                            padding: '6px 12px'
+                          }}>
+                            <EventIcon size={14} />
+                            {EVENT_TYPE_CONFIG[hike.event_type || 'hiking'].label}
+                          </span>
+                        </div>
+                        {/* Target Audience Tag */}
+                        {targetAudienceTag && (
+                          <div className="position-absolute top-0 end-0 m-2">
+                            <span className="badge shadow" style={{
                               backgroundColor: targetAudienceTag.color || '#9C27B0',
-                              fontSize: '0.85rem',
-                              padding: '6px 10px',
-                              fontWeight: '600'
-                            }}
-                          >
-                            {targetAudienceTag.name}
-                          </span>
-                        </div>
-                      )}
-                    </div>
-                    <div className="card-body flex-grow-1 d-flex flex-column">
-                      <div className="d-flex justify-content-between align-items-start mb-2">
-                        <h5 className="card-title mb-0">{hike.name}</h5>
-                        <div className="d-flex flex-column gap-1 align-items-end">
-                          {(hike.event_type_data?.difficulty || hike.difficulty) && (
-                            <span className={`badge ${
-                              (hike.event_type_data?.difficulty || hike.difficulty) === 'Easy' ? 'bg-success' :
-                              (hike.event_type_data?.difficulty || hike.difficulty) === 'Moderate' ? 'bg-warning text-dark' :
-                              'bg-danger'
-                            }`}>{hike.event_type_data?.difficulty || hike.difficulty}</span>
-                          )}
-                          {hike.status && (
-                            <span className={`badge ${
-                              hike.status === 'trip_booked' ? 'bg-success' :
-                              hike.status === 'pre_planning' ? 'bg-info' :
-                              hike.status === 'cancelled' ? 'bg-danger' :
-                              'bg-secondary'
-                            }`} style={{ fontSize: '0.7rem' }}>
-                              {hike.status === 'trip_booked' ? 'Trip Booked' :
-                               hike.status === 'pre_planning' ? 'Pre-Planning' :
-                               hike.status === 'gathering_interest' ? 'Gathering Interest' :
-                               hike.status === 'cancelled' ? 'Cancelled' :
-                               hike.status}
-                            </span>
-                          )}
-                        </div>
-                      </div>
-                      <p className="card-text text-muted small mb-3" style={{
-                        display: '-webkit-box',
-                        WebkitLineClamp: 2,
-                        WebkitBoxOrient: 'vertical',
-                        overflow: 'hidden'
-                      }}>
-                        {hike.description}
-                      </p>
-
-                      {/* Cost and Day Type Badges */}
-                      <div className="d-flex flex-wrap gap-2 mb-2">
-                        {hike.event_type === 'hiking' && hike.event_type_data?.hike_type && (
-                          <span className="badge bg-info">
-                            {hike.event_type_data.hike_type}
-                          </span>
-                        )}
-                        {hike.cost > 0 && (
-                          <span className="badge bg-success" title={hike.price_is_estimate ? "Estimated price" : "Confirmed price"}>
-                            R{hike.cost}{hike.price_is_estimate && ' ~'}
-                          </span>
-                        )}
-                      </div>
-
-                      {/* Event Details - pushed to bottom with mt-auto */}
-                      <div className="mt-auto">
-                        <div className="mb-2">
-                          <div className="d-flex align-items-center text-muted small mb-1">
-                            <Calendar size={14} className="me-2" />
-                            <span title={hike.date_is_estimate ? "Estimated date" : "Confirmed date"}>
-                              {hikeDate.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' })}
-                              {hike.date_is_estimate && <span className="ms-1" style={{ fontStyle: 'italic', opacity: 0.7 }}>~</span>}
+                              fontSize: '0.8rem',
+                              padding: '6px 12px'
+                            }}>
+                              {targetAudienceTag.name}
                             </span>
                           </div>
-                          {hike.time && (
-                            <div className="d-flex align-items-center text-muted small mb-1">
-                              <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="me-2">
-                                <circle cx="12" cy="12" r="10"></circle>
-                                <polyline points="12 6 12 12 16 14"></polyline>
-                              </svg>
-                              <span>{hike.time}</span>
-                            </div>
-                          )}
-                          {(hike.event_type_data?.distance || hike.distance) && (
-                            <div className="d-flex align-items-center text-muted small mb-1">
-                              <MapPin size={14} className="me-2" />
-                              <span>{hike.event_type_data?.distance || hike.distance}</span>
-                            </div>
-                          )}
+                        )}
+                      </div>
+
+                      <div className="card-body flex-grow-1 d-flex flex-column p-4">
+                        {/* Title */}
+                        <h5 className="fw-bold mb-3">{hike.name}</h5>
+
+                        {/* Key Info Only */}
+                        <div className="d-flex flex-column gap-2 mb-3">
+                          <div className="d-flex align-items-center text-muted">
+                            <Calendar size={16} className="me-2 flex-shrink-0" />
+                            <span style={{ fontSize: '0.95rem' }}>
+                              {hikeDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
+                            </span>
+                          </div>
                           {hike.location && (
-                            <div className="d-flex align-items-center text-muted small mb-1">
-                              <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="me-2">
-                                <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
-                                <circle cx="12" cy="10" r="3"></circle>
-                              </svg>
-                              <span style={{
-                                whiteSpace: 'nowrap',
-                                overflow: 'hidden',
-                                textOverflow: 'ellipsis'
-                              }}>{hike.location}</span>
+                            <div className="d-flex align-items-center text-muted">
+                              <MapPin size={16} className="me-2 flex-shrink-0" />
+                              <span style={{ fontSize: '0.95rem', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                                {hike.location}
+                              </span>
+                            </div>
+                          )}
+                          {hike.confirmed_count > 0 && (
+                            <div className="d-flex align-items-center text-success">
+                              <Users size={16} className="me-2 flex-shrink-0" />
+                              <span style={{ fontSize: '0.95rem', fontWeight: '600' }}>
+                                {hike.confirmed_count} going
+                              </span>
                             </div>
                           )}
                         </div>
-                        {(hike.interested_count > 0 || hike.confirmed_count > 0) && (
-                          <div className="d-flex gap-2">
-                            {hike.interested_count > 0 && (
-                              <span className="badge bg-info">
-                                {hike.interested_count} interested
-                              </span>
-                            )}
-                            {hike.confirmed_count > 0 && (
-                              <span className="badge bg-success">
-                                {hike.confirmed_count} confirmed
-                              </span>
-                            )}
-                          </div>
-                        )}
+
+                        {/* CTA Button - pushed to bottom */}
+                        <div className="mt-auto">
+                          <button
+                            className="btn btn-primary w-100 fw-bold"
+                            style={{ padding: '0.75rem', borderRadius: '10px' }}
+                            onClick={() => navigate(`/hikes/${hike.id}`)}
+                          >
+                            View Details
+                            <ArrowRight size={18} className="ms-2" />
+                          </button>
+                        </div>
                       </div>
                     </div>
-                    <div className="card-footer bg-light border-0 mt-auto">
+                  </div>
+                );
+              })}
+                </div>
+
+                {/* View All Button */}
+                {hikes.length > 6 && (
+                  <div className="row mt-4">
+                    <div className="col-12 text-center">
                       <button
-                        className="btn btn-primary btn-sm w-100"
-                        onClick={() => navigate(`/hikes/${hike.id}`)}
+                        className="btn btn-lg btn-outline-light fw-bold"
+                        style={{ padding: '1rem 3rem', borderRadius: '50px', borderWidth: '2px' }}
+                        onClick={() => navigate('/hikes')}
                       >
-                        View Details
+                        View All Adventures
+                        <ArrowRight size={20} className="ms-2" />
                       </button>
                     </div>
                   </div>
-                </div>
-              );
-            })}
-          </div>
-        )}
+                )}
+              </>
+            )}
           </>
         )}
 
         {/* Mission & Vision Section */}
-        {missionVision && (
-          <div className="row mt-5 mb-4">
-            <div className="col-12">
-              <div className="card border-0" style={{
-                borderRadius: '15px',
-                background: 'rgba(255, 255, 255, 0.12)',
-                backdropFilter: 'blur(10px)',
-                boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)'
-              }}>
-                <div className="card-body p-4">
-                  <div className="mission-vision-content">
-                    <ReactMarkdown>
-                      {missionVision.content}
-                    </ReactMarkdown>
+          {missionVision && (
+            <div className="row mt-5 mb-4">
+              <div className="col-12">
+                <div className="card border-0" style={{
+                  borderRadius: '15px',
+                  background: 'rgba(255, 255, 255, 0.12)',
+                  backdropFilter: 'blur(10px)',
+                  boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)'
+                }}>
+                  <div className="card-body p-4">
+                    <div className="mission-vision-content">
+                      <ReactMarkdown>
+                        {missionVision.content}
+                      </ReactMarkdown>
+                    </div>
                   </div>
                 </div>
               </div>
             </div>
-          </div>
-        )}
+          )}
 
-        {/* Call to Action */}
-        {!hideLoginButton && (
-          <div className="text-center mt-5">
-            <div className="card bg-white bg-opacity-90 shadow-lg border-0 d-inline-block" style={{borderRadius: '15px', maxWidth: '600px'}}>
-              <div className="card-body p-4">
-                <h3 className="mb-3">Ready to Hit the Trail?</h3>
-                <p className="text-muted mb-4">
-                  Join our community of hikers and outdoor enthusiasts. Sign up or log in to view full hike details, RSVP, coordinate carpools, and more!
+          {/* Call to Action */}
+          {!hideLoginButton && (
+            <div className="text-center mt-5">
+              <div className="card bg-white bg-opacity-90 shadow-lg border-0 d-inline-block" style={{borderRadius: '15px', maxWidth: '600px'}}>
+                <div className="card-body p-4">
+                  <h3 className="mb-3">Ready to Hit the Trail?</h3>
+                  <p className="text-muted mb-4">
+                    Join our community of hikers and outdoor enthusiasts. Sign up or log in to view full hike details, RSVP, coordinate carpools, and more!
+                  </p>
+                  <button
+                    className="btn btn-lg btn-primary"
+                    onClick={() => setShowLoginModal(true)}
+                  >
+                    Get Started
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
+      </div>
+
+      {/* Final CTA Section */}
+      {!currentUser && !hideLoginButton && (
+        <div className="py-5" style={{ background: 'linear-gradient(135deg, rgba(74, 124, 89, 0.25) 0%, rgba(45, 90, 124, 0.25) 100%)' }}>
+          <div className="container">
+            <div className="row justify-content-center">
+              <div className="col-lg-8 text-center">
+                <h2 className="display-5 fw-bold text-white mb-3">
+                  Don't Miss the Next Adventure
+                </h2>
+                <p className="lead text-white-50 mb-4">
+                  Join our community today and start exploring God's creation with fellow believers
                 </p>
                 <button
-                  className="btn btn-lg btn-primary"
+                  className="btn btn-lg btn-warning fw-bold shadow-lg me-3"
+                  style={{ padding: '1rem 3rem', borderRadius: '50px', fontSize: '1.1rem' }}
                   onClick={() => setShowLoginModal(true)}
                 >
-                  Get Started
+                  <Users size={22} className="me-2" />
+                  Join Now
                 </button>
               </div>
             </div>
           </div>
-        )}
+        </div>
+      )}
       </div>
-    </div>
     </>
   );
 };
