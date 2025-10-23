@@ -34,9 +34,10 @@ const HikeDetailsPage = () => {
   const [comments, setComments] = useState([]);
   const [newComment, setNewComment] = useState('');
   const [packingList, setPackingList] = useState({ items: [] });
-  const [packingListCollapsed, setPackingListCollapsed] = useState(false);
-  const [paymentsCollapsed, setPaymentsCollapsed] = useState(false);
-  const [activeTab, setActiveTab] = useState('overview');
+  const [packingListCollapsed, setPackingListCollapsed] = useState(true);
+  const [paymentsCollapsed, setPaymentsCollapsed] = useState(true);
+  const [commentsCollapsed, setCommentsCollapsed] = useState(true);
+  const [carpoolCollapsed, setCarpoolCollapsed] = useState(true);
 
   // Activate event detail tour (first visit only)
   useEventDetailTour(!!hike && !!currentUser, hike);
@@ -347,9 +348,9 @@ const HikeDetailsPage = () => {
         </div>
       )}
 
-      {/* Hero Image with Quick Info Overlay */}
+      {/* Compact Hero Image */}
       <div className="mb-4" style={{
-        height: '400px',
+        height: '250px',
         borderRadius: '12px',
         overflow: 'hidden',
         boxShadow: '0 4px 12px rgba(0,0,0,0.1)',
@@ -394,196 +395,62 @@ const HikeDetailsPage = () => {
           background: 'linear-gradient(to bottom, rgba(0,0,0,0.3) 0%, rgba(0,0,0,0.7) 100%)'
         }} />
 
-        {/* Quick Info Overlay */}
+        {/* Title Overlay */}
         <div style={{
           position: 'absolute',
           bottom: 0,
           left: 0,
           right: 0,
-          padding: '2rem 1.5rem',
+          padding: '1.5rem 1rem',
           color: 'white'
         }}>
-          <h1 className="mb-3" style={{
-            fontSize: '2rem',
+          <h1 className="mb-2" style={{
+            fontSize: '1.5rem',
             fontWeight: '700',
-            textShadow: '0 2px 4px rgba(0,0,0,0.5)'
+            textShadow: '0 2px 4px rgba(0,0,0,0.5)',
+            lineHeight: '1.2'
           }}>
             {hike.name}
           </h1>
 
-          <div className="d-flex flex-wrap gap-2 mb-3">
+          <div className="d-flex flex-wrap gap-2">
             {/* Event Type Badge */}
-            <span className="badge px-3 py-2" style={{
+            <span className="badge px-2 py-1" style={{
               background: eventTypeColor,
-              fontSize: '0.85rem',
+              fontSize: '0.75rem',
               fontWeight: '600'
             }}>
-              <EventTypeIcon size={14} className="me-1" />
+              <EventTypeIcon size={12} className="me-1" />
               {eventTypeLabel}
             </span>
 
             {/* Date Badge */}
-            <span className="badge bg-dark bg-opacity-75 px-3 py-2" style={{ fontSize: '0.85rem' }}>
-              <Calendar size={14} className="me-1" />
+            <span className="badge bg-dark bg-opacity-75 px-2 py-1" style={{ fontSize: '0.75rem' }}>
+              <Calendar size={12} className="me-1" />
               {new Date(hike.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
             </span>
 
             {/* Cost Badge */}
-            <span className="badge bg-dark bg-opacity-75 px-3 py-2" style={{ fontSize: '0.85rem' }}>
-              <DollarSign size={14} className="me-1" />
+            <span className="badge bg-dark bg-opacity-75 px-2 py-1" style={{ fontSize: '0.75rem' }}>
+              <DollarSign size={12} className="me-1" />
               R{parseFloat(hike.cost || 0).toFixed(0)}
             </span>
 
             {/* Confirmed Count Badge */}
-            <span className="badge bg-success bg-opacity-90 px-3 py-2" style={{ fontSize: '0.85rem' }}>
-              <Users size={14} className="me-1" />
-              {hike.confirmed_count || 0} Confirmed
+            <span className="badge bg-success bg-opacity-90 px-2 py-1" style={{ fontSize: '0.75rem' }}>
+              <Users size={12} className="me-1" />
+              {hike.confirmed_count || 0}
             </span>
           </div>
-
-          {/* Primary Action Button (Mobile/Tablet only) */}
-          {token && !isRegistrationClosed && (
-            <div className="d-md-none">
-              {!userStatus?.attendance_status && (
-                <button
-                  className="btn btn-light w-100 fw-bold"
-                  onClick={handleInterestToggle}
-                  style={{ padding: '12px' }}
-                >
-                  Express Interest
-                </button>
-              )}
-              {userStatus?.attendance_status === 'interested' && (
-                <button
-                  className="btn btn-primary w-100 fw-bold"
-                  onClick={handleConfirmAttendance}
-                  style={{ padding: '12px' }}
-                >
-                  Confirm Attendance
-                </button>
-              )}
-              {userStatus?.attendance_status === 'confirmed' && (
-                <div className="btn btn-success w-100 fw-bold" style={{ padding: '12px' }}>
-                  <CheckCircle size={18} className="me-2" />
-                  Attendance Confirmed
-                </div>
-              )}
-            </div>
-          )}
-
-          {!token && (
-            <div className="d-md-none">
-              <Link to={`/login?redirect=/hikes/${hikeId}`} className="btn btn-light w-100 fw-bold" style={{ padding: '12px' }}>
-                <LogIn size={18} className="me-2" />
-                Log in to Join
-              </Link>
-            </div>
-          )}
-        </div>
-      </div>
-
-      {/* Tab Navigation */}
-      <div className="card mb-4" style={{ background: isDark ? 'var(--card-bg)' : 'white' }}>
-        <div className="card-body p-0">
-          <ul className="nav nav-tabs border-0" role="tablist" style={{
-            borderBottom: `1px solid ${isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)'}`
-          }}>
-            <li className="nav-item" role="presentation">
-              <button
-                className={`nav-link ${activeTab === 'overview' ? 'active' : ''}`}
-                onClick={() => setActiveTab('overview')}
-                style={{
-                  border: 'none',
-                  borderBottom: activeTab === 'overview' ? '3px solid #0d6efd' : 'none',
-                  color: activeTab === 'overview' ? (isDark ? '#8ab4f8' : '#0d6efd') : (isDark ? '#999' : '#6c757d'),
-                  fontWeight: activeTab === 'overview' ? '600' : '400',
-                  padding: '1rem 1.5rem'
-                }}
-              >
-                <Info size={18} className="me-2" style={{ verticalAlign: 'text-bottom' }} />
-                Overview
-              </button>
-            </li>
-            <li className="nav-item" role="presentation">
-              <button
-                className={`nav-link ${activeTab === 'details' ? 'active' : ''}`}
-                onClick={() => setActiveTab('details')}
-                style={{
-                  border: 'none',
-                  borderBottom: activeTab === 'details' ? '3px solid #0d6efd' : 'none',
-                  color: activeTab === 'details' ? (isDark ? '#8ab4f8' : '#0d6efd') : (isDark ? '#999' : '#6c757d'),
-                  fontWeight: activeTab === 'details' ? '600' : '400',
-                  padding: '1rem 1.5rem'
-                }}
-              >
-                <EventTypeIcon size={18} className="me-2" style={{ verticalAlign: 'text-bottom' }} />
-                Details
-              </button>
-            </li>
-            {token && (
-              <li className="nav-item" role="presentation">
-                <button
-                  className={`nav-link position-relative ${activeTab === 'discussion' ? 'active' : ''}`}
-                  onClick={() => setActiveTab('discussion')}
-                  style={{
-                    border: 'none',
-                    borderBottom: activeTab === 'discussion' ? '3px solid #0d6efd' : 'none',
-                    color: activeTab === 'discussion' ? (isDark ? '#8ab4f8' : '#0d6efd') : (isDark ? '#999' : '#6c757d'),
-                    fontWeight: activeTab === 'discussion' ? '600' : '400',
-                    padding: '1rem 1.5rem'
-                  }}
-                >
-                  <MessageSquare size={18} className="me-2" style={{ verticalAlign: 'text-bottom' }} />
-                  Discussion
-                  {!isConfirmedAttendee && !isAdmin && (
-                    <span className="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-warning" style={{ fontSize: '0.6rem' }}>
-                      Confirm
-                    </span>
-                  )}
-                  {comments.length > 0 && (
-                    <span className="badge bg-secondary ms-1" style={{ fontSize: '0.7rem', verticalAlign: 'text-top' }}>
-                      {comments.length}
-                    </span>
-                  )}
-                </button>
-              </li>
-            )}
-            {token && (
-              <li className="nav-item" role="presentation">
-                <button
-                  className={`nav-link position-relative ${activeTab === 'logistics' ? 'active' : ''}`}
-                  onClick={() => setActiveTab('logistics')}
-                  style={{
-                    border: 'none',
-                    borderBottom: activeTab === 'logistics' ? '3px solid #0d6efd' : 'none',
-                    color: activeTab === 'logistics' ? (isDark ? '#8ab4f8' : '#0d6efd') : (isDark ? '#999' : '#6c757d'),
-                    fontWeight: activeTab === 'logistics' ? '600' : '400',
-                    padding: '1rem 1.5rem'
-                  }}
-                >
-                  <Car size={18} className="me-2" style={{ verticalAlign: 'text-bottom' }} />
-                  Logistics
-                  {!isConfirmedAttendee && !isAdmin && (
-                    <span className="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-warning" style={{ fontSize: '0.6rem' }}>
-                      Confirm
-                    </span>
-                  )}
-                </button>
-              </li>
-            )}
-          </ul>
         </div>
       </div>
 
       <div className="row">
         {/* Main Content */}
         <div className="col-lg-8">
-          {/* Overview Tab */}
-          {activeTab === 'overview' && (
-            <>
-              {/* Title and Key Info */}
-              <div className="card mb-4" style={{ background: isDark ? 'var(--card-bg)' : 'white' }}>
-                <div className="card-body">
+          {/* Title and Key Info */}
+          <div className="card mb-4" style={{ background: isDark ? 'var(--card-bg)' : 'white' }}>
+            <div className="card-body">
                   <div className="d-flex justify-content-between align-items-start mb-3">
                     <h2 className="mb-0">{hike.name}</h2>
                     {currentUser && currentUser.role === 'admin' && (
@@ -910,14 +777,9 @@ const HikeDetailsPage = () => {
               </div>
             </div>
           )}
-            </>
-          )}
 
-          {/* Details Tab */}
-          {activeTab === 'details' && (
-            <>
-              {/* Packing List Section - Only for hiking and camping */}
-              {(eventType === 'hiking' || eventType === 'camping') && packingList.items && packingList.items.length > 0 && (
+          {/* Packing List Section - Collapsible - Only for hiking and camping */}
+          {token && (eventType === 'hiking' || eventType === 'camping') && packingList.items && packingList.items.length > 0 && (
                 <div className="card mb-4" style={{
                   background: isDark ? 'var(--card-bg)' : 'white',
                   borderColor: isDark ? 'var(--border-color)' : '#dee2e6'
@@ -968,121 +830,153 @@ const HikeDetailsPage = () => {
                   </div>
                 </div>
               )}
-            </>
-          )}
 
-          {/* Discussion Tab - Confirmed Attendees Only */}
-          {activeTab === 'discussion' && token && (
-            <>
-              {!isConfirmedAttendee && !isAdmin ? (
-                <LockedContentTeaser
-                  icon={MessageSquare}
-                  title="Discussion"
-                  description="Join the conversation with other confirmed attendees about this event."
-                  benefits={[
-                    'Share tips and questions with other hikers',
-                    'Get updates from event organizers',
-                    'Coordinate meeting points and logistics'
-                  ]}
-                  onConfirm={handleConfirmAttendance}
-                />
-              ) : (
-                <div className="card mb-4" style={{ background: isDark ? 'var(--card-bg)' : 'white' }}>
-                  <div className="card-body">
-                    <h5 className="mb-3">
+          {/* Comments Section - Collapsible - Confirmed Attendees Only */}
+          {token && (
+            !isConfirmedAttendee && !isAdmin ? (
+              <LockedContentTeaser
+                icon={MessageSquare}
+                title="Discussion"
+                description="Join the conversation with other confirmed attendees about this event."
+                benefits={[
+                  'Share tips and questions with other hikers',
+                  'Get updates from event organizers',
+                  'Coordinate meeting points and logistics'
+                ]}
+                onConfirm={handleConfirmAttendance}
+              />
+            ) : (
+              <div className="card mb-4" style={{
+                background: isDark ? 'var(--card-bg)' : 'white',
+                borderColor: isDark ? 'var(--border-color)' : '#dee2e6'
+              }}>
+                <div className="card-body">
+                  <div
+                    className="d-flex justify-content-between align-items-center mb-3"
+                    style={{ cursor: 'pointer' }}
+                    onClick={() => setCommentsCollapsed(!commentsCollapsed)}
+                  >
+                    <h5 className="mb-0" style={{ color: isDark ? 'var(--text-primary)' : '#212529' }}>
                       <MessageSquare size={20} className="me-2" />
-                      Comments
+                      Discussion {comments.length > 0 && (
+                        <span className="badge bg-secondary ms-2" style={{ fontSize: '0.8rem' }}>
+                          {comments.length}
+                        </span>
+                      )}
                     </h5>
+                    {commentsCollapsed ? <ChevronDown size={20} /> : <ChevronUp size={20} />}
+                  </div>
 
-                {/* Comments List */}
-                <div className="mb-3" style={{ maxHeight: '400px', overflowY: 'auto' }}>
-                  {comments.length === 0 ? (
-                    <p className="text-muted">No comments yet. Be the first to comment!</p>
-                  ) : (
-                    comments.map(comment => (
-                      <div key={comment.id} className="mb-3 pb-3 border-bottom">
-                        <div className="d-flex justify-content-between align-items-start">
-                          <div>
-                            <span className="fw-bold" style={{ color: isDark ? '#8ab4f8' : '#1a73e8' }}>
-                              {comment.user_name}
-                            </span>
-                            <small className="text-muted ms-2">
-                              {new Date(comment.created_at).toLocaleDateString()}
-                            </small>
-                          </div>
-                          {currentUser && comment.user_id === currentUser.id && (
-                            <button
-                              className="btn btn-sm btn-link text-danger p-0"
-                              onClick={() => handleDeleteComment(comment.id)}
-                            >
-                              <Trash2 size={16} />
-                            </button>
-                          )}
-                        </div>
-                        <p className="mb-0 mt-1" style={{ whiteSpace: 'pre-wrap' }}>{comment.comment}</p>
+                  {!commentsCollapsed && (
+                    <>
+                      {/* Comments List */}
+                      <div className="mb-3" style={{ maxHeight: '400px', overflowY: 'auto' }}>
+                        {comments.length === 0 ? (
+                          <p className="text-muted">No comments yet. Be the first to comment!</p>
+                        ) : (
+                          comments.map(comment => (
+                            <div key={comment.id} className="mb-3 pb-3 border-bottom">
+                              <div className="d-flex justify-content-between align-items-start">
+                                <div>
+                                  <span className="fw-bold" style={{ color: isDark ? '#8ab4f8' : '#1a73e8' }}>
+                                    {comment.user_name}
+                                  </span>
+                                  <small className="text-muted ms-2">
+                                    {new Date(comment.created_at).toLocaleDateString()}
+                                  </small>
+                                </div>
+                                {currentUser && comment.user_id === currentUser.id && (
+                                  <button
+                                    className="btn btn-sm btn-link text-danger p-0"
+                                    onClick={() => handleDeleteComment(comment.id)}
+                                  >
+                                    <Trash2 size={16} />
+                                  </button>
+                                )}
+                              </div>
+                              <p className="mb-0 mt-1" style={{ whiteSpace: 'pre-wrap' }}>{comment.comment}</p>
+                            </div>
+                          ))
+                        )}
                       </div>
-                    ))
+
+                      {/* Add Comment */}
+                      <div className="mt-3">
+                        <textarea
+                          className="form-control mb-2"
+                          rows="3"
+                          placeholder="Add a comment..."
+                          value={newComment}
+                          onChange={(e) => setNewComment(e.target.value)}
+                        />
+                        <button
+                          className="btn btn-primary"
+                          onClick={handleAddComment}
+                          disabled={!newComment.trim()}
+                        >
+                          <Send size={16} className="me-2" />
+                          Post Comment
+                        </button>
+                      </div>
+                    </>
                   )}
                 </div>
-
-                {/* Add Comment */}
-                <div className="mt-3">
-                  <textarea
-                    className="form-control mb-2"
-                    rows="3"
-                    placeholder="Add a comment..."
-                    value={newComment}
-                    onChange={(e) => setNewComment(e.target.value)}
-                  />
-                  <button
-                    className="btn btn-primary"
-                    onClick={handleAddComment}
-                    disabled={!newComment.trim()}
-                  >
-                    <Send size={16} className="me-2" />
-                    Post Comment
-                  </button>
-                </div>
               </div>
-            </div>
-              )}
-            </>
+            )
           )}
 
-          {/* Logistics Tab - Confirmed Attendees or Admins Only */}
-          {activeTab === 'logistics' && token && (
-            <>
-              {!isConfirmedAttendee && !isAdmin ? (
-                <LockedContentTeaser
-                  icon={Car}
-                  title="Logistics & Carpool"
-                  description="Access carpool coordination and payment tracking once you confirm your attendance."
-                  benefits={[
-                    'Find or offer rides to the event',
-                    'View and coordinate with other attendees',
-                    'Track your payment status',
-                    'Access emergency contact information'
-                  ]}
-                  onConfirm={handleConfirmAttendance}
-                />
-              ) : (
-                <>
-                  {/* Carpool Section */}
-                  <CarpoolSectionEnhanced hikeId={hikeId} hikeLocation={hike.location} />
-
-                  {/* Payment Tracking - Confirmed attendees + Admin */}
-                  <div className="mb-4">
-                    <PaymentsSection
-                      hikeId={hikeId}
-                      hikeCost={hike.cost}
-                      isAdmin={isAdmin}
-                      collapsed={paymentsCollapsed}
-                      onToggleCollapse={() => setPaymentsCollapsed(!paymentsCollapsed)}
-                    />
+          {/* Carpool & Logistics Section - Collapsible - Confirmed Attendees or Admins Only */}
+          {token && (
+            !isConfirmedAttendee && !isAdmin ? (
+              <LockedContentTeaser
+                icon={Car}
+                title="Logistics & Carpool"
+                description="Access carpool coordination and payment tracking once you confirm your attendance."
+                benefits={[
+                  'Find or offer rides to the event',
+                  'View and coordinate with other attendees',
+                  'Track your payment status',
+                  'Access emergency contact information'
+                ]}
+                onConfirm={handleConfirmAttendance}
+              />
+            ) : (
+              <>
+                {/* Carpool Section - Collapsible */}
+                <div className="card mb-4" style={{
+                  background: isDark ? 'var(--card-bg)' : 'white',
+                  borderColor: isDark ? 'var(--border-color)' : '#dee2e6'
+                }}>
+                  <div className="card-body">
+                    <div
+                      className="d-flex justify-content-between align-items-center mb-3"
+                      style={{ cursor: 'pointer' }}
+                      onClick={() => setCarpoolCollapsed(!carpoolCollapsed)}
+                    >
+                      <h5 className="mb-0" style={{ color: isDark ? 'var(--text-primary)' : '#212529' }}>
+                        <Car size={20} className="me-2" />
+                        Carpool & Lift Club
+                      </h5>
+                      {carpoolCollapsed ? <ChevronDown size={20} /> : <ChevronUp size={20} />}
+                    </div>
+                    {!carpoolCollapsed && (
+                      <CarpoolSectionEnhanced hikeId={hikeId} hikeLocation={hike.location} />
+                    )}
                   </div>
-                </>
-              )}
-            </>
+                </div>
+
+                {/* Payment Tracking - Confirmed attendees + Admin */}
+                <div className="mb-4">
+                  <PaymentsSection
+                    hikeId={hikeId}
+                    hikeCost={hike.cost}
+                    isAdmin={isAdmin}
+                    collapsed={paymentsCollapsed}
+                    onToggleCollapse={() => setPaymentsCollapsed(!paymentsCollapsed)}
+                  />
+                </div>
+              </>
+            )
           )}
         </div>
 
