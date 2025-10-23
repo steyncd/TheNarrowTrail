@@ -293,7 +293,7 @@ const LandingPage = ({ hideLoginButton = false }) => {
 
               {/* Value Proposition */}
               <p className="lead text-white mb-4" style={{ fontSize: 'clamp(1rem, 2vw, 1.25rem)', opacity: 0.95 }}>
-                Join a community of believers exploring God's creation together. Faith-based outdoor adventures for all skill levels.
+                Experience the beauty of God's creation together with fellow believers. Get outdoors, enjoy meaningful fellowship, and talk about what truly matters — away from the noise of everyday life.
               </p>
 
               {/* Statistics Ticker */}
