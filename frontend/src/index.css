@@ -1,10 +1,44 @@
-/* Global Mobile-Friendly Styles */
+/* ========================================
+ * Import Design Tokens & Fonts
+ * ======================================== */
 
-/* Prevent horizontal scroll on mobile */
+/* Google Fonts - Inter (Body) + Poppins (Headings) + Russo One (Display) */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Poppins:wght@400;500;600;700;800&family=Russo+One&display=swap');
+
+/* Design Tokens - 2025 Best Practices */
+@import './styles/tokens.css';
+
+/* ========================================
+ * Global Typography
+ * ======================================== */
 body {
+  font-family: var(--font-body);
+  font-size: var(--font-size-base);
+  line-height: var(--line-height-normal);
+  color: var(--color-text-primary);
+  background-color: var(--color-bg-primary);
   overflow-x: hidden;
   -webkit-overflow-scrolling: touch;
 }
+
+h1, h2, h3, h4, h5, h6 {
+  font-family: var(--font-heading);
+  font-weight: var(--font-weight-bold);
+  line-height: var(--line-height-tight);
+  color: var(--color-text-primary);
+  margin-bottom: var(--spacing-4);
+}
+
+h1 { font-size: var(--font-size-3xl); }
+h2 { font-size: var(--font-size-2xl); }
+h3 { font-size: var(--font-size-xl); }
+h4 { font-size: var(--font-size-lg); }
+h5 { font-size: var(--font-size-md); }
+h6 { font-size: var(--font-size-base); }
+
+/* ========================================
+ * Global Mobile-Friendly Styles
+ * ======================================== */
 
 /* Ensure container doesn't overflow */
 .container, .container-fluid {
@@ -14,19 +48,19 @@ body {
 
 /* Mobile responsive utilities */
 @media (max-width: 768px) {
-  /* Reduce padding on mobile */
+  /* Reduce padding on mobile - 8pt spacing */
   .container {
-    padding-left: 15px;
-    padding-right: 15px;
+    padding-left: var(--spacing-4);
+    padding-right: var(--spacing-4);
   }
 
   /* Make cards more mobile-friendly */
   .card {
-    margin-bottom: 1rem;
+    margin-bottom: var(--spacing-4);
   }
 
   .card-body {
-    padding: 1rem;
+    padding: var(--spacing-4);
   }
 
   /* Tables responsive on mobile */
@@ -37,8 +71,8 @@ body {
 
   /* Modal improvements for mobile */
   .modal-dialog {
-    margin: 0.5rem;
-    max-width: calc(100% - 1rem);
+    margin: var(--spacing-2);
+    max-width: calc(100% - var(--spacing-4));
   }
 
   .modal-body {
@@ -61,24 +95,30 @@ body {
 /* Extra small devices */
 @media (max-width: 575.98px) {
   .container {
-    padding-left: 10px;
-    padding-right: 10px;
+    padding-left: var(--spacing-2);
+    padding-right: var(--spacing-2);
   }
 
   h1 {
-    font-size: 1.75rem;
+    font-size: var(--font-size-2xl);
   }
 
   h2 {
-    font-size: 1.5rem;
+    font-size: var(--font-size-xl);
   }
 }
 
-/* Touch-friendly improvements */
+/* Touch-friendly improvements - WCAG 2.2 AA (48px minimum) */
 @media (hover: none) and (pointer: coarse) {
-  .btn {
-    min-height: 44px;
-    min-width: 44px;
+  .btn,
+  .nav-link,
+  a[role="button"],
+  button,
+  input[type="button"],
+  input[type="submit"],
+  [role="button"] {
+    min-height: var(--touch-target-min);
+    min-width: var(--touch-target-min);
   }
 }
 
@@ -95,12 +135,15 @@ html {
   scroll-behavior: smooth;
 }
 
-/* Better focus indicators */
-a:focus,
-button:focus,
-input:focus {
-  outline: 2px solid #0d6efd;
+/* Better focus indicators - using design tokens */
+a:focus-visible,
+button:focus-visible,
+input:focus-visible,
+textarea:focus-visible,
+select:focus-visible {
+  outline: 2px solid var(--color-primary);
   outline-offset: 2px;
+  border-radius: var(--radius-sm);
 }
 
 /* Improve image loading */
@@ -109,13 +152,13 @@ img {
   height: auto;
 }
 
-/* Mission & Vision Content Styling */
+/* Mission & Vision Content Styling - 8pt spacing */
 .mission-vision-content h2 {
   color: rgba(255, 255, 255, 0.95);
-  margin-top: 1.5rem;
-  margin-bottom: 1rem;
-  font-weight: 600;
-  font-size: 1.35rem;
+  margin-top: var(--spacing-6);
+  margin-bottom: var(--spacing-4);
+  font-weight: var(--font-weight-semibold);
+  font-size: var(--font-size-lg);
   letter-spacing: 0.3px;
 }
 
@@ -124,23 +167,23 @@ img {
 }
 
 .mission-vision-content p {
-  margin-bottom: 0.75rem;
-  line-height: 1.7;
+  margin-bottom: var(--spacing-3);
+  line-height: var(--line-height-relaxed);
   color: rgba(255, 255, 255, 0.85);
-  font-size: 0.95rem;
+  font-size: var(--font-size-sm);
 }
 
 .mission-vision-content ul {
-  margin-bottom: 1rem;
+  margin-bottom: var(--spacing-4);
   color: rgba(255, 255, 255, 0.85);
 }
 
 .mission-vision-content li {
-  margin-bottom: 0.5rem;
-  line-height: 1.6;
+  margin-bottom: var(--spacing-2);
+  line-height: var(--line-height-normal);
 }
 
 .mission-vision-content strong {
   color: rgba(255, 255, 255, 0.95);
-  font-weight: 600;
+  font-weight: var(--font-weight-semibold);
 }

@@ -1,0 +1,383 @@
+/**
+ * Design Tokens - 2025 Web Portal Best Practices
+ * Foundation for consistent design system
+ * Based on 8pt spacing grid and modern web standards
+ */
+
+:root {
+  /* ========================================
+   * Spacing System - 8pt Grid
+   * ======================================== */
+  --spacing-0: 0;
+  --spacing-1: 4px;   /* 0.5 * 8 */
+  --spacing-2: 8px;   /* 1 * 8 */
+  --spacing-3: 12px;  /* 1.5 * 8 */
+  --spacing-4: 16px;  /* 2 * 8 */
+  --spacing-5: 20px;  /* 2.5 * 8 */
+  --spacing-6: 24px;  /* 3 * 8 */
+  --spacing-7: 28px;  /* 3.5 * 8 */
+  --spacing-8: 32px;  /* 4 * 8 */
+  --spacing-10: 40px; /* 5 * 8 */
+  --spacing-12: 48px; /* 6 * 8 */
+  --spacing-16: 64px; /* 8 * 8 */
+  --spacing-20: 80px; /* 10 * 8 */
+  --spacing-24: 96px; /* 12 * 8 */
+
+  /* ========================================
+   * Typography - Font Families
+   * ======================================== */
+  --font-body: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
+  --font-heading: 'Poppins', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
+  --font-display: 'Russo One', 'Poppins', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
+  --font-mono: 'Courier New', monospace;
+
+  /* Typography - Font Sizes (Fluid Typography) */
+  --font-size-xs: clamp(0.75rem, 0.7rem + 0.25vw, 0.875rem);     /* 12-14px */
+  --font-size-sm: clamp(0.875rem, 0.8rem + 0.375vw, 1rem);       /* 14-16px */
+  --font-size-base: clamp(1rem, 0.95rem + 0.25vw, 1.125rem);     /* 16-18px */
+  --font-size-md: clamp(1.125rem, 1.05rem + 0.375vw, 1.25rem);   /* 18-20px */
+  --font-size-lg: clamp(1.25rem, 1.15rem + 0.5vw, 1.5rem);       /* 20-24px */
+  --font-size-xl: clamp(1.5rem, 1.35rem + 0.75vw, 2rem);         /* 24-32px */
+  --font-size-2xl: clamp(2rem, 1.75rem + 1.25vw, 3rem);          /* 32-48px */
+  --font-size-3xl: clamp(2.5rem, 2rem + 2.5vw, 4rem);            /* 40-64px */
+
+  /* Typography - Font Weights */
+  --font-weight-normal: 400;
+  --font-weight-medium: 500;
+  --font-weight-semibold: 600;
+  --font-weight-bold: 700;
+  --font-weight-extrabold: 800;
+
+  /* Typography - Line Heights */
+  --line-height-tight: 1.2;
+  --line-height-snug: 1.375;
+  --line-height-normal: 1.5;
+  --line-height-relaxed: 1.625;
+  --line-height-loose: 2;
+
+  /* ========================================
+   * Colors - Light Mode (Primary)
+   * ======================================== */
+  /* Brand Colors - Outdoor Greens + Faith Gold */
+  --color-primary: #4a7c7c;           /* Teal green - main brand */
+  --color-primary-dark: #2d5a7c;      /* Deep blue-green */
+  --color-primary-light: #6ab89f;     /* Light teal */
+  --color-secondary: #4a7c59;         /* Forest green */
+  --color-accent: #ffd700;            /* Faith gold */
+  --color-accent-dark: #d4af37;       /* Darker gold */
+
+  /* Semantic Colors */
+  --color-success: #198754;
+  --color-info: #0dcaf0;
+  --color-warning: #ffc107;
+  --color-danger: #dc3545;
+
+  /* Neutral Colors - Light Mode */
+  --color-gray-50: #f8f9fa;
+  --color-gray-100: #f1f3f5;
+  --color-gray-200: #e9ecef;
+  --color-gray-300: #dee2e6;
+  --color-gray-400: #ced4da;
+  --color-gray-500: #adb5bd;
+  --color-gray-600: #6c757d;
+  --color-gray-700: #495057;
+  --color-gray-800: #343a40;
+  --color-gray-900: #212529;
+
+  /* Background & Surface Colors */
+  --color-bg-primary: #ffffff;
+  --color-bg-secondary: #f8f9fa;
+  --color-bg-tertiary: #e9ecef;
+  --color-surface: #ffffff;
+  --color-surface-elevated: #ffffff;
+
+  /* Text Colors - Light Mode */
+  --color-text-primary: #212529;
+  --color-text-secondary: #6c757d;
+  --color-text-tertiary: #adb5bd;
+  --color-text-inverse: #ffffff;
+
+  /* Border Colors */
+  --color-border-light: #e9ecef;
+  --color-border-medium: #dee2e6;
+  --color-border-dark: #ced4da;
+
+  /* ========================================
+   * Shadows - Elevation System
+   * ======================================== */
+  --shadow-xs: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+  --shadow-sm: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px -1px rgba(0, 0, 0, 0.1);
+  --shadow-base: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -2px rgba(0, 0, 0, 0.1);
+  --shadow-md: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -4px rgba(0, 0, 0, 0.1);
+  --shadow-lg: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1);
+  --shadow-xl: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+  --shadow-2xl: 0 50px 100px -20px rgba(0, 0, 0, 0.35);
+
+  /* Colored Shadows for Cards */
+  --shadow-primary: 0 10px 25px -5px rgba(74, 124, 124, 0.2);
+  --shadow-success: 0 10px 25px -5px rgba(25, 135, 84, 0.2);
+  --shadow-warning: 0 10px 25px -5px rgba(255, 193, 7, 0.2);
+  --shadow-danger: 0 10px 25px -5px rgba(220, 53, 69, 0.2);
+
+  /* ========================================
+   * Border Radius
+   * ======================================== */
+  --radius-none: 0;
+  --radius-sm: 4px;
+  --radius-base: 8px;
+  --radius-md: 12px;
+  --radius-lg: 16px;
+  --radius-xl: 20px;
+  --radius-2xl: 24px;
+  --radius-3xl: 32px;
+  --radius-full: 9999px;
+
+  /* Component-Specific Radius */
+  --radius-button: 8px;
+  --radius-card: 20px;
+  --radius-modal: 24px;
+  --radius-input: 8px;
+  --radius-badge: 12px;
+
+  /* ========================================
+   * Transitions & Animations
+   * ======================================== */
+  --transition-fast: 150ms cubic-bezier(0.4, 0, 0.2, 1);
+  --transition-base: 200ms cubic-bezier(0.4, 0, 0.2, 1);
+  --transition-medium: 300ms cubic-bezier(0.4, 0, 0.2, 1);
+  --transition-slow: 500ms cubic-bezier(0.4, 0, 0.2, 1);
+
+  /* Easing Functions */
+  --ease-in: cubic-bezier(0.4, 0, 1, 1);
+  --ease-out: cubic-bezier(0, 0, 0.2, 1);
+  --ease-in-out: cubic-bezier(0.4, 0, 0.2, 1);
+  --ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
+
+  /* ========================================
+   * Z-Index Scale
+   * ======================================== */
+  --z-index-base: 0;
+  --z-index-dropdown: 1000;
+  --z-index-sticky: 1020;
+  --z-index-fixed: 1030;
+  --z-index-modal-backdrop: 1040;
+  --z-index-modal: 1050;
+  --z-index-popover: 1060;
+  --z-index-tooltip: 1070;
+  --z-index-toast: 1080;
+
+  /* ========================================
+   * Touch Targets (WCAG 2.2 AA)
+   * ======================================== */
+  --touch-target-min: 48px;
+  --touch-target-comfortable: 56px;
+
+  /* ========================================
+   * Glassmorphism Effects
+   * ======================================== */
+  --glass-bg: rgba(255, 255, 255, 0.1);
+  --glass-border: rgba(255, 255, 255, 0.2);
+  --glass-blur: blur(10px);
+  --glass-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.15);
+}
+
+/* ========================================
+ * Dark Mode Overrides
+ * ======================================== */
+[data-theme="dark"] {
+  /* Background & Surface Colors - Dark Mode */
+  --color-bg-primary: #1a1a1a;
+  --color-bg-secondary: #242424;
+  --color-bg-tertiary: #2d2d2d;
+  --color-surface: #242424;
+  --color-surface-elevated: #2d2d2d;
+
+  /* Text Colors - Dark Mode */
+  --color-text-primary: #f8f9fa;
+  --color-text-secondary: #adb5bd;
+  --color-text-tertiary: #6c757d;
+  --color-text-inverse: #212529;
+
+  /* Border Colors - Dark Mode */
+  --color-border-light: #2d2d2d;
+  --color-border-medium: #3d3d3d;
+  --color-border-dark: #4d4d4d;
+
+  /* Adjusted Brand Colors for Dark Mode (more saturated) */
+  --color-primary: #5a9c9c;
+  --color-primary-light: #7ab9af;
+  --color-secondary: #5a9c69;
+  --color-accent: #ffed4e;
+
+  /* Adjusted Semantic Colors for Dark Mode */
+  --color-success: #22aa66;
+  --color-info: #1ed4ff;
+  --color-warning: #ffcd38;
+  --color-danger: #ef4456;
+
+  /* Shadows - Dark Mode (more subtle) */
+  --shadow-xs: 0 1px 2px 0 rgba(0, 0, 0, 0.3);
+  --shadow-sm: 0 1px 3px 0 rgba(0, 0, 0, 0.4), 0 1px 2px -1px rgba(0, 0, 0, 0.4);
+  --shadow-base: 0 4px 6px -1px rgba(0, 0, 0, 0.5), 0 2px 4px -2px rgba(0, 0, 0, 0.5);
+  --shadow-md: 0 10px 15px -3px rgba(0, 0, 0, 0.6), 0 4px 6px -4px rgba(0, 0, 0, 0.6);
+  --shadow-lg: 0 20px 25px -5px rgba(0, 0, 0, 0.7), 0 8px 10px -6px rgba(0, 0, 0, 0.7);
+  --shadow-xl: 0 25px 50px -12px rgba(0, 0, 0, 0.8);
+  --shadow-2xl: 0 50px 100px -20px rgba(0, 0, 0, 0.9);
+
+  /* Glassmorphism - Dark Mode */
+  --glass-bg: rgba(45, 45, 45, 0.4);
+  --glass-border: rgba(255, 255, 255, 0.1);
+  --glass-blur: blur(12px);
+  --glass-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+}
+
+/* ========================================
+ * Utility Classes for Spacing
+ * ======================================== */
+.spacing-1 { margin: var(--spacing-1); }
+.spacing-2 { margin: var(--spacing-2); }
+.spacing-3 { margin: var(--spacing-3); }
+.spacing-4 { margin: var(--spacing-4); }
+.spacing-6 { margin: var(--spacing-6); }
+.spacing-8 { margin: var(--spacing-8); }
+
+.p-1 { padding: var(--spacing-1); }
+.p-2 { padding: var(--spacing-2); }
+.p-3 { padding: var(--spacing-3); }
+.p-4 { padding: var(--spacing-4); }
+.p-6 { padding: var(--spacing-6); }
+.p-8 { padding: var(--spacing-8); }
+
+/* ========================================
+ * Glassmorphism Utility Class
+ * ======================================== */
+.glass {
+  background: var(--glass-bg);
+  backdrop-filter: var(--glass-blur);
+  -webkit-backdrop-filter: var(--glass-blur);
+  border: 1px solid var(--glass-border);
+  box-shadow: var(--glass-shadow);
+}
+
+/* ========================================
+ * Smooth Transitions for All Interactive Elements
+ * ======================================== */
+button, a, input, textarea, select, .card, .modal, .badge {
+  transition: all var(--transition-base);
+}
+
+/* ========================================
+ * Touch Target Enforcement (Mobile)
+ * ======================================== */
+@media (hover: none) and (pointer: coarse) {
+  button,
+  a,
+  input[type="button"],
+  input[type="submit"],
+  input[type="reset"],
+  [role="button"],
+  .btn,
+  .nav-link,
+  .badge-interactive {
+    min-height: var(--touch-target-min);
+    min-width: var(--touch-target-min);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: var(--spacing-3) var(--spacing-4);
+  }
+}
+
+/* ========================================
+ * Modern Card Styles with Elevation
+ * ======================================== */
+.card {
+  border-radius: var(--radius-card) !important;
+  border: 1px solid var(--color-border-light);
+  background: var(--color-surface);
+  box-shadow: var(--shadow-sm);
+  transition: all var(--transition-medium);
+}
+
+.card:hover {
+  box-shadow: var(--shadow-md);
+  transform: translateY(-2px);
+}
+
+.card-elevated {
+  box-shadow: var(--shadow-lg);
+}
+
+/* ========================================
+ * Modern Button Enhancements
+ * ======================================== */
+.btn {
+  border-radius: var(--radius-button);
+  font-weight: var(--font-weight-semibold);
+  transition: all var(--transition-base);
+  position: relative;
+  overflow: hidden;
+}
+
+.btn:hover {
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-base);
+}
+
+.btn:active {
+  transform: translateY(0);
+  box-shadow: var(--shadow-sm);
+}
+
+/* Ripple effect for buttons */
+.btn::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 0;
+  height: 0;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.3);
+  transform: translate(-50%, -50%);
+  transition: width 0.6s, height 0.6s;
+}
+
+.btn:active::after {
+  width: 300px;
+  height: 300px;
+}
+
+/* ========================================
+ * Badge Enhancements
+ * ======================================== */
+.badge {
+  border-radius: var(--radius-badge);
+  font-weight: var(--font-weight-semibold);
+  padding: var(--spacing-1) var(--spacing-3);
+  font-size: var(--font-size-xs);
+  letter-spacing: 0.3px;
+}
+
+/* ========================================
+ * Focus Styles (Accessibility)
+ * ======================================== */
+*:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 2px;
+  border-radius: var(--radius-sm);
+}
+
+/* ========================================
+ * Reduced Motion (Accessibility)
+ * ======================================== */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
