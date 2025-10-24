@@ -98,16 +98,16 @@ const ProfilePage = () => {
     const badges = [];
 
     // Completion badges
-    if (stats.hikes_completed >= 50) badges.push({ name: 'Trail Master', icon: '🏆', color: 'gold', description: '50+ hikes completed' });
-    else if (stats.hikes_completed >= 25) badges.push({ name: 'Seasoned Hiker', icon: '🥈', color: 'silver', description: '25+ hikes completed' });
-    else if (stats.hikes_completed >= 10) badges.push({ name: 'Mountain Explorer', icon: '🥉', color: 'bronze', description: '10+ hikes completed' });
-    else if (stats.hikes_completed >= 5) badges.push({ name: 'Trail Enthusiast', icon: '⭐', color: 'blue', description: '5+ hikes completed' });
+    if (stats.hikes_completed >= 50) badges.push({ name: 'Trail Master', icon: '🏆', color: 'gold', description: '50+ events completed' });
+    else if (stats.hikes_completed >= 25) badges.push({ name: 'Seasoned Adventurer', icon: '🥈', color: 'silver', description: '25+ events completed' });
+    else if (stats.hikes_completed >= 10) badges.push({ name: 'Explorer', icon: '🥉', color: 'bronze', description: '10+ events completed' });
+    else if (stats.hikes_completed >= 5) badges.push({ name: 'Outdoor Enthusiast', icon: '⭐', color: 'blue', description: '5+ events completed' });
 
     // Completion rate badges
     if (stats.completion_rate >= 90) badges.push({ name: 'Committed', icon: '💯', color: 'green', description: '90%+ completion rate' });
 
     // Upcoming badges
-    if (stats.hikes_upcoming >= 5) badges.push({ name: 'Adventure Planner', icon: '📅', color: 'purple', description: '5+ upcoming hikes' });
+    if (stats.hikes_upcoming >= 5) badges.push({ name: 'Adventure Planner', icon: '📅', color: 'purple', description: '5+ upcoming events' });
 
     return badges;
   };
@@ -224,7 +224,7 @@ const ProfilePage = () => {
                     {profile.hiking_since && (
                       <span className="badge bg-info">
                         <Calendar size={14} className="me-1" />
-                        Hiking since {new Date(profile.hiking_since).getFullYear()}
+                        Events since {new Date(profile.hiking_since).getFullYear()}
                       </span>
                     )}
                     {profile.profile_visibility === 'private' && (
@@ -287,7 +287,7 @@ const ProfilePage = () => {
               <div className="card-body">
                 <Mountain size={32} className="text-success mb-2" />
                 <div className="display-4 mb-2 text-success">{stats.hikes_completed}</div>
-                <p className="text-muted mb-0">Hikes Completed</p>
+                <p className="text-muted mb-0">Events Completed</p>
               </div>
             </div>
           </div>
@@ -296,7 +296,7 @@ const ProfilePage = () => {
               <div className="card-body">
                 <Calendar size={32} className="text-primary mb-2" />
                 <div className="display-4 mb-2 text-primary">{stats.hikes_upcoming}</div>
-                <p className="text-muted mb-0">Upcoming Hikes</p>
+                <p className="text-muted mb-0">Upcoming Events</p>
               </div>
             </div>
           </div>
@@ -330,11 +330,11 @@ const ProfilePage = () => {
                 <div className="card-body">
                   <h6 className="border-bottom pb-2 mb-3">
                     <MapPin size={20} className="me-2" />
-                    Hiking Preferences
+                    Event Preferences
                   </h6>
                   <p><strong>Favorite Difficulty:</strong> {stats.favorite_difficulty}</p>
                   {stats.favorite_type && (
-                    <p className="mb-0"><strong>Favorite Type:</strong> {stats.favorite_type === 'day' ? 'Day Hikes' : 'Multi-Day Adventures'}</p>
+                    <p className="mb-0"><strong>Favorite Type:</strong> {stats.favorite_type === 'day' ? 'Day Events' : 'Multi-Day Adventures'}</p>
                   )}
                 </div>
               </div>
@@ -346,13 +346,13 @@ const ProfilePage = () => {
                 <div className="card-body">
                   <h6 className="border-bottom pb-2 mb-3">
                     <Calendar size={20} className="me-2" />
-                    Hiking Timeline
+                    Event Timeline
                   </h6>
                   {stats.first_hike_date && (
-                    <p><strong>First Hike:</strong> {new Date(stats.first_hike_date).toLocaleDateString()}</p>
+                    <p><strong>First Event:</strong> {new Date(stats.first_hike_date).toLocaleDateString()}</p>
                   )}
                   {stats.last_hike_date && (
-                    <p className="mb-0"><strong>Last Hike:</strong> {new Date(stats.last_hike_date).toLocaleDateString()}</p>
+                    <p className="mb-0"><strong>Last Event:</strong> {new Date(stats.last_hike_date).toLocaleDateString()}</p>
                   )}
                 </div>
               </div>

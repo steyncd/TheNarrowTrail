@@ -13,6 +13,7 @@ const UserPreferences = () => {
     preferred_difficulties: [],
     preferred_group_types: [],
     preferred_distances: [],
+    preferred_cycling_distances: [],
     hiking_frequency: '',
     preferred_days: [],
     max_travel_distance: '',
@@ -121,7 +122,7 @@ const UserPreferences = () => {
         </div>
 
         <p className="text-muted mb-4">
-          Help us personalize your experience by sharing your hiking preferences. We'll use this to recommend events that match your interests!
+          Help us personalize your experience by sharing your event preferences. We'll use this to recommend events that match your interests!
         </p>
 
         {error && (
@@ -137,14 +138,16 @@ const UserPreferences = () => {
             What types of events interest you?
           </label>
           <div className="d-flex flex-wrap gap-2">
-            {['hiking', 'trail_running', 'camping', 'backpacking', 'mountain_biking', 'rock_climbing'].map(type => (
+            {['hiking', '4x4_excursions', 'camping', 'cycling', 'rock_climbing', 'any_outdoor_activities'].map(type => (
               <button
                 key={type}
                 type="button"
                 style={buttonStyle(preferences.preferred_event_types.includes(type))}
                 onClick={() => toggleArrayValue('preferred_event_types', type)}
               >
-                {type.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase())}
+                {type === '4x4_excursions' ? '4x4 Excursions' :
+                 type === 'any_outdoor_activities' ? 'Any Outdoor Activities' :
+                 type.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase())}
               </button>
             ))}
           </div>
@@ -177,14 +180,16 @@ const UserPreferences = () => {
             What group settings do you enjoy?
           </label>
           <div className="d-flex flex-wrap gap-2">
-            {['family', 'solo', 'couples', 'small_group', 'large_group'].map(type => (
+            {['family', 'mens_only', 'solo', 'couples', 'group_outings'].map(type => (
               <button
                 key={type}
                 type="button"
                 style={buttonStyle(preferences.preferred_group_types.includes(type))}
                 onClick={() => toggleArrayValue('preferred_group_types', type)}
               >
-                {type.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase())}
+                {type === 'mens_only' ? 'Mens Only' :
+                 type === 'group_outings' ? 'Group Outings' :
+                 type.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase())}
               </button>
             ))}
           </div>
@@ -213,11 +218,34 @@ const UserPreferences = () => {
           </div>
         </div>
 
+        {/* Cycling Distance Preferences */}
+        <div className="mb-4">
+          <label className="form-label fw-bold">
+            <MapPin size={18} className="me-2" />
+            Preferred cycling distances
+          </label>
+          <div className="d-flex flex-wrap gap-2">
+            {['short', 'medium', 'long', 'ultra'].map(dist => (
+              <button
+                key={dist}
+                type="button"
+                style={buttonStyle(preferences.preferred_cycling_distances.includes(dist))}
+                onClick={() => toggleArrayValue('preferred_cycling_distances', dist)}
+              >
+                {dist === 'short' && 'Short (< 20km)'}
+                {dist === 'medium' && 'Medium (20-50km)'}
+                {dist === 'long' && 'Long (50-100km)'}
+                {dist === 'ultra' && 'Ultra (> 100km)'}
+              </button>
+            ))}
+          </div>
+        </div>
+
         {/* Hiking Frequency */}
         <div className="mb-4">
           <label className="form-label fw-bold">
             <Calendar size={18} className="me-2" />
-            How often do you want to hike?
+            How often do you want to attend events?
           </label>
           <select
             className="form-select"
@@ -311,7 +339,7 @@ const UserPreferences = () => {
             Specific interests or features you look for
           </label>
           <div className="d-flex flex-wrap gap-2">
-            {['wildlife', 'photography', 'waterfalls', 'mountain_peaks', 'coastal', 'forest', 'desert', 'cultural_sites'].map(interest => (
+            {['wildlife', 'photography', 'waterfalls', 'mountains', 'coastal', 'bushveld'].map(interest => (
               <button
                 key={interest}
                 type="button"
