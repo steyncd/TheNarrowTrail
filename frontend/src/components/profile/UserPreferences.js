@@ -34,7 +34,18 @@ const UserPreferences = () => {
     try {
       const data = await api.getUserPreferences(token);
       if (data.preferences) {
-        setPreferences(data.preferences);
+        setPreferences({
+          preferred_event_types: data.preferences.preferred_event_types || [],
+          preferred_difficulties: data.preferences.preferred_difficulties || [],
+          preferred_group_types: data.preferences.preferred_group_types || [],
+          preferred_distances: data.preferences.preferred_distances || [],
+          preferred_cycling_distances: data.preferences.preferred_cycling_distances || [],
+          hiking_frequency: data.preferences.hiking_frequency || '',
+          preferred_days: data.preferences.preferred_days || [],
+          max_travel_distance: data.preferences.max_travel_distance || '',
+          budget_range: data.preferences.budget_range || '',
+          interests: data.preferences.interests || []
+        });
       }
     } catch (err) {
       console.error('Fetch preferences error:', err);
