@@ -462,7 +462,7 @@ class ApiService {
 
   async resetUserPassword(userId, newPassword, token) {
     return this.request(`/api/admin/users/${userId}/reset-password`, {
-      method: 'PUT',
+      method: 'POST',
       body: JSON.stringify({ newPassword })
     }, token);
   }
